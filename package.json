@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "author": "Christopher Carrington",
   "homepage": "https://github.com/acets-team/ace#readme",
-  "description": "Ace provides Solid Fundamentals... For those that love in-editor autocomplete and a lovely developer experience!",
+  "description": "👋 Ace provides Solid Fundamentals... For those that ❤️ fine grained reactivity AND in-editor autocomplete! 🙏",
   "bin": {
     "ace": "dist/src/cli/cli.js"
   },

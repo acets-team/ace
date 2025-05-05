@@ -1,7 +1,7 @@
 ![Ace](https://i.imgur.com/jFILQ9P.png)
 
 ## 🧐 What is `Ace`?!
-- 👋 `Ace` provides **Solid Fundamentals**... For those that ❤️ `fine graied reactivity` **AND** `in-editor autocomplete`!
+- 👋 `Ace` provides **Solid Fundamentals**... For those that ❤️ `fine grained reactivity` **AND** `in-editor autocomplete`!
 
 
 ## 👷‍♀️ Create `Ace` App?!
