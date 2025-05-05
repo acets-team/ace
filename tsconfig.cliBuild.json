@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -13,7 +14,7 @@
     "types": ["vinxi/types/client"],
     "isolatedModules": true,
     "paths": {
-      "ace.config": ["./ace.config.js"],
+      "ace.config": ["../ace.config.js"],
     }
   }
 }
