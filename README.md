@@ -1,24 +1,25 @@
 ![Ace](https://i.imgur.com/jFILQ9P.png)
 
-    👋 Ace provides Solid Fundamentals... For those that love in-editor autocomplete and a lovely developer experience!
+## 🧐 What is `Ace`?!
+- 👋 `Ace` provides **Solid Fundamentals**... For those that ❤️ `fine graied reactivity` **AND** `in-editor autocomplete`!
 
 
-## 👷‍♀️ Create `Ace` App
-- To get started, open a `bash` terminal &:
+## 👷‍♀️ Create `Ace` App?!
+- Yes please! Just open a `bash` terminal &:
   ```bash
   npx create-ace-app@latest
   ```
 - [Wanna see what "create-ace-app" does automatically 🔮?!](https://github.com/acets-team/create-ace-app)
 
 
-## ✅ `Ace` Features!
+## ✅ Got Features?!
 ### Standard
 1. [Free](#-how-to-deploy) global hosting, 💸 thanks to [Cloudflare](https://www.cloudflare.com/)! ☁️
 1. **`In editor`**, **`autocomplete`** & **`typesafety`** @:
-    - Anchor Tags
-    - Frontend & Backend Redirects
-    - API Requests started server side during page load
-    - Async API Requests started in the browser after page load
+    - Anchor Tags 🔗
+    - Frontend & Backend Redirects 🔀
+    - API Requests started server side during page load 🌐
+    - Async API Requests started in the browser after page load 💫
 1. If calling your API & already on the server, `call api endpoints as a function`, to ***skip*** HTTP, TCP & Serialization overhead! 🙌
 1. Initial page loads are generated on the server for lovely `SEO` but then after that initial page load, enjoy smooth `Single Page App` navigation! 🧚‍♀️ 
 1. On ***update***... Only ***update***... What ***updated***  💪 thanks to [Solid](https://www.solidjs.com/)! 🙏
