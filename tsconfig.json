@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "rootDir": "./",
+    "outDir": "./dist",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "paths": {
+      "acets": ["./src/index.ts"],
+      "ace.config": ["./ace.config.js"],
+    }
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules", "dist"]
+}

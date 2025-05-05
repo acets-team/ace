@@ -1,0 +1,10 @@
+!dist/
+node_modules
+src
+.gitignore
+ace.config.js
+notes.md
+package-lock.json
+tsconfig.cliBuild.json
+tsconfig.json
+tsconfig.srcBuild.json

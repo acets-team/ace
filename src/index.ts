@@ -1,0 +1,33 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import type { AceConfig } from 'acets'
+ */
+
+
+/**
+ * - Configure Ace!
+ * - FAQ:
+ *     - Where to place
+ *         - `./ace.config.js`
+ *     - Why is `ace.config.js` a javascript file?
+ *         - The cli does an `import()` of `ace.config.js`, and it's requires less for all to download to run js files in the terminal
+ *     - How to import type into config file for type safety
+ *         - Ensure the file starts with an `@ts-check` comment on the first line w/ nothing else on that line
+ *         - Put the JSDOC comment: `@type {import('acets').AceConfig}` directly above the line `export const config = {`
+ *     - How to import the value
+ *         - `import { config } from '@root/ace.config.js'`
+ *     - Why is this type in index.ts?
+ *         - So this type is available before types.ts aka @ace/types is created
+*/
+export type AceConfig = {
+  apiDir?: string,
+  appDir?: string,
+  cookieKey?: string,
+  sessionDataTTL?: number,
+  plugins: {
+    solid?: boolean,
+    valibot?: boolean,
+    mongoose?: boolean,
+  },
+  envs?: { name: string, url: string }[],
+}

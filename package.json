@@ -1,0 +1,50 @@
+{
+  "name": "acets",
+  "license": "MIT",
+  "type": "module",
+  "version": "0.0.1",
+  "types": "dist/index.d.ts",
+  "author": "Christopher Carrington",
+  "homepage": "https://github.com/acets-team/ace#readme",
+  "description": "Ace provides Solid Fundamentals... For those that love in-editor autocomplete and a lovely developer experience!",
+  "bin": {
+    "ace": "dist/src/cli/cli.js"
+  },
+  "bugs": {
+    "url": "https://github.com/acets-team/ace/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acets-team/ace.git"
+  },
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "publish": "npm publish --access public",
+    "build": "tsc && tsc -p tsconfig.srcBuild.json && node ./src/srcBuild.js",
+    "postbuild": "chmod +x dist/src/cli/cli.js || true",
+    "link": "npm unlink -g acets && npm link",
+    "unlink": "npm unlink -g acets"
+  },
+  "devDependencies": {
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "^0.15.3",
+    "@solidjs/start": "^1.1.3",
+    "@types/node": "^22.13.17",
+    "esbuild": "^0.25.2",
+    "mongoose": "^8.13.1",
+    "solid-js": "^1.9.5",
+    "typescript": "^5.8.2",
+    "valibot": "^1.0.0"
+  },
+  "keywords": [
+    "ace",
+    "solid",
+    "solidjs",
+    "router",
+    "api",
+    "framework",
+    "typescript",
+    "intellisense",
+    "fundamentals"
+  ]
+}

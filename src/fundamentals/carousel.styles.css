@@ -1,0 +1,34 @@
+.carousel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  transition: all 0.3s;
+  scroll-behavior: smooth;
+
+  .loops {
+    display: flex;
+    width: max-content;
+    animation: carousel-scroll-left 6s linear infinite;
+    &:hover,
+    &.pause {
+      animation-play-state: paused;
+    }
+  }
+
+  .loop {
+    display: flex;
+    white-space: normal;
+  }
+}
+
+@keyframes carousel-scroll-left {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    /* Atleast two copies of the items exist in a row, example: [loop 1] [loop 2] */
+    /* -50% shift means: slide from the beginning of the strip to the midpoint */
+    /*  So when the animation reaches 50%, it jumps back to 0 & b/c both halves are identical, this appears seamless */
+    transform: translateX(-50%);
+  }
+}

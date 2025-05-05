@@ -1,0 +1,68 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/loadSpin.styles.css'
+ */
+
+
+.load-spin {
+  /** recommend setting these for custom styling */
+  width: 2.1rem;
+  height: 2.1rem;
+  border-top: 0.3rem solid #FFF;
+  border-right: 0.3rem solid transparent;
+  animation: loadSpinRotation 1s linear infinite;
+  /** custom */
+
+  border-radius: 50%;
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.load-spin--two {
+  /** custom */
+  width: 2.1rem;
+  height: 2.1rem;
+  border-top: 0.3rem solid #FFF;
+  border-right: 0.3rem solid transparent;
+  animation: loadSpinRotation 1s linear infinite;
+  /** custom */
+
+  border-radius: 50%;
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  &::after {
+    /** custom */
+    width: 2.1rem;
+    height: 2.1rem;
+    border-bottom: 0.3rem solid #FF3D00;
+    border-left: 0.3rem solid transparent;
+    /** custom */
+
+    content: '';  
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+  }
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+} 
+
+@keyframes loadSpinRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
