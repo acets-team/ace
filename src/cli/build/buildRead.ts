@@ -55,11 +55,11 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
       if (fnName) {
         const apiName = `${apiMethod}${build.counts[apiMethod]}.${apiMethod}`
 
-        build.writes.apiFunctionsBE = `export const ${fnName} = createAPIFunction(${apiName})`
+        build.writes.apiFunctionsBE += `export const ${fnName} = createAPIFunction(${apiName})\n`
 
         build.writes.apiFunctionsFE += `export const ${fnName} = (async (o: APIFnOptions<typeof ${apiName}>) => {
   return getFE().GET('${apiPath}', o)
-}) satisfies APIFunction<typeof ${apiName}>\n`
+}) satisfies APIFunction<typeof ${apiName}>\n\n`
 
         // only add an import to the fe if a fnAlias was requested
         build.writes.importsAPIFE += getImportEntry(apiMethod + build.counts[apiMethod], fsPath, true, 'apiDir', build)
