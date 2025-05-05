@@ -8,7 +8,6 @@
 import { API } from './api'
 import { routes } from './app'
 import { Route } from './route'
-import { defaultError } from './vars'
 import { AceError } from '../aceError'
 import { gets, posts } from './apis.fe'
 import type { FetchEvent } from './types'
@@ -37,7 +36,6 @@ import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
  */
 export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
   try {
-    console.log('onMiddlewareRequest!')
     event.locals.sessionData = await getSessionData()
 
     const pathname = eventToPathname(event)
@@ -50,23 +48,18 @@ export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
         if (routeMatch?.handler instanceof Route) return await onRouteOrAPIMatched(event, routeMatch)
         else return await onIsRequestingAnAPI(event, pathname, gets)
     }
-  } catch (e: any) {
-    console.log('onMiddlewareRequest e', e)
-    const message = e && e?.message ? e.message : defaultError
-    console.log('onMiddlewareRequest message', message)
-    throw new AceError({ message })
+  } catch (error) {
+    return new Response(JSON.stringify(AceError.catch({ error }), null, 2), { status: 401 }) // Only Response objects can be returned from middleware functions. Returning any other value will result in an error. source: https://docs.solidjs.com/solid-start/advanced/middleware#middleware
   }
 }
  
 
 async function onRouteOrAPIMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
   if (routeMatch.handler.values.b4) {
-    const res = await routeMatch.handler.values.b4({
+    return await routeMatch.handler.values.b4({
       event,
       sessionData: event.locals.sessionData
     })
-    console.log('res', res)
-    return res
   }
 }
 

@@ -15,14 +15,14 @@
 ## ✅ Got Features?!
 ### Standard
 1. [Free](#-how-to-deploy) global hosting, 💸 thanks to [Cloudflare](https://www.cloudflare.com/)! ☁️
+1. The initial `page load HTML` is created server-side for lovely `SEO` but then after that initial page load, enjoy **smooth** `Single Page App` routing & navigation! 🧚‍♀️ 
+1. If calling your API & already on the server, `call api endpoints as a function`, to **skip** HTTP, TCP & Serialization overhead! 🙌
+1. On **update**... Only **update**... What **updated**  💪 thanks to [Solid](https://www.solidjs.com/)! 🙏
 1. **`In editor`**, **`autocomplete`** & **`typesafety`** @:
     - Anchor Tags 🔗
     - Frontend & Backend Redirects 🔀
     - API Requests started server side during page load 🌐
     - Async API Requests started in the browser after page load 💫
-1. If calling your API & already on the server, `call api endpoints as a function`, to ***skip*** HTTP, TCP & Serialization overhead! 🙌
-1. Initial page loads are generated on the server for lovely `SEO` but then after that initial page load, enjoy smooth `Single Page App` navigation! 🧚‍♀️ 
-1. On ***update***... Only ***update***... What ***updated***  💪 thanks to [Solid](https://www.solidjs.com/)! 🙏
 
 ### Security
 1. Smaller than a photo 📸 b/c even when **unminified** `Ace` is less then **`180 kB`**, requires **`0 dependencies`** & was built to be tree shaked! 🌳
@@ -42,13 +42,15 @@
 1. A super simple api, with tons of [JSDOC](https://jsdoc.app/) comments for in editor docs & examples  when hovering over `Ace` **types, functions and components**! 🤓
 
 ### Honorable Mentions
-1. `<AnimatedFor />` - Animate your lists beautifully & smoothly with CSS animations! 🌀
+1. `<AnimatedFor />` - Animate your lovely lists, with CSS animations! 🌀
 1. `<Messages />` - Show `form save error messages`, for the form as a hole AND per input, by the input! 🎯
-1. `Shimmer` & `LoadSpin`: Show gentle loading animations with CSS classes! ✨
+1. `Shimmer` & `LoadSpin`: Show gentle loading animations with CSS! ✨
+1. `ParamEnums`: Simply define all the `enums` a `url param` can be and then validate the url (ex: `'earth' | 'air' | 'fire' | 'water'`)
+1. `parseNumber()`: Also helpful w/ params, to find out is a param `a number`, a `specific` number and/or `between` 2 numbers to help gain url param **confidence**!
 1. `mongoConnect()` & `mongoModel()` - Manage mongo connection pools & enhance its standard typesafety!
-1. `cuteLog()` - Create strings w/ 30+ customization options 🎨
-1. `holdUp()` - Pause for a specific or random amount of time ⏳
-1. `lorem()` - Generate `lorem` words & paragraphs ✍️
+1. `cuteLog()` - Create strings w/ 30+ customization options to add some style to your terminal logs! 🎨
+1. `holdUp()` - Pause for a specific or random amount of time! ⏳
+1. `lorem()` - Generate `lorem ipsum` words & paragraphs! ✍️
 
 
 ## 🧚‍♀️ Got code?!
@@ -92,9 +94,9 @@ export const GET = new API('/api/aloha')
 
 ### POST! 🧡
 ```tsx
-import { compare } from 'bcrypt'
 import { go } from '@ace/go'
 import { API } from '@ace/api'
+import { compare } from 'bcrypt'
 import { guestB4 } from '@src/lib/b4'
 import { SessionData } from 'ace.config'
 import { M_User } from '@src/db/M_User'
@@ -178,7 +180,7 @@ export default new Route('/yin') // this route uses no layouts!
   .component((fe) => {
     return <>
       <Title>Yin</Title>
-      <A path="/yang">Yang</A> {/* <A /> knows about your routes & provides autocomplete! 🙌 */}
+      <A path="/yang">Yang</A> {/* The <A /> component knows about your routes & provides autocomplete! 🙌 */}
     </>
   })
 ```
@@ -199,8 +201,8 @@ export default new Route('/yin') // this route uses no layouts!
     import { Suspense } from 'solid-js'
     import { apiCharacter } from '@ace/apis'
     import type { InferParseFn } from '@ace/types'
-    import type { elementEnums } from '@src/lib/vars'
     import type { InferEnums } from '@ace/paramEnums'
+    import type { elementEnums } from '@src/lib/vars'
 
 
     export default new Route('/smooth')

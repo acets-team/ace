@@ -1,5 +1,6 @@
-import type { JSONResponse, FlatMessages } from './fundamentals/types'
+import { config } from 'ace.config'
 import { defaultError } from './fundamentals/vars'
+import type { JSONResponse, FlatMessages } from './fundamentals/types'
 
 
 /**
@@ -39,6 +40,8 @@ export class AceError {
     }
 
     if (!res) res = AceError.#simple(defaultError)
+
+    if (config.logCaughtErrors) console.error(options)
 
     return res
   }

@@ -1,3 +1,4 @@
+import { AceError } from './aceError'
 import { BE } from './fundamentals/be'
 import type { API } from './fundamentals/api'
 import { getSessionData } from './fundamentals/session'
@@ -19,7 +20,7 @@ export function createAPIFunction<T_API extends API<any, any, any, any>>(api: T_
         const res = await api.values.b4({ sessionData: await getSessionData() })
         if (res) return res as any
       }
-  
+
       if (!api.values.resolve) throw new Error('Please set .resolve() on your api for createAPIFunction() to work')
   
       const res = await api.values.resolve(be)
@@ -29,8 +30,8 @@ export function createAPIFunction<T_API extends API<any, any, any, any>>(api: T_
        * - `const _contracts = beAsync(() => beGET('/api/contracts'), 'contracts')` makes a real HTTP request to an API endpoint where await res.json() happens also
        */
       return res ? JSON.parse(JSON.stringify(res)) : undefined
-    } catch (e) {
-      console.log('createAPIFunction e', e)
+    } catch (error) {
+      throw AceError.catch({ error })
     }
   }
 }

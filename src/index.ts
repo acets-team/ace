@@ -24,6 +24,7 @@ export type AceConfig = {
   appDir?: string,
   cookieKey?: string,
   sessionDataTTL?: number,
+  logCaughtErrors?: boolean,
   plugins: {
     solid?: boolean,
     valibot?: boolean,

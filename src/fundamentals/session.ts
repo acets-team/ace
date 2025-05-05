@@ -79,7 +79,7 @@ async function _setSessionData<T extends SessionData>(session: SolidStartSession
 
 
 async function getSession(): Promise<SolidStartSession> {
-  if (!process.env.SESSION_CRYPT_PASSWORD) throw new Error('Please set process.env.SESSION_CRYPT_PASSWORD')
+  if (!process.env.SESSION_CRYPT_PASSWORD) throw new Error('Please set SESSION_CRYPT_PASSWORD .env variable')
   return await useSession<SessionData>({ name: config.cookieKey, password: process.env.SESSION_CRYPT_PASSWORD })
 }
 

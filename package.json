@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.0.1",
   "types": "dist/index.d.ts",
-  "author": "Christopher Carrington",
+  "author": "https://github.com/acets-team",
   "homepage": "https://github.com/acets-team/ace#readme",
   "description": "👋 Ace provides Solid Fundamentals... For those that ❤️ fine grained reactivity AND in-editor autocomplete! 🙏",
   "bin": {
@@ -21,9 +21,7 @@
     "prepublishOnly": "npm run build",
     "publish": "npm publish --access public",
     "build": "tsc && tsc -p tsconfig.srcBuild.json && node ./src/srcBuild.js",
-    "postbuild": "chmod +x dist/src/cli/cli.js || true",
-    "link": "npm unlink -g acets && npm link",
-    "unlink": "npm unlink -g acets"
+    "postbuild": "chmod +x dist/src/cli/cli.js || true"
   },
   "devDependencies": {
     "@solidjs/meta": "^0.29.4",

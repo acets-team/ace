@@ -3,9 +3,9 @@
     Anytime you see "Standard Fix" do this please
 
 ## ✅ Standard Fix
+1. In browser, delete the `Solid Start` cookie that has the cookie name from `./ace.config.js`
 1. Stop all local servers running Ace
 1. Delete generated `.ace` folder
-1. Delete `Solid Start` cookie
 1. `npm run dev`
 1. Ensure the port shown in `bash`, is the port in your `./ace.config.js`
 1. Open a new browser tab, place the url from `bash` into the browser & press `Enter`
