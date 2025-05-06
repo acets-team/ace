@@ -9,8 +9,8 @@ import type { API } from './api'
 import type { JSX } from 'solid-js'
 import type { routes } from './app'
 import type { Route } from './route'
-import type * as apisFE from './apis.fe'
-import type * as apisBE from './apis.be'
+import type * as apisFE from '../apis.fe'
+import type * as apisBE from '../apis.be'
 import type { AccessorWithLatest, redirect } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
@@ -157,96 +157,58 @@ export type InferParseGET<T_GET_Path extends GET_Paths> = AccessorWithLatest<und
  * - Receives: API GET path
  * - Gives: The type for that api's response, aka the response to the `fn()` on that API
 */
-export type InferResponseGET<T_Path extends GET_Paths> = typeof apisBE.gets extends Record<any, any>
-  ? T_Path extends keyof typeof apisBE.gets
-    ? API2FnResponse<typeof apisBE.gets[T_Path]> // infer / return fn response type if set or undefined if unset
-    : never
-  : never
-
-
-type API2FnResponse<T_API extends API<any, any, any, any>> = T_API extends API<any, any, any, infer T_Fn_Response>
-    ? T_Fn_Response
-    : never
+export type InferResponseGET<Path extends GET_Paths> = API2Response<(typeof apisBE.gets)[Path]>
 
 
 /** 
  * - Receives: Route path
  * - Gives: The type for that route's params
 */
-export type InferParamsRoute<T_Path extends keyof typeof routes> = typeof routes extends Record<any, any> // IF app has any routes
-  ? T_Path extends keyof typeof routes // IF path is a valid path to a route
-    ? Route2Params <typeof routes[T_Path]> // infer / return params if set or undefined if unset
-    : undefined
-  : undefined
+export type InferParamsRoute<T_Path extends keyof typeof routes> = Route2Params<(typeof routes)[T_Path]>
 
 
 /** 
  * - Receives: API GET path
  * - Gives: The type for that api's params
 */
-export type InferParamsGET<T_Path extends keyof typeof apisBE.gets> = typeof apisBE.gets extends Record<any, any> // IF app has any GET endpoints
-  ? T_Path extends keyof typeof apisBE.gets // IF path is a valid path to an api GET
-    ? API2Params<typeof apisBE.gets[T_Path]> // infer / return params if set or undefined if unset
-    : undefined
-  : undefined
+export type InferParamsGET<T_Path extends GET_Paths> = API2Params<typeof apisBE.gets[T_Path]>
 
-
-  /** 
-   * - Receives: API GET path
-   * - Gives: The type for that api's params
-  */
-  export type InferSearchGET<T_Path extends keyof typeof apisBE.gets> = typeof apisBE.gets extends Record<any, any> // IF app has any GET endpoints
-    ? T_Path extends keyof typeof apisBE.gets // IF path is a valid path to an api GET
-      ? API2Search<typeof apisBE.gets[T_Path]> // infer / return search params if set or undefined if unset
-      : undefined
-    : undefined
+/** 
+ * - Receives: API GET path
+ * - Gives: The type for that api's params
+*/
+export type InferSearchGET<T_Path extends GET_Paths> = API2Search<typeof apisBE.gets[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's params
 */
-export type InferParamsPOST<T_Path extends POST_Paths> = typeof apisBE.posts extends Record<any, any>
-  ? T_Path extends keyof typeof apisBE.posts
-    ? API2Params <typeof apisBE.posts[T_Path]> // infer / return params type if set or undefined if unset
-    : undefined
-  : undefined
+export type InferParamsPOST<T_Path extends POST_Paths> = API2Params<typeof apisBE.posts[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's body
 */
-export type InferBodyPOST<T_Path extends POST_Paths> = typeof apisBE.posts extends Record<any, any>
-  ? T_Path extends keyof typeof apisBE.posts
-    ? API2Body<typeof apisBE.posts[T_Path]> // infer / return body type if set or undefined if unset
-    : undefined
-  : undefined
+export type InferBodyPOST<T_Path extends POST_Paths> = API2Body<typeof apisBE.posts[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's params
 */
-export type InferSearchPOST<T_Path extends POST_Paths> = typeof apisBE.posts extends Record<any, any>
-  ? T_Path extends keyof typeof apisBE.posts
-    ? API2Search <typeof apisBE.posts[T_Path]> // infer / return search params type if set or undefined if unset
-    : undefined
-  : undefined
+export type InferSearchPOST<T_Path extends POST_Paths> = API2Search <typeof apisBE.posts[T_Path]>
 
 
 /** 
  * - Receives: API GET path
  * - Gives: The type for that api's response, aka the response to the `fn()` on that API
 */
-export type InferResponsePOST<T_Path extends POST_Paths> = typeof apisBE.posts extends Record<any, any>
-  ? T_Path extends keyof typeof apisBE.posts
-    ? API2FnResponse<typeof apisBE.posts[T_Path]> // infer / return fn response type if set or undefined if unset
-    : never
-  : never
+export type InferResponsePOST<T_Path extends POST_Paths> = API2Response<typeof apisBE.posts[T_Path]>
 
 
-type Route2Params<T_Route extends Route> = T_Route extends Route<infer T_Params, any>
+type Route2Params<T_Route extends Route<any, any>> = T_Route extends Route<infer T_Params, any>
   ? GetPopulated<T_Params>
   : undefined  
 
@@ -289,7 +251,7 @@ type KeepIfPopulated<T_Prop extends string, T_Value> = IsPopulated<T_Value> exte
   : {}
 
 
-/** Build an options object whose properties are only present if they have keys */
+/** Building an options object whose properties are only present if they have keys */
 export type APIFnOptions<T_API extends API<any, any, any, any>> =
   KeepIfPopulated<'params', API2Params<T_API>> &
   KeepIfPopulated<'body', API2Body<T_API>> &
@@ -297,8 +259,6 @@ export type APIFnOptions<T_API extends API<any, any, any, any>> =
 
 
 /** What `createAPIFunction()` creates */
-// export type APIFunction<T_API extends API<any, any, any, any>> = (options: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
-
 export type APIFunction<T_API extends API<any, any, any, any>> =
   IsPopulated<APIFnOptions<T_API>> extends true
     ? (options: APIFnOptions<T_API>) => Promise<API2Response<T_API>>

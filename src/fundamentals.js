@@ -28,7 +28,7 @@ class Fundamental {
 export const fundamentals = new Map([
   ['a', new Fundamental('tsx', 'solid', 'copy')],
   ['api', new Fundamental('ts', 'solid', 'copy')],
-  ['apis', new Fundamental('ts', 'solid', 'custom')],
+  ['apis', new Fundamental('ts', 'solid', 'copy')],
   ['app', new Fundamental('tsx', 'solid', 'custom')],
   ['animatedFor', new Fundamental('tsx', 'solid', 'copy')],
   ['be', new Fundamental('ts', 'solid', 'copy')],
@@ -70,7 +70,7 @@ export const fundamentals = new Map([
   ['pick', new Fundamental('ts', 'solid', 'copy')],
   ['randomBetween', new Fundamental('ts', 'solid', 'copy')],
   ['route', new Fundamental('ts', 'solid', 'copy')],
-  ['resolveAlias', new Fundamental('ts', 'solid', 'copy')],
+  ['resolveAlias', new Fundamental('ts', 'solid', 'helper')],
   ['selectPlaceholder', new Fundamental('ts', 'solid', 'copy')],
   ['session', new Fundamental('ts', 'solid', 'copy')],
   ['shimmer.styles', new Fundamental('css', 'solid', 'copy')],

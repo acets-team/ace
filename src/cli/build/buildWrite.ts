@@ -1,7 +1,7 @@
 import { join, resolve } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { mkdir, copyFile, writeFile } from 'node:fs/promises'
-import { getConstEntry, getImportEntry, type Build, type TreeAccumulator, type TreeNode } from './build.js'
+import { getConstEntry, getSrcImportEnry, type Build, type TreeAccumulator, type TreeNode } from './build.js'
 
 
 
@@ -34,13 +34,11 @@ function getPromises(build: Build) {
     promises.push(
       fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsSolidTypes || '', fileName: 'types.d.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApisBE(build), fileName: 'apis.be.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApisFE(build), fileName: 'apis.fe.ts' }),
+      fsWrite({ build, dir: build.dirWriteRoot, content: renderApisBE(build), fileName: 'apis.be.ts' }),
+      fsWrite({ build, dir: build.dirWriteRoot, content: renderApisFE(build), fileName: 'apis.fe.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApp(build), fileName: 'app.tsx' }),
     )
   }
-
-  promises.push(fsCopy({ build, dirWrite: build.dirWriteRoot, srcFileName: 'tsconfig.txt', aimFileName: 'tsconfig.json' }))
 
   return promises
 }
@@ -76,7 +74,7 @@ export const url: ${build.config.envs?.map(env => `'${env.url}'`).join(' | ')} =
 
 
 function renderApisBE(build: Build) {
-  return `import { createAPIFunction } from '../createAPIFunction' 
+  return `import { createAPIFunction } from './createAPIFunction' 
 
 ${build.writes.importsAPIBE}${build.space}
 export const gets = {
@@ -95,13 +93,13 @@ ${build.writes.apiFunctionsBE}
 
 
 function renderApisFE(build: Build) {
-  return `import { getFE } from './fe'
-import type { APIFunction, APIFnOptions } from './types' 
+  return `import { getFE } from './fundamentals/fe'
+import type { APIFunction } from './fundamentals/types' 
 
 ${build.writes.importsAPIFE}
+
 export const gets = {} as const
 export const posts = {} as const
-
 
 ${build.writes.apiFunctionsFE}`
 }
@@ -113,11 +111,11 @@ function renderApp(build: Build) {
   let {routes, importsMap, consts} = walkTree(build.tree)
 
   importsMap.forEach((moduleName, fsPath) => {
-    imports += getImportEntry(moduleName, fsPath, false, 'appDir', build)
+    imports += getSrcImportEnry({moduleName, fsPath})
   })
 
   build.noLayoutRoutes.forEach(route => {
-    imports += getImportEntry(route.moduleName, route.fsPath, false, 'appDir', build)
+    imports += getSrcImportEnry({ moduleName: route.moduleName, fsPath: route.fsPath })
     consts += getConstEntry(route.routePath, route.moduleName)
     routes += `          <Route path={${route.moduleName}.values.path} component={${renderRouteComponent(route.moduleName)}} matchFilters={${route.moduleName}.filters} />\n`
   })

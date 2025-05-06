@@ -340,19 +340,19 @@ export default new Route('/yin') // this route uses no layouts!
     - Type: `Shell Command: Install 'code' command in PATH`
     - Press `Enter`
 
-1. How to get the Solid icon for `.tsx` files in VS Code
+1. How to get the alter icon for `.tsx` files in VS Code
     - Download the `Symbols` extension by `Miguel Solorio`
     - Bash cd into `~/.vscode/extensions/`
     - Bash cd `miguelsolorio.symbols-` w/ the proper version
     - Bash: `code .`
-    - @ `/src/icons/files/` place `solid.svg`
-    - @ `/src/symbol-icon-theme.json` w/in `iconDefinitions` place `"solid": { "iconPath": "./icons/files/solid.svg" },`
-    - @ `fileExtensions` update `"tsx": "solid",` & anywhere else ya love!
+    - @ `/src/icons/files/` place image
+    - @ `/src/symbol-icon-theme.json` w/in `iconDefinitions` place `"ace": { "iconPath": "./icons/files/[ image name & extension ]" },`
+    - @ `fileExtensions` update `"tsx": "ace",` & anywhere else ya love!
     - @ VS Code `settings.json` add:
         ```js
         "symbols.files.associations": {
-          "*.jsx": "solidjs",
-          "*.tsx": "solidjs"
+          "*.jsx": "ace",
+          "*.tsx": "ace"
         }
         ```
     - Reload VS Code!

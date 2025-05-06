@@ -1,12 +1,13 @@
 /**
- * 🧚‍♀️ How to access:
- *     - import { resolveAlias } from '@ace/resolveAlias'
+ * 🧚‍♀️ How to access from ./app.config.ts
+ *     - import { resolveAlias } from './.ace/resolveAlias'
  */
 
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 
 
 /**
@@ -23,20 +24,6 @@ export function resolveAlias(router: 'server' | 'client' | 'server-function', im
 }
 
 
-function getResolveAliasBE(dir: string) {
-  return { ...getBaseAlias(dir), ...getFundamentalsAlias('be', dir) }
-}
-
-
-function getResolveAliasFE(dir: string) {
-  return { ...getBaseAlias(dir), ...getFundamentalsAlias('fe', dir) }
-}
-
-
-function getDir(importMetaUrl: string) {
-  return path.dirname(fileURLToPath(importMetaUrl))
-}
-
 
 function getFundamentalsAlias(env: 'be' | 'fe', dir: string): Record<string, string> {
   const aliasMap: Record<string, string> = {}
@@ -47,14 +34,27 @@ function getFundamentalsAlias(env: 'be' | 'fe', dir: string): Record<string, str
     const fsPath = path.join(fundamentalsRoot, file) // Get the full fs path to each item in the fundamentals directory
     const { name } = path.parse(file) // file name
 
-    if (name === 'apis.be' && env === 'be') aliasMap['@ace/apis'] = fsPath // we've got the fsPath to the be apis & we're currently building for the be => set the alias
-    else if (name === 'apis.fe' && env === 'fe') aliasMap['@ace/apis'] = fsPath // we've got the fsPath to the fe apis & we're currently building for the fe => set the alias
-    else aliasMap[`@ace/${name}`] = fsPath // standard
+    aliasMap[`@ace/${name}`] = fsPath // standard
   }
+
+  aliasMap['@ace/apis'] = path.join(dir, `.ace/apis.${env}`) // overwrite apis to the proper env
 
   return aliasMap
 }
 
+
+
+function getResolveAliasBE(dir: string) {
+  return { ...getBaseAlias(dir), ...getFundamentalsAlias('be', dir) }
+}
+
+function getResolveAliasFE(dir: string) {
+  return { ...getBaseAlias(dir), ...getFundamentalsAlias('fe', dir) }
+}
+
+function getDir(importMetaUrl: string) {
+  return path.dirname(fileURLToPath(importMetaUrl))
+}
 
 function getBaseAlias(dir: string) {
   return {

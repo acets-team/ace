@@ -26,8 +26,8 @@ export function createAPIFunction<T_API extends API<any, any, any, any>>(api: T_
       const res = await api.values.resolve(be)
 
       /**
-       * - `const _contracts = beAsync(() => apiContracts(), 'contracts')` calls a server-side function directly, and is then passed to Seroval, this ensures Seroval does not bomb while parsing
-       * - `const _contracts = beAsync(() => beGET('/api/contracts'), 'contracts')` makes a real HTTP request to an API endpoint where await res.json() happens also
+       * - `const _contracts = load(() => apiContracts(), 'contracts')` calls a server-side function directly, and is then passed to Seroval, this ensures Seroval does not bomb while parsing
+       * - `const _contracts = load(() => beGET('/api/contracts'), 'contracts')` makes a real HTTP request to an API endpoint where await res.json() happens also
        */
       return res ? JSON.parse(JSON.stringify(res)) : undefined
     } catch (error) {

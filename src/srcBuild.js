@@ -13,7 +13,6 @@ try {
     copyFile(join(cwd, 'src/fundamentals/app.tsx'), join(distDir, `app.txt`)),
     copyFile(join(cwd, 'src/index.ts'), join(distDir, `index.d.ts`)), // ts does not show errors in .d.ts files so we start w/o it to get intellisense & then use it to inform ts, only declarations in here
     copyFile(join(cwd, 'src/fundamentals/types.ts'), join(distDir, `types.d.txt`)),
-    copyFile(join(cwd, 'tsconfig.cliBuild.json'), join(distDir, `tsconfig.txt`)),
   ]
 
   fundamentals.forEach((f, name) => {

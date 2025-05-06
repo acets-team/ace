@@ -1,6 +1,6 @@
 import path, { join, resolve } from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
-import { getConstEntry, getImportEntry, ImportsMap, Route, type Build } from './build.js'
+import { getConstEntry, getSrcImportEnry, ImportsMap, Route, type Build } from './build.js'
 
 
 export async function buildRead(build: Build) {
@@ -57,21 +57,21 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
 
         build.writes.apiFunctionsBE += `export const ${fnName} = createAPIFunction(${apiName})\n`
 
-        build.writes.apiFunctionsFE += `export const ${fnName} = (async (o: APIFnOptions<typeof ${apiName}>) => {
+        build.writes.apiFunctionsFE += `\nexport const ${fnName}: APIFunction<typeof ${apiName}> = async (o) => {
   return getFE().GET('${apiPath}', o)
-}) satisfies APIFunction<typeof ${apiName}>\n\n`
+}\n`
 
         // only add an import to the fe if a fnAlias was requested
-        build.writes.importsAPIFE += getImportEntry(apiMethod + build.counts[apiMethod], fsPath, true, 'apiDir', build)
+        build.writes.importsAPIFE += getSrcImportEnry({ moduleName: apiMethod + build.counts[apiMethod], fsPath, star: true })
       }
 
       switch (apiMethod) {
         case 'GET':
-          build.writes.importsAPIBE += getImportEntry('GET' + build.counts.GET, fsPath, true, 'apiDir', build)
+          build.writes.importsAPIBE += getSrcImportEnry({ moduleName: 'GET' + build.counts.GET, fsPath, star: true })
           build.writes.constGET += getConstEntry(apiPath, 'GET' + build.counts.GET, 'GET')
           break
         case 'POST':
-          build.writes.importsAPIBE += getImportEntry('POST' + build.counts.POST, fsPath, true, 'apiDir', build)
+          build.writes.importsAPIBE += getSrcImportEnry({ moduleName: 'POST' + build.counts.POST, fsPath, star: true })
           build.writes.constPOST += getConstEntry(apiPath, 'POST' + build.counts.POST, 'POST')
           break
       }

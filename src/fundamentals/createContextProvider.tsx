@@ -26,20 +26,17 @@ import type { JSX, Context } from 'solid-js'
  * @example
   ```ts
   import './Dashboard.css'
+  import { load } from '@ace/load'
+  import { apiUser } from '@ace/apis'
   import { Layout } from '@ace/layout'
   import { createEffect, useContext } from 'solid-js'
-  import { beAsync, beGET, beParse } from '@ace/beAsync'
   import { AuthContext, AuthContextProvider } from '@src/contexts/AuthContext'
-
-
-  const _user = beAsync(() => beGET('/api/user'), 'user')
 
 
   export default new Layout()
     .component((fe) => {
       const authContext = useContext(AuthContext)
-
-      const user = beParse(() => _user())
+      const user = load(() => apiUser(), 'user')
 
       createEffect(() => {
         authContext.currentUsersId[1](user()?.data?.id)

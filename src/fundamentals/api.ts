@@ -81,9 +81,15 @@ export class API<
       })
     ```
     */
-    resolve<T_New_Resolve_Response>(resolve: APIFn<T_Params, T_Search, T_Body, T_New_Resolve_Response>): API<T_Params, T_Search, T_Body, T_New_Resolve_Response> {
-      (this.values as any).resolve = resolve
-      return this as any
+    resolve<T_Resolve_Fn extends APIFn<T_Params, T_Search, T_Body, any>>(resolveFN: T_Resolve_Fn): API<T_Params, T_Search, T_Body, Awaited<ReturnType<T_Resolve_Fn>>> {
+      (this.values as any).resolve = resolveFN as any // bind values
+
+      return this as unknown as API<
+        T_Params,
+        T_Search,
+        T_Body,
+        Awaited<ReturnType<T_Resolve_Fn>>
+      >
     }
 
 

@@ -1,7 +1,7 @@
-import { getFE } from './fe'
-import type { APIFunction } from './types'
+import { getFE } from './fundamentals/fe'
+import type { APIFunction } from './fundamentals/types'
 
-import * as GET1 from '../api/a'
+import * as GET1 from './api/a'
 
 
 export const gets = {} as const

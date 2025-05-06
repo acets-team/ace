@@ -8,5 +8,6 @@ export const GET = new API('/api/a/:id')
     return be.json({ a: true })
   })
 
+
 export const POST = new API('/api/a')
   .body<{ a: string }>()
