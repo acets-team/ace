@@ -17,7 +17,7 @@
 1. [Free](#-how-to-deploy) global hosting, 💸 thanks to [Cloudflare](https://www.cloudflare.com/)! ☁️
 1. The initial `page load HTML` is created server-side for lovely `SEO` but then after that initial page load, enjoy **smooth** `Single Page App` routing & navigation! 🧚‍♀️ 
 1. If calling your API & already on the server, `call api endpoints as a function`, to **skip** HTTP, TCP & Serialization overhead! 🙌
-1. On **update**... Only **update**... What **updated**  💪 thanks to [Solid](https://www.solidjs.com/)! 🙏
+1. On **update**... Only **update**... What **updated**  💪 all **thanks** to [Solid](https://www.solidjs.com/)! 🙏
 1. **`In editor`**, **`autocomplete`** & **`typesafety`** @:
     - Anchor Tags 🔗
     - Frontend & Backend Redirects 🔀
@@ -54,41 +54,56 @@
 
 
 ## 🧚‍♀️ Got code?!
-### GET! 💜
+### GET! 💖
 ```tsx
 import { API } from '@ace/api'
 
 export const GET = new API('/api/aloha')
-  .fn(async (be) => {
+  .resolve(async (be) => {
     return be.json({ aloha: true })
   })
 ```
 
 
-### Params! 💙
+### Params! 💜
 - Required & optional params available @ `routes` & `apis`!
 ```tsx
 import { API } from '@ace/api'
 
 export const GET = new API('/api/aloha/:id')
-  .params<{ id: string }>() // set params type here & then this api's params are known @ .fn() & app-wide 🙌
-  .fn(async (be) => {
+  .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
+  .resolve(async (be) => {
     return be.json({ params: be.getParams() })
   })
 ```
 
 
-### Middleware! 💚
+### Use Middleware! 💙
 - Available @ `routes` & `apis`!
 ```tsx
 import { API } from '@ace/api'
 import { authB4 } from '@src/lib/b4'
 
 export const GET = new API('/api/aloha')
-  .b4(authB4) // run this `authB4()` async function before this api boots!
-  .fn(async (be) => {
+  .b4(authB4) // run the `authB4()` async function before this api boots!
+  .resolve(async (be) => {
     return be.json({ aloha: true })
   })
+```
+
+
+### Create Middleware! 💚
+```tsx
+import { go } from '@ace/go'
+import type { B4 } from '@ace/types'
+
+export const guestB4: B4 = async (ctx) => {
+  if (ctx.sessionData) return go('/contracts') // go() knows about all your routes & provides autocomplete!
+}
+
+export const authB4: B4 = async (ctx) => {
+  if (!ctx.sessionData) return go('/sign-in/:messageId?', {messageId: '1'})
+}
 ```
 
 
@@ -107,8 +122,8 @@ import { signInSchema, SignInSchema } from '@src/schemas/SignInSchema'
 
 export const POST = new API('/api/sign-in')
   .b4(guestB4)
-  .body<SignInSchema>() // tells .fn() & app-wide the request body this api requires
-  .fn((be) => {
+  .body<SignInSchema>() // tells .resolve() & app-wide the request body this api requires
+  .resolve((be) => {
     const body = signInSchema.parse(await be.getBody()) // get, validate & parse the request body in 1 line!
 
     await mongoConnect() // ensures 1 mongo pool is running
@@ -186,7 +201,7 @@ export default new Route('/yin') // this route uses no layouts!
 ```
 
 
-### Route w/ Async Data! 🌟
+### Route w/ Async Data! 💫
 - Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
 - If this page is refreshed, data begins gathering on the server
 - If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser

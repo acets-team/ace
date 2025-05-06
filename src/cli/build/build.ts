@@ -111,7 +111,6 @@ export class Build {
   /** The config defined at `./ace.config` */
   static async #getConfig(cwd: string) {
     const configPath = resolve(cwd, 'ace.config.js')
-    console.log('configPath', configPath)
     const module = await import(configPath)
     const config = module?.config ? module.config : null
 
