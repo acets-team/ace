@@ -194,4 +194,4 @@ const renderLayoutComponent = (moduleName?: string) => `props => layoutComponent
 
 const renderRouteComponent = (moduleName?: string) => `() => routeComponent(${moduleName})`
 
-const renderRouteMatchFilters = (route: BuildRoute) => route.routePath === '*' ? '' : `matchFilters={${route.moduleName!}.filters}`
+const renderRouteMatchFilters = (route: BuildRoute) => route.routePath === '*' ? '' : `matchFilters={${route.moduleName!}.values.filters}`

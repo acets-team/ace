@@ -286,28 +286,27 @@ export default new Route404()
 
 ### Infer! 🧚‍♀️
 - In the example above we use `InferParseFn`
-- When using an `Infer`, example: `InferParseFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` include this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
-    - `✅ InferParseFn`
+- When using an `Infer`, example: `InferParseFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` jas this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
+    - **`✅ InferParseFn`**
         - Autocomplete: **All API Functions**
         - Type: **API Function Response**
         - Example: `InferParseFn<'apiCharacter'>`
-    - `✅ InferResponseGET`
-         - Autocomplete: **Path to each api GET**
-         - Type: **API Response Body**
-         - Example: `InferResponseGET<'/api/example'>`
-    - `✅ InferParamsGET`
-         - Autocomplete: **Path to each api GET**
-         - Type: **API Params**
-         - Example: `InferParamsGET<'/api/example/:id'>`
-    - `✅ InferBodyPOST`
-         - Autocomplete: **Path to each api POST**
-         - Type: **API Request Body**
-         - Example: `InferBodyPOST<'/api/example'>`
-
-    - `✅ InferParamsRoute`
-         - Autocomplete: **Path to each route**
-         - Type: **Route Params**
-         - Example: `InferParamsRoute<'/example/:id'>`
+    - **`✅ InferResponseGET`**
+        - Autocomplete: **Path to each api GET**
+        - Type: **API Response Body**
+        - Example: `InferResponseGET<'/api/example'>`
+    - **`✅ InferParamsGET`**
+        - Autocomplete: **Path to each api GET**
+        - Type: **API Params**
+        - Example: `InferParamsGET<'/api/example/:id'>`
+    - **`✅ InferBodyPOST`**
+        - Autocomplete: **Path to each api POST**
+        - Type: **API Request Body**
+        - Example: `InferBodyPOST<'/api/example'>`
+    - **`✅ InferParamsRoute`**
+        - Autocomplete: **Path to each route**
+        - Type: **Route Params**
+        - Example: `InferParamsRoute<'/example/:id'>`
 ### Form! ✨
 ```tsx
 import { Title } from '@solidjs/meta'
