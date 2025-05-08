@@ -70,6 +70,7 @@ export const fundamentals = new Map([
   ['pick', new Fundamental('ts', 'solid', 'copy')],
   ['randomBetween', new Fundamental('ts', 'solid', 'copy')],
   ['route', new Fundamental('ts', 'solid', 'copy')],
+  ['route404', new Fundamental('ts', 'solid', 'copy')],
   ['resolveAlias', new Fundamental('ts', 'solid', 'helper')],
   ['selectPlaceholder', new Fundamental('ts', 'solid', 'copy')],
   ['session', new Fundamental('ts', 'solid', 'copy')],

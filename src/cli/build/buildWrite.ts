@@ -1,7 +1,7 @@
 import { join, resolve } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { mkdir, copyFile, writeFile } from 'node:fs/promises'
-import { getConstEntry, getSrcImportEnry, type Build, type TreeAccumulator, type TreeNode } from './build.js'
+import { getConstEntry, getSrcImportEnry, type Build, type TreeAccumulator, type TreeNode, type BuildRoute } from './build.js'
 
 
 
@@ -116,8 +116,8 @@ function renderApp(build: Build) {
 
   build.noLayoutRoutes.forEach(route => {
     imports += getSrcImportEnry({ moduleName: route.moduleName, fsPath: route.fsPath })
-    consts += getConstEntry(route.routePath, route.moduleName)
-    routes += `          <Route path={${route.moduleName}.values.path} component={${renderRouteComponent(route.moduleName)}} matchFilters={${route.moduleName}.filters} />\n`
+    if (route.routePath !== '*') consts += getConstEntry(route.routePath, route.moduleName) // if 404 is in consts then it'd be routes & then it'd be in <A />
+    routes += `          <Route path="${route.routePath}" component={${renderRouteComponent(route.moduleName)}} ${renderRouteMatchFilters(route)} />\n`
   })
 
   const marker = '/** gen */'
@@ -173,8 +173,8 @@ function walkTree(node: TreeNode, indent = 8, accumulator: TreeAccumulator = { i
 
   for (const r of node.routes) { // for each route in this layout
     accumulator.importsMap.set(r.fsPath, r.moduleName) // set route import
-    accumulator.consts += getConstEntry(r.routePath, r.moduleName) // set route const entry
-    accumulator.routes += (' '.repeat(indent) + `<Route path={${r.moduleName}.values.path} component={${renderRouteComponent(r.moduleName)}} matchFilters={${r.moduleName!}.filters} />\n`) // set routes entry
+    if (r.routePath !== '*') accumulator.consts += getConstEntry(r.routePath, r.moduleName) // if 404 is in consts then it'd be routes & then it'd be in <A />
+    accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={${renderRouteComponent(r.moduleName)}} ${renderRouteMatchFilters(r)} />\n`) // set routes entry
   }
 
   for (const child of node.layouts.values()) { // recurse into each child layout
@@ -193,3 +193,5 @@ function walkTree(node: TreeNode, indent = 8, accumulator: TreeAccumulator = { i
 const renderLayoutComponent = (moduleName?: string) => `props => layoutComponent(props, ${moduleName})`
 
 const renderRouteComponent = (moduleName?: string) => `() => routeComponent(${moduleName})`
+
+const renderRouteMatchFilters = (route: BuildRoute) => route.routePath === '*' ? '' : `matchFilters={${route.moduleName!}.filters}`

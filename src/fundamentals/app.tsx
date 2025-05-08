@@ -6,6 +6,7 @@
   
   
 import { Layout } from './layout'
+import { Route404 } from './route404'
 import { Route as AceRoute } from './route'
 import { MetaProvider } from '@solidjs/meta'
 import { Suspense, type JSX } from 'solid-js'
@@ -76,7 +77,7 @@ export type RouterRoot = (props: RouteSectionProps) => JSX.Element
 
 
 
-export function routeComponent(route: AceRoute): JSX.Element | undefined {
+export function routeComponent(route: AceRoute | Route404): JSX.Element | undefined {
   const fe = getFE()
 
   const res = route.values.component?.(fe)

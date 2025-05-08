@@ -2,9 +2,9 @@ import { fileURLToPath } from 'node:url'
 import type { AceConfig } from 'acets'
 import { buildRead } from './buildRead.js'
 import { buildWrite } from './buildWrite.js'
+import { join, resolve, dirname } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
-import path, { join, resolve, dirname } from 'node:path'
 import { supportedApiMethods } from '../../fundamentals/vars.js'
 
 
@@ -27,14 +27,15 @@ export class Build {
   cwd: string
   env: string
   space = '\n'
-  baseUrl: string
   fsApp?: string
-  config: AceConfig
   dirRead: string
-  fsSolidTypes?: string
+  baseUrl: string
+  found404 = false
+  config: AceConfig
   dirWriteRoot: string
+  fsSolidTypes?: string
   dirWriteFundamentals: string
-  noLayoutRoutes: Route[] = [] 
+  noLayoutRoutes: BuildRoute[] = [] 
   whiteList = new FundamentalWhiteList()
   apiCounts: { GET: number, POST: number } = { GET: 0, POST: 0 }
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
@@ -171,7 +172,7 @@ class FundamentalWhiteList {
 }
 
 
-export type Route = {
+export type BuildRoute = {
   /** Path starting from fs root */
   fsPath: string,
   /** Path defined @ new Route() */
@@ -189,7 +190,7 @@ export type Route = {
 export type TreeNode = {
   moduleName: string,
   fsPath?: string,
-  routes: Route[],
+  routes: BuildRoute[],
   layouts: Map<string,TreeNode>
 }
 

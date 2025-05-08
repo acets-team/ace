@@ -1,5 +1,6 @@
 ![Ace](https://i.imgur.com/jFILQ9P.png)
 
+
 ## 🧐 What is `Ace`?!
 - 👋 `Ace` provides **Solid Fundamentals**... For those that ❤️ `fine grained reactivity` **AND** `in-editor autocomplete`!
 
@@ -24,10 +25,12 @@
     - API Requests started server side during page load 🌐
     - Async API Requests started in the browser after page load 💫
 
+
 ### Security
 1. Smaller than a photo 📸 b/c even when **unminified** `Ace` is less then **`180 kB`**, requires **`0 dependencies`** & was built to be tree shaked! 🌳
 1. Simplify cookies, sessions & auth, thanks to the `set()`, `get()` & `clear()`, session data helpers! 🚨 
 1. Like middleware, run `async` functions **before** your `route`'s or `api`'s boot! 🔐
+
 
 ### Routes & API
 1. Define 0 to many `layouts` for `routes` to be placed within! 📥 
@@ -37,9 +40,11 @@
 1. Have static content available immediately, make multiple api calls during a page reder, and as each dynamic promise resolves (ex: database data), stream that item back to the frontend! 🎉
 1. So when Request processing begins on the server, so does dynamic data gathering. If dynamic data is ready before the page has been built that dynamic data will be included in the initial page load and all else will stream once that item is ready! 💫
 
+
 ### Getting Started
 1. Create new projects 👩‍🍼 and build the **`autocompleting intellisense types`** for existing ones 🏗️ wih our `blazingly-fast cli`! ⚡️
 1. A super simple api, with tons of [JSDOC](https://jsdoc.app/) comments for in editor docs & examples  when hovering over `Ace` **types, functions and components**! 🤓
+
 
 ### Honorable Mentions
 1. `<AnimatedFor />` - Animate your lovely lists, with CSS animations! 🌀
@@ -141,7 +146,6 @@ export const POST = new API('/api/sign-in')
     return be.go('/auhenticated') // go() knows about all your routes & provides autocomplete!
   }
 })
-
 ```
 
 
@@ -201,6 +205,33 @@ export default new Route('/yin') // this route uses no layouts!
 ```
 
 
+### 404 Route! ☀️
+```tsx
+import './404.css'
+import { A } from '@ace/a'
+import { Title } from '@solidjs/meta'
+import RootLayout from '../RootLayout'
+import { Route404 } from '@ace/route404'
+
+
+export default new Route404()
+  .layouts([RootLayout]) // zero to many layouts available!
+  .component((fe) => {
+    return <>
+      <Title>😅 404</Title>
+
+      <main class="not-found">
+        <div class="code">404 😅</div>
+        <div class="message">Oops! We can't find that page.</div>
+        <div class="path">{fe.getLocation().pathname}</div>
+        <A path="/" class="brand">🏡 Go Back Home</A>
+      </main>
+    </>
+  })
+
+```
+
+
 ### Route w/ Async Data! 💫
 - Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
 - If this page is refreshed, data begins gathering on the server
@@ -253,73 +284,108 @@ export default new Route('/yin') // this route uses no layouts!
     }
     ```
 
+### Infer! 🧚‍♀️
+- In the example above we use `InferParseFn`
+- When using an `Infer`, example: `InferParseFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` include this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
+    - `✅ InferParseFn`
+        - Autocomplete: **All API Functions**
+        - Type: **API Function Response**
+        - Example: `InferParseFn<'apiCharacter'>`
+    - `✅ InferResponseGET`
+         - Autocomplete: **Path to each api GET**
+         - Type: **API Response Body**
+         - Example: `InferResponseGET<'/api/example'>`
+    - `✅ InferParamsGET`
+         - Autocomplete: **Path to each api GET**
+         - Type: **API Params**
+         - Example: `InferParamsGET<'/api/example/:id'>`
+    - `✅ InferBodyPOST`
+         - Autocomplete: **Path to each api POST**
+         - Type: **API Request Body**
+         - Example: `InferBodyPOST<'/api/example'>`
 
+    - `✅ InferParamsRoute`
+         - Autocomplete: **Path to each route**
+         - Type: **Route Params**
+         - Example: `InferParamsRoute<'/example/:id'>`
 ### Form! ✨
-  ```tsx
-  import { Title } from '@solidjs/meta'
-  import { guestB4 } from '@src/lib/b4'
-  import RootLayout from '../RootLayout'
-  import { clear } from '@ace/clear'
-  import { Route } from '@ace/route'
-  import GuestLayout from './Guest.Layout'
-  import { Submit } from '@ace/submit'
-  import { Messages } from '@ace/messages'
-  import { signUpSchema } from '@src/schemas/SignUpSchema'
-  import { createOnSubmit } from '@ace/createOnSubmit'
+```tsx
+import { Title } from '@solidjs/meta'
+import { guestB4 } from '@src/lib/b4'
+import RootLayout from '../RootLayout'
+import { clear } from '@ace/clear'
+import { Route } from '@ace/route'
+import GuestLayout from './Guest.Layout'
+import { Submit } from '@ace/submit'
+import { Messages } from '@ace/messages'
+import { signUpSchema } from '@src/schemas/SignUpSchema'
+import { createOnSubmit } from '@ace/createOnSubmit'
 
 
-  export default new Route('/sign-up/:sourceId?')
-    .b4(guestB4) // run this asyc fn b4 route render
-    .layouts([RootLayout, GuestLayout]) // Root wraps Guest, Guest wraps this Route!
-    .component((fe) => {
-      const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
-        const body = signUpSchema.parse({ // get parse & validate request body
-          email: fd('email'), // fd() is a form data helper
-          password: fd('password')
-        }) 
+export default new Route('/sign-up/:sourceId?')
+  .b4(guestB4) // run this asyc fn b4 route render
+  .layouts([RootLayout, GuestLayout]) // Root wraps Guest, Guest wraps this Route!
+  .component((fe) => {
+    const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
+      const body = signUpSchema.parse({ // get parse & validate request body
+        email: fd('email'), // fd() is a form data helper
+        password: fd('password')
+      }) 
 
-        await fe.POST('/api/sign-up', { body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & this path & body have autocomplete!
-      })
+      await fe.POST('/api/sign-up', { body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & this path & body have autocomplete!
+    })
 
-      return <>
-        <Title>Sign Up</Title>
+    return <>
+      <Title>Sign Up</Title>
 
-        <form onSubmit={onSubmit}>
-          <input placeholder="Email" name="email" type="email" use:clear />
-          <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or fe.POST(), for just the email input! 🚀 */}
+      <form onSubmit={onSubmit}>
+        <input placeholder="Email" name="email" type="email" use:clear />
+        <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or fe.POST(), for just the email input! 🚀 */}
 
-          <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on first interaction w/ this input! */}
-          <Messages name="password" />
+        <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on first interaction w/ this input! */}
+        <Messages name="password" />
 
-          <div class="footer">
-            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses fe.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
-          </div>
-        </form>
-      </>
-    }
-  })
-  ```
-  ![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
-
+        <div class="footer">
+          <Submit label="Sign Up" bitKey="signUp" /> {/* Uses fe.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
+        </div>
+      </form>
+    </>
+  }
+})
+```
+![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 
 
 ## 🚀 How to Deploy!
-- [Cloudflare](https://www.cloudflare.com/) offers free global hosting! 🥹
-    - Create a GitHub account or Sign in
-    - Push to a public or private repository
-    - Create a Cloudlfare account or Sign in
-    - Navigate to `Workers & Pages`
-    - Add you Github account information
-    - Do an initial push to main, aka deploy, just to get an env url
-    - Add the env url to your `./ace.config.js`
-    - Example:
-      ```js
-      envs: [
-        { name: 'local', url: 'http://localhost:3000' },
-        { name: 'prod', url: 'https://example.ace.workers.dev' },
-      ]
-      ```
-    - 💖 Deploy!
+### [Cloudflare](https://www.cloudflare.com/) offers free global hosting! 🥹
+1. Create a GitHub account or Sign in
+1. Push to a public or private repository
+1. Create a Cloudlfare account or Sign in
+1. Navigate to `Workers & Pages`
+1. Click the `Create` button
+1. Click: `Import a Repository`
+1. Configure your Project
+    - Build Command: `npm run build`
+    - Deploy Command: `npx wrangler deploy`
+    - Save & Deploy
+1. Copy worker env url
+1. Add the env url to your `./ace.config.js`
+1. Example:
+    ```js
+    envs: [
+      { name: 'local', url: 'http://localhost:3000' },
+      { name: 'prod', url: 'https://example.ace.workers.dev' },
+    ]
+    ```
+1. Locally at your project root (where package.json is) create `wrangler.toml`
+1. In the first line place the worker name that you gave to cloudflare: `name = "your-project-name"`
+1. On the 2nd line place today's date: `compatibility_date = "2025-01-30"`
+1. Locally navigate to `.env` at your project root
+1. For each item here, tell cloudflare about it, example: `npx wrangler secret put SESSION_CRYPT_PASSWORD`
+1. Bash: `ace build prod` or `npx ace build prod` (`npx` is required when a `-g` is not done @ `npm i`)
+1. Navigate to `Workers & Pages` > `Your Project` > `Deployments`
+1. 💫 Push to GitHub aka Deploy!
+
 
 ![Bunnies writing code](https://i.imgur.com/d0wINvM.jpeg)
 

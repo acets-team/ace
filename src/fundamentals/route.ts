@@ -119,7 +119,7 @@ export class Route<T_Params extends URLParams = any, T_Search extends URLSearchP
 type RouteFilters = Record<string, any>
 
 
-interface RouteValues<T_Params extends URLParams, T_Search extends URLSearchParams> {
+type RouteValues<T_Params extends URLParams, T_Search extends URLSearchParams> = {
   path: string
   pattern: RegExp
   b4?: B4
