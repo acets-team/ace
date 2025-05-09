@@ -252,14 +252,18 @@ type KeepIfPopulated<T_Prop extends string, T_Value> = IsPopulated<T_Value> exte
 
 
 /** Building an options object whose properties are only present if they have keys */
-export type APIFnOptions<T_API extends API<any, any, any, any>> =
+type BaseAPIFnOptions<T_API extends API<any,any,any,any>> =
   KeepIfPopulated<'params', API2Params<T_API>> &
-  KeepIfPopulated<'body', API2Body<T_API>> &
+  KeepIfPopulated<'body',   API2Body<T_API>> &
   KeepIfPopulated<'search', API2Search<T_API>>
+
+
+/** BitKey is optional */
+export type APIFnOptions<T_API extends API<any,any,any,any>> = BaseAPIFnOptions<T_API> & { bitKey?: string }
 
 
 /** What `createAPIFunction()` creates */
 export type APIFunction<T_API extends API<any, any, any, any>> =
-  IsPopulated<APIFnOptions<T_API>> extends true
+  IsPopulated<BaseAPIFnOptions<T_API>> extends true
     ? (options: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
     : (options?: APIFnOptions<T_API>) => Promise<API2Response<T_API>>

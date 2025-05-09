@@ -10,9 +10,10 @@ import { Route404 } from './route404'
 import { Route as AceRoute } from './route'
 import { MetaProvider } from '@solidjs/meta'
 import { Suspense, type JSX } from 'solid-js'
+import { setFEChildren } from '../feChildren'
+import { getFE, FEContextProvider } from './fe'
 import { FileRoutes } from '@solidjs/start/router'
 import { MessagesCleanup } from '../messagesCleanup'
-import { getFE, FEContextProvider, _setChildren } from './fe'
 import { Route, Router, type RouteSectionProps } from '@solidjs/router'
 
 
@@ -92,6 +93,6 @@ export function routeComponent(route: AceRoute | Route404): JSX.Element | undefi
 
 export function layoutComponent(props: RouteSectionProps, layout: Layout): JSX.Element {
   const fe = getFE()
-  _setChildren(fe, props.children)
+  setFEChildren(fe, props.children)
   return layout.values.component?.(fe)
 }

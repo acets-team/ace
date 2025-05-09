@@ -9,7 +9,7 @@ import { config } from 'ace.config'
 import { AceError } from '../aceError'
 import { getCookie } from 'vinxi/http'
 import { buildURL } from '../buildURL'
-import { url as baseUrl } from './env'
+import { getBaseUrl } from './getBaseUrl'
 import type * as apisBE from '../apis.be'
 import { query, createAsync, AccessorWithLatest } from '@solidjs/router'
 import type { GET_Paths, POST_Paths, InferResponseGET, InferResponsePOST, Routes, GoResponse, APIFnOptions } from './types'
@@ -88,7 +88,7 @@ export async function _beAPI<T_Response>({ url, cookieKey, method = 'GET', body 
 
     if (method === 'POST') requestInit.body = body
 
-    const response = await fetch(baseUrl + url, requestInit)
+    const response = await fetch(getBaseUrl() + url, requestInit)
 
     if (response.redirected) return go(response.url as Routes)
 

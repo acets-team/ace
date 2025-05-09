@@ -229,7 +229,7 @@ export type TreeAccumulator = { importsMap: ImportsMap, consts: string, routes: 
 export const getConstEntry = (urlPath: string, moduleName: string, apiModuleName?: keyof typeof supportedApiMethods) => `  '${urlPath}': ${moduleName}${apiModuleName ? '.' + apiModuleName : ''},\n`
 
 
-export function getSrcImportEnry({star, moduleName, fsPath}: {star?: boolean, moduleName: string, fsPath: string}) {
+export function getSrcImportEnry({star, moduleName, fsPath, addType }: {star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
   const [, fsFromSrc] = fsPath.split('/src/')
 
   if (!fsFromSrc) throw new Error('Please ensure your file path is w/in the src directory, we just tried to do a split on the fsPath: ${fsPath} on /src/ and that did not work')
@@ -238,7 +238,7 @@ export function getSrcImportEnry({star, moduleName, fsPath}: {star?: boolean, mo
     .replace('.tsx', '')
     .replace('.ts', '')
 
-  return `import ${star ? '* as ' : ''}${moduleName} from '@src/${from}'\n`
+  return `import ${addType ? 'type' : ''} ${star ? '* as ' : ''}${moduleName} from '@src/${from}'\n`
 }
 
 

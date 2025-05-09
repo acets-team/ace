@@ -42,7 +42,7 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
    *     - [3] → path
    *     - [5] → optional function name
    */
-  const regex = /export\s+const\s+(GET|POST)\s*=\s*new\s+API\(\s*(['"])(.+?)\2\s*\)(?:[\s\S]*?\.fn\(\s*(['"])([A-Za-z_]\w*)\4\s*\))?/g
+  const regex = /export\s+const\s+(GET|POST)\s*=\s*new\s+API\(\s*(['"])(.+?)\2(?:\s*,\s*(['"])([A-Za-z_]\w*)\4)?\s*\)/g
 
   for (const matches of content.matchAll(regex)) {
     const apiMethod = matches[1]
@@ -58,11 +58,11 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
         build.writes.apiFunctionsBE += `export const ${fnName} = createAPIFunction(${apiName})\n`
 
         build.writes.apiFunctionsFE += `\nexport const ${fnName}: APIFunction<typeof ${apiName}> = async (o) => {
-  return getFE().GET('${apiPath}', o)
+  return getFE().${apiMethod}('${apiPath}', o)
 }\n`
 
         // only add an import to the fe if a fnAlias was requested
-        build.writes.importsAPIFE += getSrcImportEnry({ moduleName: apiMethod + build.counts[apiMethod], fsPath, star: true })
+        build.writes.importsAPIFE += getSrcImportEnry({ moduleName: apiMethod + build.counts[apiMethod], fsPath, star: true, addType: true })
       }
 
       switch (apiMethod) {

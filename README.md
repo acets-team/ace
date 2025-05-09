@@ -16,18 +16,19 @@
 ## ✅ Got Features?!
 ### Standard
 1. [Free](#-how-to-deploy) global hosting, 💸 thanks to [Cloudflare](https://www.cloudflare.com/)! ☁️
-1. The initial `page load HTML` is created server-side for lovely `SEO` but then after that initial page load, enjoy **smooth** `Single Page App` routing & navigation! 🧚‍♀️ 
-1. If calling your API & already on the server, `call api endpoints as a function`, to **skip** HTTP, TCP & Serialization overhead! 🙌
-1. On **update**... Only **update**... What **updated**  💪 all **thanks** to [Solid](https://www.solidjs.com/)! 🙏
+1. From the **server** or **browser**, call your **API endpoints** as a `typesafe` **function**!
 1. **`In editor`**, **`autocomplete`** & **`typesafety`** @:
     - Anchor Tags 🔗
     - Frontend & Backend Redirects 🔀
     - API Requests started server side during page load 🌐
     - Async API Requests started in the browser after page load 💫
+1. The initial `page load HTML` is created server-side for lovely `SEO` but then after that initial page load, enjoy **smooth** `Single Page App` routing & navigation! 🧚‍♀️ 
+1. On **update**... Only **update**... What **updated**  💪 all **thanks** to [Solid](https://www.solidjs.com/)! 🙏
+
 
 
 ### Security
-1. Smaller than a photo 📸 b/c even when **unminified** `Ace` is less then **`180 kB`**, requires **`0 dependencies`** & was built to be tree shaked! 🌳
+1. Smaller than a photo 📸 b/c even when **unminified** `Ace` is less then **`300 kB`**, requires **`0 dependencies`** & was built to be tree shaked! 🌳
 1. Simplify cookies, sessions & auth, thanks to the `set()`, `get()` & `clear()`, session data helpers! 🚨 
 1. Like middleware, run `async` functions **before** your `route`'s or `api`'s boot! 🔐
 
@@ -63,7 +64,7 @@
 ```tsx
 import { API } from '@ace/api'
 
-export const GET = new API('/api/aloha')
+export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api endpoint @ the path /api/aloha AND we can call the function apiAloha() app-wide w/ request & response typesafety!
   .resolve(async (be) => {
     return be.json({ aloha: true })
   })
@@ -75,7 +76,7 @@ export const GET = new API('/api/aloha')
 ```tsx
 import { API } from '@ace/api'
 
-export const GET = new API('/api/aloha/:id')
+export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
   .resolve(async (be) => {
     return be.json({ params: be.getParams() })
@@ -89,7 +90,7 @@ export const GET = new API('/api/aloha/:id')
 import { API } from '@ace/api'
 import { authB4 } from '@src/lib/b4'
 
-export const GET = new API('/api/aloha')
+export const GET = new API('/api/aloha', 'apiAloha')
   .b4(authB4) // run the `authB4()` async function before this api boots!
   .resolve(async (be) => {
     return be.json({ aloha: true })
@@ -125,7 +126,7 @@ import { mongoConnect } from '@ace/mongoConnect'
 import { signInSchema, SignInSchema } from '@src/schemas/SignInSchema'
 
 
-export const POST = new API('/api/sign-in')
+export const POST = new API('/api/sign-in', 'apiSignIn')
   .b4(guestB4)
   .body<SignInSchema>() // tells .resolve() & app-wide the request body this api requires
   .resolve((be) => {
@@ -236,10 +237,9 @@ export default new Route404()
 - Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
 - If this page is refreshed, data begins gathering on the server
 - If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser
-- First w/in your API definition
-    1. Specify `.fn('apiCharacter')`
-    1. Place the function name you want in there
-- & then to use it:
+- How to:
+    1. First w/in your API definition: `export const GET = new API('/api/character/:element', 'apiCharacter')`
+    1. & then call your API w/in the `route` or `layout` as many times as ya ❤️:
     ```tsx
     import '@ace/shimmer.styles'
     import { load } from '@ace/load'
@@ -286,7 +286,7 @@ export default new Route404()
 
 ### Infer! 🧚‍♀️
 - In the example above we use `InferParseFn`
-- When using an `Infer`, example: `InferParseFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` jas this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
+- When using an `Infer`, example: `InferParseFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` has this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
     - **`✅ InferParseFn`**
         - Autocomplete: **All API Functions**
         - Type: **API Function Response**
@@ -309,16 +309,17 @@ export default new Route404()
         - Example: `InferParamsRoute<'/example/:id'>`
 ### Form! ✨
 ```tsx
+import { clear } from '@ace/clear'
+import { Route } from '@ace/route'
+import { Submit } from '@ace/submit'
+import { apiSignUp } from '@ace/apis'
 import { Title } from '@solidjs/meta'
 import { guestB4 } from '@src/lib/b4'
 import RootLayout from '../RootLayout'
-import { clear } from '@ace/clear'
-import { Route } from '@ace/route'
 import GuestLayout from './Guest.Layout'
-import { Submit } from '@ace/submit'
 import { Messages } from '@ace/messages'
-import { signUpSchema } from '@src/schemas/SignUpSchema'
 import { createOnSubmit } from '@ace/createOnSubmit'
+import { signUpSchema } from '@src/schemas/SignUpSchema'
 
 
 export default new Route('/sign-up/:sourceId?')
@@ -331,7 +332,7 @@ export default new Route('/sign-up/:sourceId?')
         password: fd('password')
       }) 
 
-      await fe.POST('/api/sign-up', { body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & this path & body have autocomplete!
+      await apiSignUp({ body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & the body has autocomplete!
     })
 
     return <>
@@ -383,59 +384,12 @@ export default new Route('/sign-up/:sourceId?')
 1. For each item here, tell cloudflare about it, example: `npx wrangler secret put SESSION_CRYPT_PASSWORD`
 1. Bash: `ace build prod` or `npx ace build prod` (`npx` is required when a `-g` is not done @ `npm i`)
 1. Navigate to `Workers & Pages` > `Your Project` > `Deployments`
-1. 💫 Push to GitHub aka Deploy!
+1. 💫 Push to GitHub aka **Deploy**! ❤️
 
 
 ![Bunnies writing code](https://i.imgur.com/d0wINvM.jpeg)
 
 
-## 💖 FAQ
-1. How to show intellisense dropdown in VS Code?
-    - `Control` + `Space`
-    
-1. How to reload VS Code?
-    - `Command` + `Shift` + `P`
-    - Type: `reload window`
-    - Press `Enter`
-
-1. How to open VS Code `settings.json`
-    - `Command` + `Shift` + `P`
-    - Type: `user settings json`
-    - Press `Enter`
-
-1. How to get VS Code to create `<div class="example"></div>` on `.example`
-    - @ VS Code `settings.json` add:
-        ```json
-        {
-          "emmet.includeLanguages": {
-            "typescriptreact": "html",
-            "javascriptreact": "html"
-          }
-        }
-        ```
-    - Reload VS Code!
-
-1. How to run `code .` in VS Code `bash` & have it open a new VS Code in that directory
-    - `Command` + `Shift` + `P`
-    - Type: `Shell Command: Install 'code' command in PATH`
-    - Press `Enter`
-
-1. How to get the alter icon for `.tsx` files in VS Code
-    - Download the `Symbols` extension by `Miguel Solorio`
-    - Bash cd into `~/.vscode/extensions/`
-    - Bash cd `miguelsolorio.symbols-` w/ the proper version
-    - Bash: `code .`
-    - @ `/src/icons/files/` place image
-    - @ `/src/symbol-icon-theme.json` w/in `iconDefinitions` place `"ace": { "iconPath": "./icons/files/[ image name & extension ]" },`
-    - @ `fileExtensions` update `"tsx": "ace",` & anywhere else ya love!
-    - @ VS Code `settings.json` add:
-        ```js
-        "symbols.files.associations": {
-          "*.jsx": "ace",
-          "*.tsx": "ace"
-        }
-        ```
-    - Reload VS Code!
-
-1. Gotta errors dictionary?
-    -  [Yes please!](https://github.com/acets-team/ace/blob/main/README_ERRORS.md)
+## 💖 Next!
+- [FAQ](https://github.com/acets-team/ace/blob/main/README_FAQ.md)
+- [Error Dictionary](https://github.com/acets-team/ace/blob/main/README_ERRORS.md)

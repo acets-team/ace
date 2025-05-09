@@ -1,8 +1,7 @@
 import { API } from '../fundamentals/api'
 
 
-export const GET = new API('/api/a/:id')
-  .fn('apiA')
+export const GET = new API('/api/a/:id', 'apiA')
   .params<{id: string}>()
   .resolve(async (be) => {
     return be.json({ a: true })

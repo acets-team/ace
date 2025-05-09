@@ -8,8 +8,9 @@ import { Bits } from '../bits'
 import { feFetch } from '../feFetch'
 import { buildURL } from '../buildURL'
 import { FEMessages } from '../feMessages'
-import { createContext, JSX, useContext } from 'solid-js'
+import { getFEChildren } from '../feChildren'
 import { useParams, useLocation } from '@solidjs/router'
+import { createContext, JSX, useContext } from 'solid-js'
 import { createContextProvider } from './createContextProvider'
 import type { GET_Paths, InferParamsGET, POST_Paths, InferBodyPOST, InferParamsPOST, InferResponseGET, InferResponsePOST, URLParams, URLSearchParams } from './types'
 
@@ -22,13 +23,6 @@ import type { GET_Paths, InferParamsGET, POST_Paths, InferBodyPOST, InferParamsP
  *     - Also holds the current params & location
  */
 export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParams = {}> {
-  /**
-   * Why protected & not private?
-   *    - If private: TypeError: Receiver must be an instance of class FE at Proxy.GET
-   *    - B/c the FE instance is wrapped in a Proxy
-   *    - Class-private fields/methods can only be accessed on the raw instance itself—not on a proxy around it
-   */
-  protected _children: JSX.Element
   bits = new Bits()
   messages = new FEMessages()
 
@@ -85,19 +79,9 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * - With `Ace` only a `Layout` has children btw, routes do not
    */
   getChildren(): JSX.Element | undefined {
-    return (this as any)[childrenSym];
+    return getFEChildren(this)
   }
 }
-
-
-/** allows us to have a public getChildren & a private setChildren */
-const childrenSym = Symbol('FE.children')
-
-function _setChildren(fe: FE, c: JSX.Element) {
-  (fe as any)[childrenSym] = c;
-}
-
-export { _setChildren }
 
 
 /**

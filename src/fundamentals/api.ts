@@ -12,25 +12,22 @@ import type { APIBody, URLSearchParams, URLParams, B4 } from './types'
 
 
 /** - Create a GET or POST, API endpoint */
-export class API<
-  T_Params extends APIBody = {},
-  T_Search extends URLSearchParams = {},
-  T_Body extends URLParams = {},
-  T_Response extends any | unknown = unknown
-> {
+export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams = {}, T_Body extends URLParams = {}, T_Response extends any | unknown = unknown> {
   public readonly values: {
     path: string
     pattern: RegExp
     b4?: B4
-    resolve?: APIFn<T_Params, T_Search, T_Body, T_Response>,
+    resolve?: APIResolveFunction<T_Params, T_Search, T_Body, T_Response>,
     fn?: string
   }
 
-  constructor(path: string) {
+  constructor(path: string, fnName?: string) {
     this.values = {
       path,
       pattern: pathnameToPattern(path),
     }
+
+    if (fnName) this.values.fn = fnName
   }
 
 
@@ -81,8 +78,8 @@ export class API<
       })
     ```
     */
-    resolve<T_Resolve_Fn extends APIFn<T_Params, T_Search, T_Body, any>>(resolveFN: T_Resolve_Fn): API<T_Params, T_Search, T_Body, Awaited<ReturnType<T_Resolve_Fn>>> {
-      (this.values as any).resolve = resolveFN as any // bind values
+    resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, Awaited<ReturnType<T_Resolve_Fn>>> {
+      (this.values as any).resolve = resolveFunction as any // bind values
 
       return this as unknown as API<
         T_Params,
@@ -92,16 +89,6 @@ export class API<
       >
     }
 
-
-  /**
-   * - When we are already server side we may want to call an endpoint (call api during page render)
-   * - Calling a function when server side rather then an http call allows us to bypass HTTP, TCP & Serialization overhead
-   * - From the FE, use fe.GET() and from the BE, just call the fn by name that is specified here!
-   */
-  fn(functionName: string): this {
-    this.values.fn = functionName
-    return this
-  }
 
   /**
    * ### Set the type for the url params
@@ -155,7 +142,7 @@ export class API<
 }
 
 
-export type APIFn<
+export type APIResolveFunction<
   T_Params extends URLParams,
   T_Search extends URLSearchParams,
   T_Body extends APIBody,

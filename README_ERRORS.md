@@ -22,3 +22,5 @@
 1. `Error Unknown error @ solid-js/dist/dev.js`
     - Fix any browser console errors
     - Standard Fix
+1. `Type [example] is not assignable to type 'IntrinsicAttributes & [example]. Property [example] does not exist on type 'IntrinsicAttributes & [example].ts(2322)`
+    - Ensure the props on your functional components are destructured so rather then `export function ExampleComponent(fe: FE)` it should be `export function ExampleComponent({ fe }: { fe: FE })` 
