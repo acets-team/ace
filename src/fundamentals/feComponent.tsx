@@ -14,7 +14,6 @@ import { clientOnly } from '@solidjs/start'
  * @example
  * 
   ```ts
-  import { getFE } from './fe'
   import { onCleanup, onMount } from 'solid-js'
   import { feComponent } from '@ace/feComponent'
 
@@ -31,8 +30,6 @@ import { clientOnly } from '@solidjs/start'
     function onClick(event: MouseEvent) {
       console.log('aloha')
     }
-
-    const fe = getFE()
 
     return <div>Hi, {props.name}!</div>
   })

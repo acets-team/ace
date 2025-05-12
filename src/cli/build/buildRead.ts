@@ -9,7 +9,7 @@ export async function buildRead(build: Build) {
     if (!build.config.appDir || typeof build.config.appDir !== 'string') throw new Error('❌ When using the solid plugin, `config.appDir` must be a truthy string')
 
     const [fsApp, fsSolidTypes] = await Promise.all([
-      readFile(join(build.dirRead, '../../../app.txt'), 'utf-8'),
+      readFile(join(build.dirRead, '../../../createApp.txt'), 'utf-8'),
       readFile(join(build.dirRead, '../../../types.d.txt'), 'utf-8'),
       readAPIDirectory(resolve(build.cwd, build.config.apiDir), build),
       readAppDirectory(resolve(build.cwd, build.config.appDir), build),
@@ -58,7 +58,7 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
         build.writes.apiFunctionsBE += `export const ${fnName} = createAPIFunction(${apiName})\n`
 
         build.writes.apiFunctionsFE += `\nexport const ${fnName}: APIFunction<typeof ${apiName}> = async (o) => {
-  return getFE().${apiMethod}('${apiPath}', o)
+  return fe.${apiMethod}('${apiPath}', o)
 }\n`
 
         // only add an import to the fe if a fnAlias was requested
@@ -104,17 +104,27 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
       if (!routePath) continue // this tsx file has no propertly formatted export default new Route or new Route404
   
       build.counts.routes++
+      const routeModuleName = 'route' + build.counts.routes
 
-      const route: BuildRoute = { fsPath, routePath, moduleName: `route_${build.counts.routes}` }
+      const route: BuildRoute = { fsPath, routePath, moduleName: routeModuleName }
 
       let node = build.tree
 
       if (fsLayouts.length === 0) node.routes.push(route) // if no layouts, it lives under root
       else {
         for (const fsLayoutPath of fsLayouts) {
-          if (!node.layouts.has(fsLayoutPath)) { // create that child node if it doesn't exist
+          let layoutModuleName
+
+          if (!build.layoutModuleNames.has(fsLayoutPath)) {
             build.counts.layouts++
-            node.layouts.set(fsLayoutPath, { moduleName: 'layout'+build.counts.layouts, fsPath: fsLayoutPath, routes: [], layouts: new Map() })
+            build.layoutModuleNames.set(fsLayoutPath, 'layout' + build.counts.layouts)
+          }
+
+          layoutModuleName = build.layoutModuleNames.get(fsLayoutPath)
+
+          if (layoutModuleName && !node.layouts.has(fsLayoutPath)) { // create that child node if it doesn't exist
+            build.counts.layouts++
+            node.layouts.set(fsLayoutPath, { moduleName: layoutModuleName, fsPath: fsLayoutPath, routes: [], layouts: new Map() })
           }
 
           node = node.layouts.get(fsLayoutPath)! // descend into it

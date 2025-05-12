@@ -35,7 +35,7 @@ import { onMount, type JSX } from 'solid-js'
  * 
  * @example
     ```tsx
-    import '@ace/loadSpin.styles.css'
+    import '@ace/loadSpin.styles'
     import { Route } from '@ace/route'
     import { createSignal, For, Show } from 'solid-js'
     import { AnimatedFor, ForAnimator } from '@ace/animatedFor'

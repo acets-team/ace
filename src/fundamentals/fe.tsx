@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { FE, getFE } from '@ace/fe'
+ *     - import { fe, FEContextProvider } from '@ace/fe'
  */
 
 
@@ -10,9 +10,29 @@ import { buildURL } from '../buildURL'
 import { FEMessages } from '../feMessages'
 import { getFEChildren } from '../feChildren'
 import { useParams, useLocation } from '@solidjs/router'
-import { createContext, JSX, useContext } from 'solid-js'
-import { createContextProvider } from './createContextProvider'
+import { createContext, type JSX, type ParentComponent } from 'solid-js'
 import type { GET_Paths, InferParamsGET, POST_Paths, InferBodyPOST, InferParamsPOST, InferResponseGET, InferResponsePOST, URLParams, URLSearchParams } from './types'
+
+
+export let fe!: FE // the "!" tells ts: we'll assign this before it’s used but, ex: if a fe.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error 
+
+
+export const FEContext = createContext<FE | null>(null)
+
+
+/**
+ * - Wrap app w/ Provider
+ * - Assign exported fe
+ */
+export const FEContextProvider: ParentComponent = (props) => {
+  fe = new FE<{}, {}>()
+
+  return <>
+    <FEContext.Provider value={fe}>
+      {props.children}
+    </FEContext.Provider>
+  </>
+}
 
 
 /** 
@@ -82,28 +102,3 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
     return getFEChildren(this)
   }
 }
-
-
-/**
- * - Typically called when you'd love the fe object in a custom component & don't wanna prop drill
- * @example
-  ```ts
-  import { getFE } from '@ace/fe'
-
-  export function CustomComponent() {
-    const fe = getFE()
-    // ...
-  }
-  ```
- */
-export function getFE(): FE {
-  const fe = useContext(FEContext)
-
-  if (!fe) throw new Error("Please ensure getFE()` is called inside <FEContextProvider> AND not too deep in callbacks!")
-
-  return fe
-}
-
-export const FEContext = createContext(new FE())
-
-export const FEContextProvider = createContextProvider(FEContext)

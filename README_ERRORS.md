@@ -12,7 +12,7 @@
 
 ## 🔔 Errors
 1. `TypeError: Comp is not a function at createComponent`
-    - Ensure `app.tsx` has `import { createApp } from '@ace/app'` and `export default createApp()`
+    - Ensure `app.tsx` has `import { createApp } from '@ace/createApp'` and `export default createApp()`
     - Standard Fix
 1. `Error: <A> and 'use' router primitives can be only used inside a Route.`
     - This is typically caused by something in the default export function @ `app.tsx` that should not be there, like `useParams()` or `useLocation()`. This function must only have items like  `<Router />`, `<FileRoutes />` or `<Route />`. Then w/in the component functions of the route or layout we may use router primatives

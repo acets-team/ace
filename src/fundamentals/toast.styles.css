@@ -1,0 +1,128 @@
+#ace-toast-wrapper {
+  position: fixed;
+  top: 0.9rem;
+  width: 45rem;
+  left: 50%;
+  margin-left: -22.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+
+  .toast {
+    overflow: hidden;
+    margin-bottom: 0.9rem;
+    padding: 1.2rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    color: rgb(214, 217, 223);
+    border: 1px solid rgb(55, 65, 81);
+    background-color: rgb(31, 41, 55);
+    animation: toast-animation 0.9s;
+    transition: all 0.6s ease;
+    max-width: calc(100vw - 3rem);
+    &.success .icon {
+      color: rgb(3, 84, 63);
+      border: 1px solid rgb(14, 159, 110);
+      background-color: rgb(188, 240, 218);
+    }
+    &.info .icon {
+      color: rgb(30, 66, 159);
+      border: 1px solid rgb(63, 131, 248);
+      background-color: rgb(195, 221, 253);
+    }
+
+    ul, span {
+      flex: auto;
+    }
+
+    ul {
+      padding: 0;
+      margin: 0 0 0 1.8rem;
+
+      li {
+        margin: 0.3rem 0;
+      }
+    }
+
+    .icon-wrapper {
+      flex-grow: 0;
+      flex-shrink: 0;
+      width: 3.6rem;
+      height: 3.6rem;
+      min-width: 3.6rem;
+      min-height: 3.6rem;
+      margin-right: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius:0.9rem;
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 3.6rem;
+        min-width: 3.6rem;
+        height: 3.6rem;
+        min-height: 3.6rem;
+
+        svg {
+          flex-grow: 0;
+          flex-shrink: 0;
+          width: 2.4rem;
+          min-width: 2.4rem;
+          height: 2.4rem;
+          min-height: 2.4rem;
+        }
+      }
+    }
+
+    .close {
+      border: 1px solid transparent;
+      background-color: transparent;
+      border-radius: 50%;
+      color: rgb(156, 163, 175);
+      transition: all 0.15s;
+      margin: 0 0 0 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 0;
+      flex-shrink: 0;
+      height: 2.97rem;
+      min-height: 2.97rem;
+      width: 2.97rem;
+      min-width: 2.97rem;
+      &:hover {
+        cursor: pointer;
+        border-color: rgb(117, 126, 139);
+        background-color: rgb(75, 85, 99);
+      }
+
+      svg {
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 1.8rem;
+        min-width: 1.8rem;
+        height: 1.8rem;
+        min-height: 1.8rem;
+      }
+    }
+  }
+}
+
+@keyframes toast-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(-9rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

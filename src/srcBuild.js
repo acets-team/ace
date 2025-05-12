@@ -10,7 +10,7 @@ try {
   const distDir = join(cwd, 'dist')
 
   const promises = [
-    copyFile(join(cwd, 'src/fundamentals/app.tsx'), join(distDir, `app.txt`)),
+    copyFile(join(cwd, 'src/fundamentals/createApp.tsx'), join(distDir, `createApp.txt`)),
     copyFile(join(cwd, 'src/index.ts'), join(distDir, `index.d.ts`)), // ts does not show errors in .d.ts files so we start w/o it to get intellisense & then use it to inform ts, only declarations in here
     copyFile(join(cwd, 'src/fundamentals/types.ts'), join(distDir, `types.d.txt`)),
   ]

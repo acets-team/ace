@@ -5,7 +5,7 @@
  */
 
 
-import { getFE } from './fe'
+import { fe } from './fe'
 
 
 /**
@@ -21,8 +21,8 @@ import { getFE } from './fe'
  * @example
  * ```ts
  * const onSubmit = createOnSubmit(async (fd) => {
- *   const body = exampleSchema.parse({ email: fd('email') })
- *   await fe.POST('/api/example', { body, bitKey: 'example' }) // a bit is a boolean signal
+ *   const body = signUpSchema.parse({ email: fd('email') })
+ *   await apiSignUp({ body, bitKey: 'save' }) // a bit is a boolean signal
  * })
  * ```
  * 
@@ -33,8 +33,6 @@ import { getFE } from './fe'
  * @param callback.event - The 2nd param provided to `callback()`. The `event`, of type `SubmitEvent`, is typically used when `fd()` is not low level enough
  */
 export function createOnSubmit(callback: OnSubmitCallback) {
-  const fe = getFE()
-
   return async function (event: SubmitEvent) {
     try {
       event.preventDefault()

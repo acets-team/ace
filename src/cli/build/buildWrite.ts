@@ -36,7 +36,7 @@ function getPromises(build: Build) {
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' }),
       fsWrite({ build, dir: build.dirWriteRoot, content: renderApisBE(build), fileName: 'apis.be.ts' }),
       fsWrite({ build, dir: build.dirWriteRoot, content: renderApisFE(build), fileName: 'apis.fe.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApp(build), fileName: 'app.tsx' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderCreateApp(build), fileName: 'createApp.tsx' }),
     )
   }
 
@@ -93,7 +93,7 @@ ${build.writes.apiFunctionsBE}
 
 
 function renderApisFE(build: Build) {
-  return `import { getFE } from './fundamentals/fe'
+  return `import { fe } from './fundamentals/fe'
 import type { APIFunction } from './fundamentals/types' 
 
 ${build.writes.importsAPIFE}
@@ -105,54 +105,34 @@ ${build.writes.apiFunctionsFE}`
 }
 
 
-
-function renderApp(build: Build) {
+function renderCreateApp(build: Build) {
   let imports = ''
-  let {routes, importsMap, consts} = walkTree(build.tree)
+  let { routes, importsMap, consts } = walkTree(build.tree)
 
   importsMap.forEach((moduleName, fsPath) => {
     imports += getSrcImportEnry({moduleName, fsPath})
   })
 
-  build.noLayoutRoutes.forEach(route => {
-    imports += getSrcImportEnry({ moduleName: route.moduleName, fsPath: route.fsPath })
-    if (route.routePath !== '*') consts += getConstEntry(route.routePath, route.moduleName) // if 404 is in consts then it'd be routes & then it'd be in <A />
-    routes += `          <Route path="${route.routePath}" component={${renderRouteComponent(route.moduleName)}} ${renderRouteMatchFilters(route)} />\n`
-  })
+  const gen1 = '/** gen1 */'
+  const gen2 = '/** gen2 */'
 
-  const marker = '/** gen */'
-  const marker1Index = build.fsApp?.indexOf(marker) || 0
-  const marker2Index = build.fsApp?.indexOf(marker, marker1Index + marker.length) || 0 // start searching after marker 1
+  if (!build.fsApp) throw new Error('!build.fsApp')
+ 
+  const startGen1 = build.fsApp.indexOf(gen1)
+  const endGen2 = build.fsApp.indexOf(gen2) + gen2.length
 
-  // aggregate dynamic data
-  const dynamic = `${imports}\n
-export const routes = {
-${consts.slice(0,-2)}
-}
-${build.space}
-/** 
-* - Returns a function that when called provided an <App /> component
-*/
-export function createApp(Root = InternalRouterRoot) {
-  return function () {
-    return <>
-      <Router root={Root}>
-        <FileRoutes />
-${routes.slice(0,-1)}
-      </Router>
-    </>
-  }
-}
-`
-  /**
-   * - Part 1: `this.fsApp?.slice(0, marker1Index)`
-   * - Part 2: `dynamic`
-   * - Part 3: `this.fsApp?.slice(marker2Index + marker.length)`
-   *     - Adding the marker length allows us to remove the marker from the output
-   */
-  const content = build.fsApp?.slice(0, marker1Index) + dynamic + build.fsApp?.slice(marker2Index + marker.length)
+  const beforeGen1 = build.fsApp.slice(0, startGen1)
+  const afterGen2 = build.fsApp.slice(endGen2)
 
-  return content
+  const dynamicBlock = `${imports}\n\nexport const routes = {\n${consts.slice(0, -2)}\n}\n`
+
+  let replaced = beforeGen1 + dynamicBlock + afterGen2
+
+  const gen3 = '{/* gen3 */}'
+  const jsxRoutes = routes.trimEnd()
+  replaced = replaced.replace(gen3, jsxRoutes)
+
+  return replaced
 }
 
 

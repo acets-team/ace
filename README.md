@@ -192,8 +192,8 @@ export default new Layout()
 ### Route! 🌟
 ```tsx
 import { A } from '@ace/a'
-import { Title } from '@solidjs/meta'
 import { Route } from '@ace/route'
+import { Title } from '@solidjs/meta'
 
 
 export default new Route('/yin') // this route uses no layouts!
@@ -246,7 +246,7 @@ export default new Route404()
     import { Route } from '@ace/route'
     import { Suspense } from 'solid-js'
     import { apiCharacter } from '@ace/apis'
-    import type { InferParseFn } from '@ace/types'
+    import type { InferLoadFn } from '@ace/types'
     import type { InferEnums } from '@ace/paramEnums'
     import type { elementEnums } from '@src/lib/vars'
 
@@ -261,7 +261,7 @@ export default new Route404()
         return <Characters res={{ air, fire, earth, water }} />
       })
 
-    function Characters({ res }: { res: Record<InferEnums<typeof elementEnums>, InferParseFn<'apiCharacter'>> }) {
+    function Characters({ res }: { res: Record<InferEnums<typeof elementEnums>, InferLoadFn<'apiCharacter'>> }) {
       return <>
         <div class="characters">
           <Character element={res.fire} />
@@ -273,7 +273,7 @@ export default new Route404()
     }
 
 
-    function Character({ element }: { element: InferParseFn<'apiCharacter'> }) {
+    function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) {
       return <>
         <div class="character">
           <Suspense fallback={<div class="shimmer"></div>}>
@@ -285,12 +285,12 @@ export default new Route404()
     ```
 
 ### Infer! 🧚‍♀️
-- In the example above we use `InferParseFn`
-- When using an `Infer`, example: `InferParseFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` has this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
-    - **`✅ InferParseFn`**
+- In the example above we use `InferLoadFn`
+- When using an `Infer`, example: `InferLoadFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` has this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
+    - **`✅ InferLoadFn`**
         - Autocomplete: **All API Functions**
         - Type: **API Function Response**
-        - Example: `InferParseFn<'apiCharacter'>`
+        - Example: `InferLoadFn<'apiCharacter'>`
     - **`✅ InferResponseGET`**
         - Autocomplete: **Path to each api GET**
         - Type: **API Response Body**

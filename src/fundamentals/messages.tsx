@@ -4,7 +4,7 @@
  */
 
 
-import { getFE } from './fe'
+import { fe } from './fe'
 import { feComponent } from './feComponent'
 import { DEFAULT_MESSAGE_NAME } from './vars'
 import { For, Show, type JSX } from 'solid-js'
@@ -20,7 +20,6 @@ import { For, Show, type JSX } from 'solid-js'
  * options.name - Messages are grouped by name
  */
 export const Messages = feComponent(({ name = DEFAULT_MESSAGE_NAME, ...props }: { name?: string } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const fe = getFE()
   const [messages] = fe.messages.get(name)
 
   return <>

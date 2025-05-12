@@ -7,8 +7,8 @@
 import type { FE } from './fe'
 import type { API } from './api'
 import type { JSX } from 'solid-js'
-import type { routes } from './app'
 import type { Route } from './route'
+import type { routes } from './createApp'
 import type * as apisFE from '../apis.fe'
 import type * as apisBE from '../apis.be'
 import type { AccessorWithLatest, redirect } from '@solidjs/router'
@@ -140,10 +140,10 @@ type ApiFunctionKeys = {
 
 
 /**
- * - `function name` to an `API` => type for `beParse()` response
- * - Helpful when you've done `const lorem = beParse(() => _lorem())` and want the type for lorem
+ * - `function name` to an `API` => type for `load()` response
+ * - Helpful when you've done `const example = load(() => apiExample(), 'example')` and want the type for example
  */
-export type InferParseFn<T_Function_Name extends ApiFunctionKeys> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisFE)[T_Function_Name]>>>
+export type InferLoadFn<T_Function_Name extends ApiFunctionKeys> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisFE)[T_Function_Name]>>>
 
 
 /**
