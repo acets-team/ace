@@ -7,7 +7,7 @@
 import { onMount, createEffect, createSignal, createContext, For, Show, ParentComponent } from 'solid-js';
 
 
-export let showToast: ShowToast = () => { // if we call showToast() before mounting the provider (which does showToast = _showToast) => error
+export let showToast: ShowToast = () => { // if we call showToast() before mounting the ToastProvider => error
   throw new Error('showToast() was called outside before mounting a wrapper <ToastProvider>')
 }
 

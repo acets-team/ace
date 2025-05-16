@@ -2,8 +2,8 @@
 * 🧚‍♀️ How to access:
 *     - import { createApp } from '@ace/createApp'
 */
-  
-  
+
+
 import { Layout } from './layout'
 import { Route404 } from './route404'
 import { Route as AceRoute } from './route'
@@ -13,7 +13,7 @@ import { setFEChildren } from '../feChildren'
 import { FileRoutes } from '@solidjs/start/router'
 import { MessagesCleanup } from '../messagesCleanup'
 import { Suspense, type JSX, type ParentComponent } from 'solid-js'
-import { Route, Router, type RouteSectionProps } from '@solidjs/router' // Route is used by gen3
+import { Route, Router, type RouteSectionProps } from '@solidjs/router'
 
 
 
@@ -47,6 +47,19 @@ export const routes = {
 /** 
  * @param wrappers - The first wrapper is the outermost, default is `[FEContextProvider, MetaProvider, Suspense]`
  * @returns A function that when called provided an <App /> component
+ * @example
+```ts
+import './app.css'
+import '@ace/toast.styles'
+import { Suspense } from 'solid-js'
+import { createApp } from '@ace/createApp'
+import { ToastProvider } from '@ace/toast'
+import { FEContextProvider } from '@ace/fe'
+import { MetaProvider } from '@solidjs/meta'
+
+
+export default createApp([ToastProvider, FEContextProvider, MetaProvider, Suspense])
+```
  */
 export function createApp(wrappers: ParentComponent<any>[] = [FEContextProvider, MetaProvider, Suspense]) {
   const Root: ParentComponent<any> = (props: RouteSectionProps) => {

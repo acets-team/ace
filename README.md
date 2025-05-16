@@ -79,7 +79,8 @@ import { API } from '@ace/api'
 export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
   .resolve(async (be) => {
-    return be.json({ params: be.getParams() })
+    const {id} = be.getParams() // typesafe!
+    return be.json({ id })
   })
 ```
 
