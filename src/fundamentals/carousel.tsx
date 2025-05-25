@@ -41,11 +41,11 @@ import type { JSX } from 'solid-js'
  * </>
  * ```
  */
-export function Carousel({ items, duplicateCount = 2 }: { items: JSX.Element, duplicateCount?: number }) {
+export function Carousel({ items, duplicateCount = 2, ...props }: { items: JSX.Element, duplicateCount?: number } & JSX.HTMLAttributes<HTMLDivElement>) {
   if (!duplicateCount || typeof duplicateCount !== 'number' || duplicateCount < 2) duplicateCount = 2
 
   return <>
-    <div class="carousel">
+    <div class="ace-carousel" {...props}>
       <div class="loops">
         {
           // To create a real seamless loop, we must physically duplicate the items, not just by reference

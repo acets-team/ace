@@ -76,6 +76,8 @@ export const fundamentals = new Map([
   ['session', new Fundamental('ts', 'solid', 'copy')],
   ['shimmer.styles', new Fundamental('css', 'solid', 'copy')],
   ['submit', new Fundamental('tsx', 'solid', 'copy')],
+  ['tabs', new Fundamental('tsx', 'solid', 'copy')],
+  ['tabs.styles', new Fundamental('css', 'solid', 'copy')],
   ['toast', new Fundamental('tsx', 'solid', 'copy')],
   ['toast.styles', new Fundamental('css', 'solid', 'copy')],
   ['types', new Fundamental('ts', 'solid', 'custom')],

@@ -1,5 +1,9 @@
 # 👷‍♀️ FAQ!
 
+1. How to speak to `ChatGPT` about `Ace`?!
+    - I love to preface prompts w/ this:
+    - This code is coming from Ace, which is a framework that is Solid Start w/ additional type safety!
+
 1. How to show intellisense dropdown in VS Code?
     - `Control` + `Space`
     

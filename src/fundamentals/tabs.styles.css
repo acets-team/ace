@@ -1,0 +1,74 @@
+.ace-tabs {
+  &.pill,
+  &.classic {
+    .marker {
+      top: 0;
+      left: 0;
+      background: rgba(0, 123, 255, 0.1);
+      border-radius: 0.9rem 0.9rem 0 0;
+      transition: all 0.3s ease;
+      will-change: transform, width, height, opacity;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .tab.active {
+      color: #007bff;
+    }
+  }
+  &.underline {
+    .marker {
+      bottom: 0;
+      border-radius: 3rem;
+      height: 0.3rem;
+      background: #007bff;
+      transition: transform 0.3s ease, width 0.3s ease;
+      will-change: transform, width;
+    }
+
+    .tab.active {
+      color: #007bff;
+    }
+  }
+  &.pill .marker {
+    border-radius: 999px;
+  }
+
+  .tabs {
+    position: relative;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scrollbar-color: transparent transparent;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .marker {
+      position: absolute;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 0.3s;
+      color: #444;
+      position: relative;
+      z-index: 1;
+      &:hover {
+        color: #007bff;
+      }
+    }
+  }
+
+  .tab-contents {
+    margin-top: 6px;
+
+    .tab-content {
+      display: none;
+      &.active {
+        display: block;
+      }
+    }
+  }
+}
