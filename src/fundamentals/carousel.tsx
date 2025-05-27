@@ -2,58 +2,79 @@
  * 🧚‍♀️ How to access:
  *     - import '@ace/carousel.styles'
  *     - import { Carousel } from '@ace/carousel'
+ *     - import type { CarouselProps } from '@ace/carousel'
  */
 
 
-
-import type { JSX } from 'solid-js'
+import { For, onMount, type JSX } from 'solid-js'
 
 
 /**
- * - Create a carousel that pauses on hover and is swipable on moble w/ super simple code
- * - 1st prop is `items` which is the `For` component
- * - 2nd optional prop is `duplicateCount` which defaults to 2, we duplicate the list atleast twice so that when we get to the end there are items shown, if you want more duplicates use this prop, if `duplicateCount` is falsy of less then 2, we set it to 2
- * - B/c of how solid jsx works, this component will not work correclty if `items` or its child items are the same and just referenced, the items must be different, which is typical from a db, but not in testing, so for testing use an array where each item is unique and not just a reference to the same item and all will work gr8, as seen in the example below 🙌
- * 
- * ---
- * 
+ * ### Create a carousel that pauses on hover and is swipable on mobile
+ * @param items - `() => JSX.Element` - Anonymous function that returns a `For` component
+ * @param duplicateCount - `number` - Default / Minimum = 2 - So there are more items at the end of the carousel
+ * @param speed - `number` - Pixels per second - Default is 81
  * @example
- * ```css
- * .carousel { width: 150px; }
- * .carousel .loops { animation-duration: 15s !important; }
- * .carousel .loops .goal { width: 90px; margin-right: 18px; }
- * ```
- * 
- * ---
- * 
- * @example
- * ```tsx
- * const goals = [{title: 'relax 🏖️'}, {title: 'bliss 🌤️'}, {title: 'peace 🧘‍♀️'}]
- * 
- * return <> 
- *   <Carousel items={
- *     <For each={goals}>{
- *       (o) => <>
- *         <div class="goal">{o.title}</div>
- *       </>
- *     }</For>
- *   </Carousel>
- * </>
- * ```
+  ```tsx
+    const goals = [{title: 'relax 🏖️'}, {title: 'bliss 🌤️'}, {title: 'peace 🧘‍♀️'}]
+
+    return <> 
+      <Carousel id="carousel" style="width: 21rem" duplicateCount={3} items={() =>
+        <For each={goals}>{
+          (o) => <>
+            <div style="width: 9rem; text-align: center;">{o.title}</div>
+          </>
+        }</For>
+      }/>
+    </>
+  ```
  */
-export function Carousel({ items, duplicateCount = 2, ...props }: { items: JSX.Element, duplicateCount?: number } & JSX.HTMLAttributes<HTMLDivElement>) {
-  if (!duplicateCount || typeof duplicateCount !== 'number' || duplicateCount < 2) duplicateCount = 2
+export function Carousel({ items, duplicateCount = 2, speed = 81, ...props }: CarouselProps) {
+  if (duplicateCount < 2) duplicateCount = 2
+
+  let divLoops: undefined | HTMLDivElement
+
+  const loops = Array.from({ length: duplicateCount })
+
+  onMount(async () => {
+    if (!divLoops) return
+
+    const imgs = Array.from(divLoops.querySelectorAll('img')) as HTMLImageElement[];
+
+    if (imgs.length) {
+      await Promise.all( // allow images to load b4 checking total width
+        imgs.map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((resolve) => { img.onload = img.onerror = () => resolve()}) // IF onload or onerror => resolve
+        )
+      )
+    }
+
+    const firstLoop = divLoops.children[0] as HTMLElement
+    const loopWidth = firstLoop.getBoundingClientRect().width
+
+    divLoops.style.setProperty("--loop-width", `${loopWidth}px`)
+    divLoops.style.setProperty("--loop-duration", `${loopWidth / speed}s`) // loop width is total pixels to go, speed is pixels per second, so divinding gives us seconds
+  })
 
   return <>
-    <div class="ace-carousel" {...props}>
-      <div class="loops">
-        {
-          // To create a real seamless loop, we must physically duplicate the items, not just by reference
-          // Each .map() call creates a new set of DOM nodes
-          // The looped items aren’t just referenced, they’re actually rebuilt in memory & inserted `duplicateCount` times
-          [...Array(duplicateCount)].map(() => <div class="loop">{items}</div>)
-        }
+    <section class="ace-carousel" role="region" aria-label="Carousel" aria-roledescription="Carousel" {...props}>
+      <div class="loops" ref={divLoops}>
+        <For each={loops}>{
+          () => <div class="loop">{items()}</div>
+        }</For>
       </div>
-    </div>
+    </section>
   </>
+}
+
+
+type CarouselProps = JSX.HTMLAttributes<HTMLElement> & {
+  /** items to render */
+  items: () => JSX.Element
+  /** Carousel duplicates items so that at the end of the scroll there are more items to show, minimum / default is 2 */
+  duplicateCount?: number
+  /** px per second, default is 81 */
+  speed?: number
 }
