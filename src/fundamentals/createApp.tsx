@@ -50,7 +50,7 @@ export const routes = {
  * @example
 ```ts
 import './app.css'
-import '@ace/toast.styles'
+import '@ace/toast.styles.css'
 import { Suspense } from 'solid-js'
 import { createApp } from '@ace/createApp'
 import { ToastProvider } from '@ace/toast'

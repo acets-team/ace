@@ -1,3 +1,9 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/tabs.styles.css'
+ */
+
+
 .ace-tabs {
   &.pill,
   &.classic {

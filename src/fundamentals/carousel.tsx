@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import '@ace/carousel.styles'
+ *     - import '@ace/carousel.styles.css'
  *     - import { Carousel } from '@ace/carousel'
  *     - import type { CarouselProps } from '@ace/carousel'
  */

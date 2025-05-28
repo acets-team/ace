@@ -1,3 +1,9 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/toast.styles.css'
+ */
+
+
 #ace-toast-wrapper {
   position: fixed;
   top: 0.9rem;

@@ -1,0 +1,69 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/slideshow.styles.css'
+ */
+
+
+.ace-slideshow {
+  position: relative;
+  overflow: hidden;
+
+  .track {
+    position: relative;
+    width: 100%;
+  }
+
+  .slide {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+
+    &.active {
+      opacity: 1;
+      position: relative;
+    }
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+
+    .play {
+      display: flex;
+      align-items: center;
+
+      input {
+        margin-right: 0.6rem;
+        width: 1.71rem;
+        height: 1.71rem;
+      }
+    }
+  }
+
+  .dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+    gap: 0.5rem;
+
+    .dot {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 999px;
+      border: 1px solid #aaa;
+      background: #eee;
+      color: #000;
+      font-size: 0.75rem;
+      line-height: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      &.active {
+        background: #333;
+        color: #fff;
+      }
+    }
+  }
+}

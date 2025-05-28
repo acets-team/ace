@@ -24,7 +24,7 @@ export const Messages = feComponent(({ name = DEFAULT_MESSAGE_NAME, ...props }: 
 
   return <>
     <Show when={ messages()?.length }>
-      <div class="fun_messages" {...props}>
+      <div class="ace-messages" {...props}>
         <Show when={ messages().length > 1 } fallback={messages()[0]}>
           <ul>
             <For each={messages()}>{ (msg) => <li>{msg}</li> }</For>

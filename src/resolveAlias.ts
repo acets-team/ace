@@ -32,9 +32,10 @@ function getFundamentalsAlias(env: 'be' | 'fe', dir: string): Record<string, str
 
   for (const file of files) {
     const fsPath = path.join(fundamentalsRoot, file) // Get the full fs path to each item in the fundamentals directory
-    const { name } = path.parse(file) // file name
+    const { name, base, ext } = path.parse(file) // file name
 
-    aliasMap[`@ace/${name}`] = fsPath // standard
+    if (ext === '.css') aliasMap[`@ace/${base}`] = fsPath
+    else aliasMap[`@ace/${name}`] = fsPath // standard
   }
 
   aliasMap['@ace/apis'] = path.join(dir, `.ace/apis.${env}`) // overwrite apis to the proper env

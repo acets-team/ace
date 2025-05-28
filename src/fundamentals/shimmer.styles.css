@@ -1,4 +1,10 @@
-.shimmer {
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/shimmer.styles.css'
+ */
+
+
+.ace-shimmer {
   /** recommend setting these for custom styling */
   width: 100%;
   height: 1.8rem;

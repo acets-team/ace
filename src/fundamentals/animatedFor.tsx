@@ -35,7 +35,7 @@ import { onMount, type JSX } from 'solid-js'
  * 
  * @example
     ```tsx
-    import '@ace/loadSpin.styles'
+    import '@ace/load.styles.css'
     import { Route } from '@ace/route'
     import { createSignal, For, Show } from 'solid-js'
     import { AnimatedFor, ForAnimator } from '@ace/animatedFor'
@@ -60,7 +60,7 @@ import { onMount, type JSX } from 'solid-js'
         return <>
           <button onClick={onClick}>
             <Show when={fe.bits.isOn('example')} fallback="Click for Side In!">
-              <span class="load-spin--two"></span>
+              <span class="ace-load--two"></span>
             </Show>
           </button>
 

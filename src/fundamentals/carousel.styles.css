@@ -1,8 +1,14 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/carousel.styles.css'
+ */
+
+
 .ace-carousel {
   overflow: hidden;
   -ms-overflow-style: none;  /* IE/Edge */
   scrollbar-width: none;     /* Firefox */
-  &.ace-carousel::-webkit-scrollbar {
+  &::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
 
