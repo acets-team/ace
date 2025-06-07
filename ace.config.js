@@ -13,6 +13,7 @@ export const config = {
   ],
   plugins: {
     solid: true,
+    turso: true,
     valibot: true,
     mongoose: true,
   }

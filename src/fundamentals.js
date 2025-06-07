@@ -1,5 +1,5 @@
 // @ts-check
-// It is easiest for `fun build` to read js files, so that is why this is a js file
+// It is easiest for `ace build` to read js files, so that is why this is a js file
 
 
 /**
@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'mongoose' | 'valibot'} pluginName - Name of plugin
+   * @param {'solid' | 'valibot' | 'turso' | 'mongoose'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -39,6 +39,9 @@ export const fundamentals = new Map([
   ['beMessages', new Fundamental('ts', 'solid', 'helper')],
   ['buildURL', new Fundamental('ts', 'solid', 'helper')],
   ['clear', new Fundamental('ts', 'solid', 'copy')],
+  ['cms', new Fundamental('ts', 'turso', 'copy')],
+  ['cmsApi', new Fundamental('ts', 'turso', 'copy')],
+  ['cmsSQL', new Fundamental('ts', 'turso', 'copy')],
   ['createApp', new Fundamental('tsx', 'solid', 'custom')],
   ['createOnSubmit', new Fundamental('ts', 'solid', 'copy')],
   ['dateTimeFormat', new Fundamental('tsx', 'solid', 'copy')],
@@ -82,6 +85,7 @@ export const fundamentals = new Map([
   ['tabs.styles', new Fundamental('css', 'solid', 'copy')],
   ['toast', new Fundamental('tsx', 'solid', 'copy')],
   ['toast.styles', new Fundamental('css', 'solid', 'copy')],
+  ['tursoConnect', new Fundamental('ts', 'turso', 'copy')],
   ['types', new Fundamental('ts', 'solid', 'custom')],
   ['url', new Fundamental('ts', 'solid', 'copy')],
   ['valibotSchema', new Fundamental('ts', 'valibot', 'copy')],

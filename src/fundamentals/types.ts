@@ -267,3 +267,20 @@ export type APIFunction<T_API extends API<any, any, any, any>> =
   IsPopulated<BaseAPIFnOptions<T_API>> extends true
     ? (options: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
     : (options?: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
+
+
+export type CMSItem = {
+  /** DB id */
+  id: number
+  /** Describes what this CMS item is for */
+  label: string
+  /** Markdown content */
+  content: string
+  /** The page this content is on, its sql id */
+  pageId: number
+  /** The page this content is on, its name */
+  pageName: string
+}
+
+
+export type CMSMap = Map<number, CMSItem>

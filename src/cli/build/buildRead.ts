@@ -148,24 +148,25 @@ type RouteResult = {
   fsLayouts: string[],
 }
 
-/**
- * Build a map of imported identifiers to their source paths
- */
-function getImportsMap(content: string): ImportsMap {
-  const importsMap: ImportsMap = new Map()
-  const regexImports = /^import\s+([A-Za-z_$][\w$]*)\s+from\s+(['"`])(.+?)\2/gm
-  for (const match of content.matchAll(regexImports)) {
-    const [, localName, , importPath] = match
 
-    if (importPath && localName) importsMap.set(localName, importPath)
+/** Build a map of imported identifiers to their source paths */
+function getImportsMap(content: string): Map<string, string> {
+  const importsMap = new Map<string, string>()
+  const regex = /^import\s+(.+?)\s+from\s+(['"`])(.+?)\2/gm // capture everything between `import` and `from` AND capture path
+
+  for (const match of content.matchAll(regex)) {
+    const [, clause = '', , importPath = ''] = match
+    const parts = clause.split(',').map(s => s.trim()) // split on commas
+    const defaultName = parts.find(part => !(part.startsWith('{') && part.endsWith('}'))) // find the first part that is not a named-import b/c not wrapped in { }
+
+    if (defaultName) importsMap.set(defaultName, importPath)
   }
 
   return importsMap
 }
 
-/**
- * Extract filesystem layout paths from a `.layouts([A, B])` call
- */
+
+/** Extract filesystem layout paths from a `.layouts([A, B])` call */
 function extractLayouts(dir: string, content: string): string[] {
   const fsLayouts: string[] = []
   const regexLayouts = /\.layouts\(\s*\[\s*([^\]]+?)\s*\]\s*\)/
@@ -188,18 +189,16 @@ function extractLayouts(dir: string, content: string): string[] {
   return fsLayouts
 }
 
-/**
- * Extract the route path string from the tail after `new Route(`
- */
+
+/** Extract the route path string from the tail after `new Route(` */
 function extractRoutePath(tail: string): string | undefined {
   const regexPath = /^\s*(['"`])([^'"`]+)\1/
   const match = regexPath.exec(tail)
   return match && match[2] ? match[2] : undefined
 }
 
-/**
- * Parses a file for `export default new Route(path)`
- */
+
+/** Parses a file for `export default new Route(path)` */
 export function doRouteRegex(dir: string, content: string): RouteResult {
   const res: RouteResult = { routePath: '', fsLayouts: [] }
 
@@ -215,9 +214,8 @@ export function doRouteRegex(dir: string, content: string): RouteResult {
   return res
 }
 
-/**
- * Parses a file for `export default new Route404()`
- */
+
+/** Parses a file for `export default new Route404()` */
 export function doRoute404Regex(dir: string, content: string): RouteResult {
   const res: RouteResult = { routePath: '', fsLayouts: [] }
 

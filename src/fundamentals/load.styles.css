@@ -8,7 +8,7 @@
   /** customize */
   width: 2.1rem;
   height: 2.1rem;
-  border-top: 0.3rem solid #FFF;
+  border-top: 0.3rem solid blue;
   border-right: 0.3rem solid transparent;
   animation: aceLoadRotation 1s linear infinite;
   /** customize */
@@ -23,7 +23,7 @@
   /** customize */
   width: 2.1rem;
   height: 2.1rem;
-  border-top: 0.3rem solid #FFF;
+  border-top: 0.3rem solid blue;
   border-right: 0.3rem solid transparent;
   animation: aceLoadRotation 1s linear infinite;
   /** customize */
@@ -36,7 +36,7 @@
     /** customize */
     width: 2.1rem;
     height: 2.1rem;
-    border-bottom: 0.3rem solid #FF3D00;
+    border-bottom: 0.3rem solid red;
     border-left: 0.3rem solid transparent;
     /** customize */
 

@@ -25,10 +25,44 @@ export type AceConfig = {
   cookieKey?: string,
   sessionDataTTL?: number,
   logCaughtErrors?: boolean,
-  plugins: {
-    solid?: boolean,
-    valibot?: boolean,
-    mongoose?: boolean,
-  },
+  plugins: PluginsConfig,
   envs?: { name: string, url: string }[],
+}
+
+
+export type PluginsConfig = {
+  /**
+   * Enables **SolidJS** fundamentals (helpful modules @ `./ace`)
+   *
+   * Requires the following npm dev imports:
+   * - `solid-js`
+   * - `@solidjs/meta`
+   * - `@solidjs/start`
+   * - `@solidjs/router`
+   */
+  solid?: boolean
+
+  /**
+   * Enables **Valibot** fundamentals (helpful modules @ `./ace`)
+   *
+   * Requires the following npm dev imports:
+   * - `valibot`
+   */
+  valibot?: boolean
+
+  /**
+   * Enables **Turso** fundamentals (helpful modules @ `./ace`)
+   *
+   * Requires the following npm dev imports:
+   * - `@libsql/client`
+   */
+  turso?: boolean
+
+  /**
+   * Enables **Mongoose** fundamentals (helpful modules @ `./ace`)
+   *
+   * Requires the following npm dev imports:
+   * - `mongoose`
+   */
+  mongoose?: boolean
 }

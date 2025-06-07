@@ -1,6 +1,7 @@
 /**
 * 🧚‍♀️ How to access:
 *     - import { createApp } from '@ace/createApp'
+*     - import type { ParentComponentEntry, ParentComponentEntryWithProps } from '@ace/createApp'
 */
 
 
@@ -45,7 +46,7 @@ export const routes = {
 
 
 /** 
- * @param wrappers - The first wrapper is the outermost, default is `[FEContextProvider, MetaProvider, Suspense]`
+ * @param parentComponents - The first wrapper is the outermost, default is `[FEContextProvider, MetaProvider, Suspense]`
  * @returns A function that when called provided an <App /> component
  * @example
 ```ts
@@ -61,20 +62,21 @@ import { MetaProvider } from '@solidjs/meta'
 export default createApp([ToastProvider, FEContextProvider, MetaProvider, Suspense])
 ```
  */
-export function createApp(wrappers: ParentComponent<any>[] = [FEContextProvider, MetaProvider, Suspense]) {
+export function createApp(parentComponents: ParentComponentEntry<any>[] = [FEContextProvider, MetaProvider, Suspense]) {
   const Root: ParentComponent<any> = (props: RouteSectionProps) => {
     let RootAccumulator: ParentComponent<any> = (p) => <>{p.children}</> // will become our Root, starts w/ the children and with each loop adds a Wrapper
 
-    for (let i = wrappers.length - 1; i >= 0; i--) {
-      const Wrapper = wrappers[i] // get Wrapper
+    for (let i = parentComponents.length - 1; i >= 0; i--) {
+      const entry = parentComponents[i]
+      if (!entry) continue
 
-      if (!Wrapper) continue
+      const { parentComponent: Wrapper, props } = normalizeParentComponent(entry)
 
       const CurrentRoot = RootAccumulator // get Wrapper children
 
-      // place Wrapper around CurrentRoot AND update the RootAccumulator
+      // place ParentComponent around CurrentRoot AND update the RootAccumulator
       RootAccumulator = (p) => <>
-        <Wrapper>
+        <Wrapper {...props}>
           <CurrentRoot>{p.children}</CurrentRoot>
         </Wrapper>
       </>
@@ -94,6 +96,12 @@ export function createApp(wrappers: ParentComponent<any>[] = [FEContextProvider,
 }
 
 
+function normalizeParentComponent<T_Props extends Record<string, any> = {}>(entry: ParentComponentEntry<T_Props>): ParentComponentEntryWithProps<T_Props> {
+  if (typeof entry === 'function') return { parentComponent: entry, props: {} as T_Props }  // bare ParentComponent<P>
+  else return { parentComponent: entry.parentComponent, props: entry.props ?? ({} as T_Props) } // obj ParentComponent
+}
+
+
 
 function routeComponent(route: AceRoute | Route404): JSX.Element | undefined {
   const res = route.values.component?.(fe)
@@ -109,4 +117,13 @@ function routeComponent(route: AceRoute | Route404): JSX.Element | undefined {
 function layoutComponent(props: RouteSectionProps, layout: Layout): JSX.Element {
   setFEChildren(fe, props.children)
   return layout.values.component?.(fe)
+}
+
+
+
+export type ParentComponentEntry<T_Props extends Record<string, any> = {}> = ParentComponent<T_Props> | ParentComponentEntryWithProps<T_Props>
+
+export type ParentComponentEntryWithProps<T_Props extends Record<string, any> = {}> = {
+  parentComponent: ParentComponent<T_Props>
+  props: T_Props
 }
