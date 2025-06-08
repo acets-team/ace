@@ -19,8 +19,8 @@ export class CMS {
       this.#signal[1](map => {
         if (Array.isArray(res?.data)) {
           for (const row of res.data) {
-            if (typeof row.id === 'number' && typeof row.label === 'string' && typeof row.content === 'string' && typeof row.pageId === 'number' && typeof row.pageName === 'string') {
-              map.set(row.id, { id: row.id, label: row.label, content: row.content, pageId: row.pageId, pageName: row.pageName })
+            if (typeof row.id === 'number' && typeof row.label === 'string' && typeof row.content === 'string' && typeof row.pageId === 'number' && typeof row.pageName === 'string' && typeof row.isMarkdown === 'number') {
+              map.set(row.id, { id: row.id, label: row.label, content: row.content, pageId: row.pageId, pageName: row.pageName, isMarkdown: row.isMarkdown })
             }
           }
         }

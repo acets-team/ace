@@ -5,7 +5,8 @@ export const createTables = `CREATE TABLE IF NOT EXISTS cmsPage (
 CREATE TABLE IF NOT EXISTS cmsContent (
   id INTEGER PRIMARY KEY,
   label TEXT NOT NULL,
-  content TEXT NOT NULL
+  content TEXT NOT NULL,
+  isMarkdown INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS cmsPageContent (
   pageId INTEGER NOT NULL,
@@ -16,37 +17,23 @@ CREATE TABLE IF NOT EXISTS cmsPageContent (
 );`
 
 
-export const getAll = `SELECT * FROM cmsContent`
-
-
-const selectProps = 'cmsContent.*, cmsPage.id AS pageId, cmsPage.name AS pageName'
+export const getAll = `
+  SELECT cmsContent.*, cmsPage.id AS pageId, cmsPage.name AS pageName
+  FROM cmsContent
+  JOIN cmsPageContent ON cmsContent.id = cmsPageContent.contentId
+  JOIN cmsPage ON cmsPage.id = cmsPageContent.pageId
+`
 
 
 export const getByPageId = {
-  ts: `
-    SELECT ${selectProps} FROM cmsContent
-    JOIN cmsPageContent ON cmsContent.id = cmsPageContent.contentId
-    JOIN cmsPage ON cmsPage.id = cmsPageContent.pageId
-    WHERE cmsPage.id = (:id)`,
-  console: `
-    SELECT ${selectProps} FROM cmsContent
-    JOIN cmsPageContent ON cmsContent.id = cmsPageContent.contentId
-    JOIN cmsPage ON cmsPage.id = cmsPageContent.pageId
-    WHERE cmsPage.id = 0`
+  ts: getAll + 'WHERE cmsPage.id = (:id)',
+  console: getAll + 'WHERE cmsPage.id = 0',
 }
 
 
 export const getByPageName = {
-  ts: `
-    SELECT ${selectProps} FROM cmsContent
-    JOIN cmsPageContent ON cmsContent.id = cmsPageContent.contentId
-    JOIN cmsPage ON cmsPage.id = cmsPageContent.pageId
-    WHERE cmsPage.name = (:page)`,
-  console: `
-    SELECT ${selectProps} FROM cmsContent
-    JOIN cmsPageContent ON cmsContent.id = cmsPageContent.contentId
-    JOIN cmsPage ON cmsPage.id = cmsPageContent.pageId
-    WHERE cmsPage.name = ''`
+  ts: getAll + 'WHERE cmsPage.name = (:page)',
+  console: getAll +  `WHERE cmsPage.name = ''`
 }
 
 
@@ -58,14 +45,14 @@ export const insertPage = {
 
 export const insertContent = {
   ts: `
-    INSERT INTO cmsContent (label, content)
-    VALUES (:label, :content);
+    INSERT INTO cmsContent (label, content, isMarkdown)
+    VALUES (:label, :content, COALESCE(:isMarkdown, 0));
     INSERT INTO cmsPageContent (pageId, contentId)
     VALUES (:pageId, last_insert_rowid())
   `,
   console: `
-    INSERT INTO cmsContent (label, content)
-    VALUES ('', '');
+    INSERT INTO cmsContent (label, content, isMarkdown)
+    VALUES ('', '', 0);
     INSERT INTO cmsPageContent (pageId, contentId)
     VALUES (0, last_insert_rowid())
   `

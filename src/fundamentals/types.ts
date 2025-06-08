@@ -280,6 +280,8 @@ export type CMSItem = {
   pageId: number
   /** The page this content is on, its name */
   pageName: string
+  /** Boolean, does the content include markdown? */
+  isMarkdown: number
 }
 
 
