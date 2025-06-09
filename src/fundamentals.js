@@ -41,6 +41,7 @@ export const fundamentals = new Map([
   ['clear', new Fundamental('ts', 'solid', 'copy')],
   ['cms', new Fundamental('ts', 'turso', 'copy')],
   ['cmsApi', new Fundamental('ts', 'turso', 'copy')],
+  ['cmsSchema', new Fundamental('ts', 'turso', 'copy')],
   ['cmsSQL', new Fundamental('ts', 'turso', 'copy')],
   ['createApp', new Fundamental('tsx', 'solid', 'custom')],
   ['createOnSubmit', new Fundamental('ts', 'solid', 'copy')],

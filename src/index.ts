@@ -55,6 +55,7 @@ export type PluginsConfig = {
    *
    * Requires the following npm dev imports:
    * - `@libsql/client`
+   * - `drizzle-orm`
    */
   turso?: boolean
 
