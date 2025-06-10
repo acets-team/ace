@@ -6,7 +6,7 @@
 
 import { go } from './go'
 import { config } from 'ace.config'
-import { AceError } from '../aceError'
+import { AceError } from './aceError'
 import { getCookie } from 'vinxi/http'
 import { buildURL } from '../buildURL'
 import { getBaseUrl } from './getBaseUrl'

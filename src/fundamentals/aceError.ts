@@ -1,6 +1,6 @@
 import { config } from 'ace.config'
-import { defaultError } from './fundamentals/vars'
-import type { JSONResponse, FlatMessages } from './fundamentals/types'
+import { defaultError } from './vars'
+import type { JSONResponse, FlatMessages } from './types'
 
 
 /**
@@ -66,5 +66,59 @@ export class AceError {
 
   static #simple(message: string, status: number = 400): JSONResponse {
     return { data: null, error: { isAceError: true, status, message } }
+  }
+
+
+
+  /**
+   * Merge any number of AceError instances into a single AceError
+   *
+   * - Field‐level `messages` (FlatMessages) are shallow‐merged
+   * - `message` strings are concatenated with "; "
+   * - `status` takes the *first* defined status
+   * - `statusText`, `rawBody` take the first defined value
+   *
+   * @param errors One or more AceError instances to merge, sending an error that is not an AceError is fine we'll just skip it
+   * @returns A new AceError containing the combined information
+   * @example
+    ```ts
+    if (error1 || error2 || error3) {
+      throw AceError.merge(error1, error2, error3)
+    }
+    ```
+   */
+  static merge(...errors: Array<AceError | undefined>): AceError {
+    const combinedMessage: string[] = []
+    const mergedMessages: FlatMessages = {}
+
+    let firstStatus: number | undefined
+    let firstRawBody: string | undefined
+    let firstStatusText: string | undefined
+
+    for (const e of errors) {
+      if (!(e instanceof AceError)) continue
+
+      if (e.message) combinedMessage.push(e.message) // build combinedMessage
+      if (firstStatus === undefined && typeof e.status === 'number') firstStatus = e.status // set firstStatus
+      if (!firstStatusText && e.statusText) firstStatusText = e.statusText // set firstStatusText
+      if (!firstRawBody && e.rawBody) firstRawBody = e.rawBody // set firstRawBody
+
+      if (e.messages) { // build mergedMessages
+        for (const [field, msgs] of Object.entries(e.messages)) {
+          mergedMessages[field] = [
+            ...(mergedMessages[field] ?? []),
+            ...msgs,
+          ]
+        }
+      }
+    }
+
+    return new AceError({
+      status: firstStatus ?? 400,
+      statusText: firstStatusText,
+      rawBody: firstRawBody,
+      message: combinedMessage.length ? combinedMessage.join('; ') : undefined,
+      messages: Object.keys(mergedMessages).length ? mergedMessages : undefined,
+    })
   }
 }

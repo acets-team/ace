@@ -1,4 +1,4 @@
-import { AceError } from './aceError'
+import { AceError } from './fundamentals/aceError'
 
 /**
  * - Do a fetch call on the fe

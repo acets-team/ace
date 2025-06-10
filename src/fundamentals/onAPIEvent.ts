@@ -7,8 +7,8 @@
 
 import { BE } from './be'
 import { API } from './api'
+import { AceError } from './aceError'
 import { json } from '@solidjs/router'
-import { AceError } from '../aceError'
 import type { APIEvent } from './types'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch } from '../pathnameToMatch'

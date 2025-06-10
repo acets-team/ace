@@ -1,6 +1,6 @@
-import { AceError } from './aceError'
 import { BE } from './fundamentals/be'
 import type { API } from './fundamentals/api'
+import { AceError } from './fundamentals/aceError'
 import { getSessionData } from './fundamentals/session'
 import type { APIFunction, APIFnOptions } from './fundamentals/types'
 

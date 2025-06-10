@@ -5,9 +5,9 @@
  */
 
 
-import { AceError } from '../aceError'
+import { AceError } from './aceError'
 import type { FlatMessages } from './types'
-import { flatten, safeParse, type BaseSchema, type InferOutput } from 'valibot'
+import { flatten, safeParse, type BaseSchema, type InferOutput, type Config } from 'valibot'
 
 
 
@@ -31,8 +31,8 @@ export class ValibotSchema<T extends BaseSchema<any, any, any>> {
    * @param schema - Schema the input should look like
    * @returns - Parsed output or throws an error if any issues
    */
-  parse(input: AnyValue<InferOutput<T>>): InferOutput<T> {
-    const result = safeParse(this.schema, input)
+  parse(input: AnyValue<InferOutput<T>>, config?: Config<any>): InferOutput<T> {
+    const result = safeParse(this.schema, input, config)
 
     if (!result.issues) return result.output
     else {

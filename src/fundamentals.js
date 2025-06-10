@@ -27,6 +27,7 @@ class Fundamental {
 
 export const fundamentals = new Map([
   ['a', new Fundamental('tsx', 'solid', 'copy')],
+  ['aceError', new Fundamental('ts', 'solid', 'copy')],
   ['api', new Fundamental('ts', 'solid', 'copy')],
   ['apis', new Fundamental('ts', 'solid', 'copy')],
   ['animatedFor', new Fundamental('tsx', 'solid', 'copy')],
@@ -52,7 +53,6 @@ export const fundamentals = new Map([
   ['feChildren', new Fundamental('ts', 'solid', 'helper')],
   ['feFetch', new Fundamental('ts', 'solid', 'helper')],
   ['feMessages', new Fundamental('ts', 'solid', 'helper')],
-  ['aceError', new Fundamental('ts', 'solid', 'helper')],
   ['getBaseUrl', new Fundamental('ts', 'solid', 'copy')],
   ['getMiddleware', new Fundamental('ts', 'solid', 'copy')],
   ['go', new Fundamental('ts', 'solid', 'copy')],
