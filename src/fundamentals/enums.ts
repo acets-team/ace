@@ -6,39 +6,68 @@
 
 
 /**
- * - Helpful when you've got a param that can be a set of different string values `(enums)`
- *     - Provides a type for the enums
- *     - Provides a toString() for the enums
- *     - Provides a set() for enum lookup 
+ * - Provides a type for the enums
+ * - Creates a `enum.values[key] = value` object that is typed 
+ * - Creates a `enum.keys[key] = key` object that is typed 
+ * - Creates a `enum.entries = [[key, value]]` array that is helpful @ `<For />` that is typed 
+ * - Creates a new Set() for `enum.has()` boolean return enum lookup 
+ * - Provides a toString() for the enums
  *
  * @example
- * ```ts
- * const elementEnums = new Enums('fire','water','air','earth')
- * 
- * if (!elementEnums.has(params.element)) {
- *   throw new Error(`🔔 Please send a valid element, "${params.element}" is not a valid element, the valid elements are: ${elementEnums}`)
- * }
- * 
- * type Element = InferEnums<typeof elementEnums> // 'earth' | 'fire' | 'water' | 'air'
- * ```
- */
-export class Enums<const T_Enums extends readonly string[]> {
-  #enums: T_Enums
+  ```ts
+  const enums = new Enums([
+    'admin',
+    { enum: 'mod', value: 'Moderator 🛡️' },
+    { enum: 'user', value: 'User 👤' },
+  ])
+
+  type Users = InferEnums<typeof enums> // 'admin' | 'mod' | 'user'
+
+  console.log(enums.values.admin)  // "admin"
+  console.log(enums.values.mod)  // "Moderator 🛡️"
+  console.log(enums.keys.user)  // "user"
+
+  console.log(enums.has('mod'))  // true
+  console.log(enums.has('example'))  // false
+  
+  console.log(enums.toString()) // "admin | mod: Moderator 🛡️ | user: User 👤"
+  ```
+ * @example
+  ```tsx
+  <For each={enums.entries}>
+    {([key, value]) => <option value={key}>{value}</option>}
+  </For>
+  ```
+   */
+export class Enums<const T_Entries extends readonly EnumEntry[]> {
+  #reqEntries: T_Entries
   #set: Set<string>
-  readonly values: { [K in T_Enums[number]]: K }
+  readonly keys: MappedKeys<T_Entries>
+  readonly values: MappedValues<T_Entries>
+  readonly entries: ReadonlyArray<[keyof MappedValues<T_Entries>, MappedValues<T_Entries>[keyof MappedValues<T_Entries>]]>
 
-  constructor(...enums: T_Enums) {
-    this.#enums = enums
-    this.#set = new Set(enums)
+  constructor(reqEntries: T_Entries) {
+    this.#reqEntries = reqEntries
+    this.#set = new Set(reqEntries.map(e => typeof e === 'string' ? e : e.key))
 
-    const vals = {} as { [K in T_Enums[number]]: K }
+    const keys: any = {}
+    const values: any = {}
+    const entries: any[] = []
 
-    for (const e of enums) {
-      (vals as any)[e] = e
+    for (const e of reqEntries) {
+      const k = typeof e === 'string' ? e : e.key
+      const v = typeof e === 'string' ? e : e.value
+
+      keys[k] = k
+      values[k] = v
+      entries.push([k, v])
     }
 
-    this.values = vals
+    this.keys = Object.freeze(keys) as MappedKeys<T_Entries>
+    this.values = Object.freeze(values) as MappedValues<T_Entries>
+    this.entries = Object.freeze(entries) as ReadonlyArray<[keyof MappedValues<T_Entries>, MappedValues<T_Entries>[keyof MappedValues<T_Entries>]]>
   }
+
 
 
   /**
@@ -46,9 +75,10 @@ export class Enums<const T_Enums extends readonly string[]> {
    * @param potentialEnum The value we are wondering is an enum
    * @returns Boolean, Is the potential enum valid or not
    */
-  has(potentialEnum: unknown): potentialEnum is T_Enums[number] {
+  has(potentialEnum: unknown): potentialEnum is keyof MappedValues<T_Entries> {
     return typeof potentialEnum === 'string' && this.#set.has(potentialEnum)
   }
+
 
 
   /**
@@ -56,20 +86,57 @@ export class Enums<const T_Enums extends readonly string[]> {
    * @param joinedBy How the enums are joined, defaults to " | "
    */
   toString(joinedBy = ' | '): string {
-    return this.#enums.join(joinedBy)
+    return this.#reqEntries
+      .map(e => typeof e === 'string' ? e : `${e.key}: ${e.value}`)
+      .join(joinedBy)
   }
 }
+
 
 
 /**
  * - Receives a `enums` object
  * - Gives back the enums's type, example: `'yin' | 'yang'`
- *
- * @example
- * ```ts
- * export type Category = InferEnums<typeof categoryEnums>
- * ```
- * */
-export type InferEnums<T_Enums extends Enums<readonly string[]>> = T_Enums extends Enums<infer T_Values>
+ */
+
+export type InferEnums<T_Enums extends Enums<readonly EnumEntry[]>> = T_Enums extends Enums<infer T_Values>
   ? T_Values[number]
   : never
+
+
+
+/**
+ * - What get's passed to the Enums constructor
+ */
+export type EnumEntry = string | { key: string; value: string }
+
+
+
+/**
+ * - Turns enum entries into `{ key1: "value1", key2: "value2" }`
+ */
+type MappedValues<T extends readonly EnumEntry[]> = { 
+  [P in T[number] as 
+    P extends string ? P :
+    P extends { key: infer K extends string } ? K : 
+    never
+  ]: 
+    P extends string ? P :
+    P extends { value: infer V } ? V : 
+    never
+}
+
+
+/**
+ * - Turns enum entries into `{ key1: "key1", key2: "key2" }`
+ */
+type MappedKeys<T extends readonly EnumEntry[]> = { 
+  [P in T[number] as 
+    P extends string ? P :
+    P extends { key: infer K extends string } ? K : 
+    never
+  ]: 
+    P extends string ? P :
+    P extends { key: infer K extends string } ? K :
+    never
+}
