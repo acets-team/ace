@@ -1,7 +1,7 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { ParamEnums } from '@ace/paramEnums'
- *     - import type { InferEnums } from '@ace/paramEnums'
+ *     - import { Enums } from '@ace/enums'
+ *     - import type { InferEnums } from '@ace/enums'
  */
 
 
@@ -13,7 +13,7 @@
  *
  * @example
  * ```ts
- * const elementEnums = new ParamEnums('fire','water','air','earth')
+ * const elementEnums = new Enums('fire','water','air','earth')
  * 
  * if (!elementEnums.has(params.element)) {
  *   throw new Error(`🔔 Please send a valid element, "${params.element}" is not a valid element, the valid elements are: ${elementEnums}`)
@@ -22,13 +22,22 @@
  * type Element = InferEnums<typeof elementEnums> // 'earth' | 'fire' | 'water' | 'air'
  * ```
  */
-export class ParamEnums<const T_Enums extends readonly string[]> {
-  readonly enums: T_Enums
+export class Enums<const T_Enums extends readonly string[]> {
+  #enums: T_Enums
   #set: Set<string>
+  readonly values: { [K in T_Enums[number]]: K }
 
   constructor(...enums: T_Enums) {
-    this.enums = enums
+    this.#enums = enums
     this.#set = new Set(enums)
+
+    const vals = {} as { [K in T_Enums[number]]: K }
+
+    for (const e of enums) {
+      (vals as any)[e] = e
+    }
+
+    this.values = vals
   }
 
 
@@ -47,13 +56,13 @@ export class ParamEnums<const T_Enums extends readonly string[]> {
    * @param joinedBy How the enums are joined, defaults to " | "
    */
   toString(joinedBy = ' | '): string {
-    return this.enums.join(joinedBy)
+    return this.#enums.join(joinedBy)
   }
 }
 
 
 /**
- * - Receives a `paramEnums` object
+ * - Receives a `enums` object
  * - Gives back the enums's type, example: `'yin' | 'yang'`
  *
  * @example
@@ -61,6 +70,6 @@ export class ParamEnums<const T_Enums extends readonly string[]> {
  * export type Category = InferEnums<typeof categoryEnums>
  * ```
  * */
-export type InferEnums<T_ParamEnums extends ParamEnums<readonly string[]>> = T_ParamEnums extends ParamEnums<infer T_Values>
+export type InferEnums<T_Enums extends Enums<readonly string[]>> = T_Enums extends Enums<infer T_Values>
   ? T_Values[number]
   : never
