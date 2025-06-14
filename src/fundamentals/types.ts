@@ -11,7 +11,7 @@ import type { Route } from './route'
 import type { routes } from './createApp'
 import type * as apisFE from '../apis.fe'
 import type * as apisBE from '../apis.be'
-import type { AccessorWithLatest, redirect } from '@solidjs/router'
+import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
 
@@ -27,25 +27,25 @@ export type POST_Paths = keyof typeof apisBE.posts
 export type Routes = keyof typeof routes
 
 
-/** 
- * - How a response from a `new API()` is
- * - A redirect or a json
- * - & the json can handle data, errors, and/or `Valibot` / `Zod` messages
+/**
+ * When we create a Response object they type for data is lost
+ * But when we create an AceResponse we can store / infer the type for the data!
  */
-export type APIResponse<T_Data = any> = GoResponse | JSONResponse<T_Data>
-
-
-/** Backend redirect */
-export type GoResponse = ReturnType<typeof redirect>
+export interface AceResponse<T> extends Response {
+  __dataType?: T
+}
 
 
 /**
+ * - Response from `new API()`
  * - If an API does not respond / a redirect it responds w/ this JSON
- * - `Valibot` / `Zod` errors @ `res.error.messages`
+ * - Response data @ `res.data`
+ * - String error @ `res.error.message`
+ * - `Valibot` errors @ `res.error.messages`
  */
-export type JSONResponse<T_Data = any> = {
-  data: null | T_Data,
-  error: null | AceErrorType
+export type APIResponse<T_Data = any> = {
+  data: T_Data | null
+  error: AceErrorType | null
 }
 
 
@@ -208,27 +208,27 @@ export type InferSearchPOST<T_Path extends POST_Paths> = API2Search <typeof apis
 export type InferResponsePOST<T_Path extends POST_Paths> = API2Response<typeof apisBE.posts[T_Path]>
 
 
-type Route2Params<T_Route extends Route<any, any>> = T_Route extends Route<infer T_Params, any>
+export type Route2Params<T_Route extends Route<any, any>> = T_Route extends Route<infer T_Params, any>
   ? GetPopulated<T_Params>
   : undefined  
 
 
-type API2Body<T_API extends API<any, any, any, any>> = T_API extends API<any, any, infer T_Body, any>
+export type API2Body<T_API extends API<any, any, any, any>> = T_API extends API<any, any, infer T_Body, any>
   ? GetPopulated<T_Body>
   : undefined  
 
 
-type API2Params<T_API extends API<any, any, any, any>> = T_API extends API<infer T_Params, any, any, any>
+export type API2Params<T_API extends API<any, any, any, any>> = T_API extends API<infer T_Params, any, any, any>
   ? GetPopulated<T_Params>
   : undefined  
 
 
-type API2Search<T_API extends API<any, any, any, any>> = T_API extends API<any, infer T_Search, any, any>
+export type API2Search<T_API extends API<any, any, any, any>> = T_API extends API<any, infer T_Search, any, any>
   ? GetPopulated<T_Search>
   : undefined  
 
 
-type API2Response<T_API extends API<any, any, any, any>> = T_API extends API<any, any, any, infer T_Response>
+export type API2Response<T_API extends API<any, any, any, any>> = T_API extends API<any, any, any, infer T_Response>
   ? GetPopulated<T_Response>
   : undefined  
 
@@ -238,7 +238,7 @@ export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? fals
 
 
 /** If object has keys return object, else return undefined */
-type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
+export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
 
 
 /**
@@ -246,13 +246,13 @@ type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
  * - Else => return {}
  * - Then we' APIFnOptions we unite the objects w/ & and get one object with only the populated items; unpopulated ones are simply omitted
  */
-type KeepIfPopulated<T_Prop extends string, T_Value> = IsPopulated<T_Value> extends true
+export type KeepIfPopulated<T_Prop extends string, T_Value> = IsPopulated<T_Value> extends true
   ? { [T_Key in T_Prop]: T_Value }
   : {}
 
 
 /** Building an options object whose properties are only present if they have keys */
-type BaseAPIFnOptions<T_API extends API<any,any,any,any>> =
+export type BaseAPIFnOptions<T_API extends API<any,any,any,any>> =
   KeepIfPopulated<'params', API2Params<T_API>> &
   KeepIfPopulated<'body',   API2Body<T_API>> &
   KeepIfPopulated<'search', API2Search<T_API>>
@@ -263,10 +263,9 @@ export type APIFnOptions<T_API extends API<any,any,any,any>> = BaseAPIFnOptions<
 
 
 /** What `createAPIFunction()` creates */
-export type APIFunction<T_API extends API<any, any, any, any>> =
-  IsPopulated<BaseAPIFnOptions<T_API>> extends true
-    ? (options: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
-    : (options?: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
+export type APIFunction<T_API extends API<any, any, any, any>> = IsPopulated<BaseAPIFnOptions<T_API>> extends true
+  ? (options: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
+  : (options?: APIFnOptions<T_API>) => Promise<API2Response<T_API>>
 
 
 export type CMSItem = {

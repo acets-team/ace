@@ -11,7 +11,6 @@ import type { Params } from '@solidjs/router'
 export function pathnameToMatch(pathname: string, map: Record<string, API | Route>): RouteMatch<API | Route> | undefined {
   for (const path of Object.keys(map) as Array<keyof typeof map>) {
     const match = map[path]?.values.pattern.exec(pathname)
-
     if (!match) continue
 
     const params: Params = match.groups ?? {}

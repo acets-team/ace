@@ -5,10 +5,11 @@
  */
 
 
-import { go as _go } from './go'
+import { go } from './go'
+import { GoResponse } from './goResponse'
 import { BEMessages } from '../beMessages'
 import { APIEvent } from '@solidjs/start/server'
-import type { JSONResponse, Routes, InferParamsRoute, GoResponse, APIBody, URLSearchParams, URLParams } from './types'
+import type { APIResponse, APIBody, URLSearchParams, URLParams, AceResponse, Routes, InferParamsRoute } from './types'
 
 
 
@@ -44,27 +45,28 @@ export class BE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
 
 
   static CreateFromFn<T_Params extends URLParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(params: T_Params, search: T_Search, body?: T_Body) {
-    return new BE('http', null, params, search, body)
+    return new BE('fn', null, params, search, body)
   }
 
 
   /**
-   * - Wraps "@solidjs/router" `redirect()`
    * - Provides intellisense to current routes
    * - same as `go()` that is typically used @ `b4()`
    */
-  go: <T extends Routes>(path: T, params?: InferParamsRoute<T>) => GoResponse = _go
+  go<T extends Routes>(path: T, params?: InferParamsRoute<T>): GoResponse {
+    return go(path, params)
+  }
 
 
   /**
    * - Typically called when you'd love to respond from the api w/ json
-   * - Will also add any messages to an errors object if you called be.message.push() during this call
-   * - If you'd rather respond w/ an error and no data `throw new Error()`
+   * - Will also add any messages to an errors object if you called be.messages.push() during this call
+   * - If you'd rather respond w/ an error and not data `throw new Error()`
    * @param data - The data to respond w/
    * @returns An object that has `{ data }` and also too some errors or messages
    */
-  json<T>(data: T): JSONResponse<T> {
-    let res: JSONResponse<T> = { data: null, error: null }
+  json<T>(data: T, status = 200, headers?: HeadersInit): AceResponse<T> {
+    let res: APIResponse<T> = { data: null, error: null }
 
     if (data) res.data = data
 
@@ -75,7 +77,10 @@ export class BE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
       }
     }
 
-    return res
+    return new Response(JSON.stringify(res), {
+      status,
+      headers: { 'Content-Type': 'application/json', ...headers },
+    }) as AceResponse<T>
   }
 
 

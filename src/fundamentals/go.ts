@@ -5,16 +5,15 @@
 
 
 import { buildURL } from '../buildURL'
-import { redirect } from '@solidjs/router'
-import type { Routes, InferParamsRoute, GoResponse } from './types'
+import { GoResponse } from './goResponse'
+import type { Routes, InferParamsRoute } from './types'
 
 
 
 /**
- * - Wraps "@solidjs/router" `redirect()`
  * - Provides intellisense to current routes
- * - Typically called w/in a `b4()` fn, same as `be.go()`
+ * - Stores the location (url) in an object to be redirected to later
  */
 export function go<T extends Routes>(path: T, params?: InferParamsRoute<T>): GoResponse {
-  return redirect(buildURL(path, params))
+  return new GoResponse(buildURL(path, params))
 }

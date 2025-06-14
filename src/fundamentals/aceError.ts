@@ -1,6 +1,6 @@
 import { config } from 'ace.config'
 import { defaultError } from './vars'
-import type { JSONResponse, FlatMessages } from './types'
+import type { APIResponse, FlatMessages } from './types'
 
 
 /**
@@ -30,8 +30,8 @@ export class AceError {
    * - Typically called in the catch block of a try / cactch
    * @param options `{ error, data, defaultMessage = '❌ Sorry but an error just happened' }`
    */
-  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): JSONResponse<T>  {
-    let res: JSONResponse<T> | undefined
+  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): APIResponse<T>  {
+    let res: APIResponse<T> | undefined
 
     if (options?.error) {
       if (options.error instanceof AceError) res = options.error.#get<T>(options.data)
@@ -47,8 +47,8 @@ export class AceError {
   }
 
 
-  #get<T extends any>(data?: T): JSONResponse {
-    const res: JSONResponse = { data, error: null }
+  #get<T extends any>(data?: T): APIResponse {
+    const res: APIResponse = { data, error: null }
 
     if (this.status || this.statusText || this.message || this.messages || this.rawBody) {
       res.error = { isAceError: true }
@@ -64,7 +64,7 @@ export class AceError {
   }
 
 
-  static #simple(message: string, status: number = 400): JSONResponse {
+  static #simple(message: string, status: number = 400): APIResponse {
     return { data: null, error: { isAceError: true, status, message } }
   }
 

@@ -49,7 +49,8 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
 
   /** @returns The url params object  */
   getParams() {
-    return useParams<T_Params>()
+    const params = useParams<T_Params>()
+    return { ...params } // params is a Proxy(Object) & this spread allows us to do for (const param in params)
   }
   
 
@@ -58,6 +59,7 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
     return useLocation<T_Search>()
   }
 
+
   /**
    * Call GET w/ intellisense
    * @param path - As defined @ `new API()`
@@ -65,7 +67,7 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * @param options.params - Path params
    */
   async GET<T extends GET_Paths>(path: T, options?: { params?: InferParamsGET<T>, bitKey?: string }): Promise<InferResponseGET<T>> {
-    return this._fetch(buildURL(path, options?.params), {method: 'GET', bitKey: options?.bitKey })
+    return this._fetch<InferResponseGET<T>>(buildURL(path, options?.params), {method: 'GET', bitKey: options?.bitKey })
   }
 
 
@@ -77,14 +79,14 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * @param options.body - Request body
    */
   async POST<T extends POST_Paths>(path: T, options?: { params?: InferParamsPOST<T>, body?: InferBodyPOST<T>, bitKey?: string }): Promise<InferResponsePOST<T>> {
-    return this._fetch(buildURL(path, options?.params), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
+    return this._fetch<InferResponsePOST<T>>(buildURL(path, options?.params), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
   }
 
 
-  protected async _fetch(url: string, { method, body, bitKey }: { body?: any, bitKey?: string, method: 'GET' | 'POST' }) {
+  protected async _fetch<T>(url: string, { method, body, bitKey }: { method: 'GET' | 'POST'; body?: any; bitKey?: string }): Promise<T> {
     if (bitKey) this.bits.set(bitKey, true)
 
-    const res = await feFetch(url, method, body)
+    const res = await feFetch<T>(url, method, body)
 
     this.messages.align(res)
 
@@ -92,6 +94,7 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
 
     return res
   }
+
 
   /**
    * - Get the children for a layout

@@ -1,0 +1,51 @@
+.ace-radio-cards {
+  display: flex;
+  gap: 2.1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  input[type="radio"] {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+    white-space: nowrap;
+    &:checked + label {
+      box-shadow: var(--ace-radio-card-active-shadow);
+      border-color: var(--ace-radio-card-active-border-color);
+      background-color: var(--ace-radio-card-active-bg-color);
+    }
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    max-width: 33rem;
+    border: 2px solid #f0efef;
+    border-radius: 1.2rem;
+    padding: 1.5rem;
+    background: white;
+    cursor: pointer;
+    transition: var(--speed);
+    &:hover {
+      transform: var(--ace-radio-card-active-transform);
+      border-color: var(--ace-radio-card-active-border-color);
+      box-shadow: var(--ace-radio-card-active-shadow);
+    }
+
+    .title {
+      font-size: 2.1rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: rgb(9, 9, 11);
+    }
+
+    .description {
+      font-size: 1.71rem;
+      line-height: 1.4;
+      color: rgb(67, 66, 66);
+    }
+  }
+}

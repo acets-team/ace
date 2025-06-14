@@ -8,8 +8,9 @@
 import { BE } from './be'
 import { API } from './api'
 import { AceError } from './aceError'
-import { json } from '@solidjs/router'
 import type { APIEvent } from './types'
+import { GoResponse } from './goResponse'
+import { json, redirect } from '@solidjs/router'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch } from '../pathnameToMatch'
 
@@ -23,6 +24,7 @@ export async function onAPIEvent(event: APIEvent, apis: Record<string, API<any>>
       return await routeMatch.handler.values.resolve(be)
     }
   } catch (error) {
-    return json(AceError.catch({ error }), { status: 400 })
+    if (error instanceof GoResponse) return redirect(error.location)
+    else return json(AceError.catch({ error }), { status: 400 })
   }
 }

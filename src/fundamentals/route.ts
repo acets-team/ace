@@ -56,17 +56,14 @@ export class Route<T_Params extends URLParams = any, T_Search extends URLSearchP
    *     - Append `event.locals`, `event.request` or `event.response`
    *     - Do a redirect
    *     - Return nothing and allow api fn to to process next
-   * - 🚨 If returning the response must be a `Response` object b/c this is what is given to the client
-   * - 🚨 When calling `go()` from w/in a `b4` a return type is required, b/c ts needs to know about all routes's when we call `go()` to provide autocomplete but we are defining a route while calling `go()`. So the return type stops the loop of defining & searching
    * @example
     ```ts
     import { go } from '@ace/go'
     import { Route } from '@ace/route'
-    import type { GoResponse } from '@ace/types'
 
     export default new Route('/')
-      .b4(async (): Promise<GoResponse> => {
-        return go('/sign-in')
+      .b4(async () => {
+        throw go('/sign-in')
       })
     ```
    */

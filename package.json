@@ -20,7 +20,7 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "publish": "npm publish --access public",
-    "build": "tsc && tsc -p tsconfig.srcBuild.json && node ./src/srcBuild.js",
+    "build": "node ./src/fresh.js && tsc && tsc -p tsconfig.srcBuild.json && node ./src/srcBuild.js",
     "postbuild": "chmod +x dist/src/cli/cli.js || true"
   },
   "devDependencies": {

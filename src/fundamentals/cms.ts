@@ -4,14 +4,14 @@
  */
 
 
-import type { CMSItem, CMSMap, JSONResponse } from './types'
+import type { CMSItem, CMSMap, APIResponse } from './types'
 import { createEffect, createSignal, type Accessor } from 'solid-js'
 
 
 export class CMS {
   #signal = createSignal<CMSMap>(new Map())
 
-  constructor(cmsLoad: Accessor<JSONResponse<CMSItem[]> | undefined>) {
+  constructor(cmsLoad: Accessor<APIResponse<CMSItem[]> | undefined>) {
     createEffect(() => {
       const res = cmsLoad()
       const rows = res?.data

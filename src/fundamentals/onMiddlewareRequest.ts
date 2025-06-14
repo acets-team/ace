@@ -12,6 +12,8 @@ import { gets, posts } from './apis'
 import { AceError } from './aceError'
 import type { FetchEvent } from './types'
 import { getSessionData } from './session'
+import { GoResponse } from './goResponse'
+import { redirect } from '@solidjs/router'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
 
@@ -56,10 +58,15 @@ export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
 
 async function onRouteOrAPIMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
   if (routeMatch.handler.values.b4) {
-    return await routeMatch.handler.values.b4({
-      event,
-      sessionData: event.locals.sessionData
-    })
+    try {
+      return await routeMatch.handler.values.b4({
+        event,
+        sessionData: event.locals.sessionData
+      })
+    } catch (error) {
+      if (error instanceof GoResponse) return redirect(error.location)
+      else throw error
+    }
   }
 }
 
