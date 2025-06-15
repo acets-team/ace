@@ -7,7 +7,7 @@
 
 import type { BE } from './be'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { APIBody, URLSearchParams, URLParams, B4, AceResponse } from './types'
+import type { APIBody, URLSearchParams, URLParams, B4, AceResponse, InferAceResponse } from './types'
 
 
 
@@ -78,7 +78,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
       })
     ```
     */
-    resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, UnwrapAceResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
+    resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, InferAceResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
 
       (this.values as any).resolve = resolveFunction as any
 
@@ -86,7 +86,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
         T_Params,
         T_Search,
         T_Body,
-        UnwrapAceResponse<Awaited<ReturnType<T_Resolve_Fn>>>
+        InferAceResponse<Awaited<ReturnType<T_Resolve_Fn>> >
       >
     }
 
@@ -150,6 +150,3 @@ export type APIResolveFunction<
   T_Body extends APIBody,
   T_Fn_Response
 > = (be: BE<T_Params, T_Search, T_Body>) => Promise<T_Fn_Response | AceResponse<T_Fn_Response>>
-
-
-export type UnwrapAceResponse<T> = T extends AceResponse<infer U> ? U : T

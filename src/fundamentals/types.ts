@@ -36,6 +36,15 @@ export interface AceResponse<T> extends Response {
 }
 
 
+/** 
+ * - Receives: AceResponse
+ * - Gives: The object type for the stringified json 
+*/
+export type InferAceResponse<T> = T extends AceResponse<infer U>
+    ? APIResponse<U>
+    : T
+
+
 /**
  * - Response from `new API()`
  * - If an API does not respond / a redirect it responds w/ this JSON
