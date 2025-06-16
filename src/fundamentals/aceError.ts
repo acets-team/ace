@@ -35,7 +35,8 @@ export class AceError {
 
     if (options?.error) {
       if (options.error instanceof AceError) res = options.error.#get<T>(options.data)
-      else if (options.error instanceof Error) res = AceError.#simple(options.error.message)
+      else if (typeof options.error === 'object' && typeof options.error.error === 'object' && typeof options.error.error.message === 'string') res = AceError.#simple(options.error.error.message)
+      else if (options.error instanceof Error || (typeof options.error === 'object' && options.error.message)) res = AceError.#simple(options.error.message)
       else if (typeof options.error === 'string') res = AceError.#simple(options.error)      
     }
 

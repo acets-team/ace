@@ -16,23 +16,15 @@ import { base64UrlEncode } from './base64UrlEncode'
   ```ts
   import { jwtCreate, ttlWeek } from '@ace/jwtCreate'
 
-  if (!process.env.JWT_SECRET) throw new Error('!process.env.JWT_SECRET')
-
-  const jwt = await jwtCreate({
-    crypto,
-    ttl: ttlWeek,
-    payload: { userId: 42 },
-    secret: process.env.JWT_SECRET,
-  })
+  const jwt = await jwtCreate({ ttl: ttlWeek, payload: { userId: 42 } })
   ```
  * @param props.payload - The JSON-serializable payload for the jwt token
- * @param props.crypto - A Web Crypto instance (e.g. `globalThis.crypto` or Node’s `webcrypto`)
- * @param props.secret - We recommend a secret that is at least 64 bytes so you get the full 512 bits of key entropy, to create a secret we recommend, bash: `openssl rand -base64 64`
  * @param props.ttl - Time-to-live in milliseconds
  * @returns A signed JWT string using HS512
  */
-export async function jwtCreate({ payload, crypto: cryptoObj, secret, ttl }: JwtCreateProps): Promise<string> {
-  if (!secret) throw new Error('Please include a truthy secret')
+export async function jwtCreate({ payload, ttl }: JwtCreateProps): Promise<string> {
+  if (!process.env.JWT_SECRET) throw new Error('!process.env.JWT_SECRET')
+
   if (ttl <= 0)  throw new Error('Please include a TTL > 0')
 
   const encoder = new TextEncoder()
@@ -50,10 +42,10 @@ export async function jwtCreate({ payload, crypto: cryptoObj, secret, ttl }: Jwt
 
   const headerBodyBinary = encoder.encode(`${headerB64}.${bodyB64}`) // will be signed soon
 
-  const secretBinary = encoder.encode(secret) // will turn this into a key
-  const cryptoKey = await cryptoObj.subtle.importKey('raw', secretBinary, { name: 'HMAC', hash: 'SHA-512' }, false, ['sign'])    
+  const secretBinary = encoder.encode(process.env.JWT_SECRET) // will turn this into a key
+  const cryptoKey = await crypto.subtle.importKey('raw', secretBinary, { name: 'HMAC', hash: 'SHA-512' }, false, ['sign'])    
 
-  const sigBinary = await cryptoObj.subtle.sign('HMAC', cryptoKey, headerBodyBinary)
+  const sigBinary = await crypto.subtle.sign('HMAC', cryptoKey, headerBodyBinary)
   const sigB64 = base64UrlEncode(sigBinary)
 
   return `${headerB64}.${bodyB64}.${sigB64}` // final JWT
@@ -71,10 +63,6 @@ export const ttlWeek = 7 * ttlDay
 export type JwtCreateProps = {
   /** The JSON-serializable payload for the jwt token */
   payload: Record<string, unknown>
-  /** A Web Crypto instance (e.g. `globalThis.crypto` or Node’s `webcrypto`) */
-  crypto: Crypto
-  /** We recommend a secret that is at least 64 bytes so you get the full 512 bits of key entropy, to create a secret we recommend, bash: `openssl rand -base64 64` */
-  secret: string
   /** Time-to-live in milliseconds */
   ttl: number
 }

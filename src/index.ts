@@ -22,8 +22,7 @@
 export type AceConfig = {
   apiDir?: string,
   appDir?: string,
-  cookieKey?: string,
-  sessionDataTTL?: number,
+  jwtCookieKey?: string,
   logCaughtErrors?: boolean,
   plugins: PluginsConfig,
   envs?: { name: string, url: string }[],

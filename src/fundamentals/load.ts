@@ -4,6 +4,7 @@
  */
 
 
+import { AceError } from './aceError'
 import { query, createAsync, AccessorWithLatest } from '@solidjs/router'
 
 
@@ -18,16 +19,20 @@ import { query, createAsync, AccessorWithLatest } from '@solidjs/router'
  * @returns `AccessorWithLatest<undefined | Awaited<ReturnType<fetchFn>>>`
  */
 export function load<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: string): AccessorWithLatest<T_Response | undefined> {
-  const loaded = query(fetchFn, cacheKey)
+    const loaded = query(fetchFn, cacheKey)
 
-  return createAsync(async () => {
-    const res = await loaded()
+    return createAsync(async () => {
+      try {
+        const res = await loaded()
 
-    if (res instanceof Response) {
-      const json = await res.json()
-      return json as T_Response
-    }
+        if (res instanceof Response) {
+          const json = await res.json()
+          return json as T_Response
+        }
 
-    return res as T_Response
-  })
+        return res as T_Response
+      } catch (error) {
+        return AceError.catch({ error }) as T_Response
+      }
+    })
 }

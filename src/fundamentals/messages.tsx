@@ -6,7 +6,7 @@
 
 import { fe } from './fe'
 import { feComponent } from './feComponent'
-import { DEFAULT_MESSAGE_NAME } from './vars'
+import { defaultMessageName } from './vars'
 import { For, Show, type JSX } from 'solid-js'
 
 
@@ -19,7 +19,7 @@ import { For, Show, type JSX } from 'solid-js'
  * options.css - To give a class name to the wrapper
  * options.name - Messages are grouped by name
  */
-export const Messages = feComponent(({ name = DEFAULT_MESSAGE_NAME, ...props }: { name?: string } & JSX.HTMLAttributes<HTMLDivElement>) => {
+export const Messages = feComponent(({ name = defaultMessageName, ...props }: { name?: string } & JSX.HTMLAttributes<HTMLDivElement>) => {
   const [messages] = fe.messages.get(name)
 
   return <>

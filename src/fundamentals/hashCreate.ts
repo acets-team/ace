@@ -16,25 +16,24 @@ import { base64UrlEncode } from './base64UrlEncode'
  * - Uses the `PBKDF2` algorithm and either the `SHA-256` or `SHA-512` (strongest / default) hash functions
  * @example
   ```ts
-  const hash = await hashCreate({ crypto, password: 'example' })
+  const hash = await hashCreate({ password: 'example' })
   ```
  * @param props.password - The plaintext password to hash
- * @param props.crypto - A Web Crypto instance (e.g. `globalThis.crypto` or Node’s `webcrypto`)
  * @param props.saltLength - The National Institute of Standards and Technology (NIST) recommends a random salt length of 16 so we do to. `(default is 16)`
  * @param props.iterations - We recommend 300_000 to 1_000_000 iterations for high security & fast performance `(default is 600_000)`. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms
  * @param props.hashFn - `SHA-512 (default)` w/ default saltLength & iterations is far beyond classical brute-force capabilities. SHA-256 is slightly weaker but faster.
  * @returns A hashed password using `SHA-256` or `SHA-512`
  */
-export async function hashCreate({ password, crypto: cryptoObj, saltLength = 16, iterations = 600_000, hashFn = 'SHA-512' }: HashCreateProps): Promise<string> {
+export async function hashCreate({ password, saltLength = 16, iterations = 600_000, hashFn = 'SHA-512' }: HashCreateProps): Promise<string> {
   const encoder = new TextEncoder()
 
   const passwordBinary = encoder.encode(password)
 
-  const salt = cryptoObj.getRandomValues(new Uint8Array(saltLength)) // random salt
+  const salt = crypto.getRandomValues(new Uint8Array(saltLength)) // random salt
 
-  const cryptoKey = await cryptoObj.subtle.importKey( 'raw', passwordBinary, 'PBKDF2', false, ['deriveBits'])
+  const cryptoKey = await crypto.subtle.importKey( 'raw', passwordBinary, 'PBKDF2', false, ['deriveBits'])
 
-  const hashBinary = await cryptoObj.subtle.deriveBits( { name: 'PBKDF2', salt, iterations, hash: hashFn }, cryptoKey, hashFn === 'SHA-512' ? 512 : 256 )
+  const hashBinary = await crypto.subtle.deriveBits( { name: 'PBKDF2', salt, iterations, hash: hashFn }, cryptoKey, hashFn === 'SHA-512' ? 512 : 256 )
 
   const saltB64 = base64UrlEncode(salt.buffer)
 
@@ -47,8 +46,6 @@ export async function hashCreate({ password, crypto: cryptoObj, saltLength = 16,
 export type HashCreateProps = {
   /** The plaintext password to hash */
   password: string
-  /** A Web Crypto instance (e.g. `globalThis.crypto` or Node’s `webcrypto`) */
-  crypto: Crypto
   /** The National Institute of Standards and Technology (NIST) recommends a random salt length of 16 so we do to. `(default is 16)` */
   saltLength?: number
   /** We recommend 300_000 to 1_000_000 iterations for high security & fast performance `(default is 600_000)`. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms */

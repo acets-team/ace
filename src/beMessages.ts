@@ -1,5 +1,5 @@
 import type { FlatMessages } from './fundamentals/types'
-import { DEFAULT_MESSAGE_NAME } from './fundamentals/vars'
+import { defaultMessageName } from './fundamentals/vars'
 
 
 /**
@@ -16,7 +16,7 @@ export class BEMessages {
   }
 
 
-  push(message: string, name: string = DEFAULT_MESSAGE_NAME) {
+  push(message: string, name: string = defaultMessageName) {
     const current = this.messages[name] || []
 
     current.push(message)

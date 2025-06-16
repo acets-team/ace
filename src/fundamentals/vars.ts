@@ -1,13 +1,20 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { DEFAULT_MESSAGE_NAME, DEFAULT_TOAST_NAME } from '@ace/vars'
+ *     - import { defaultMessageName, jwtCookieKey, defaultError } from '@ace/vars'
+ *     - import type { SupportedApiMethods } from '@ace/vars'
  */
 
 
-export const DEFAULT_TOAST_NAME = '_toast'
+import { config } from 'ace.config'
+import { Enums, type InferEnums } from './enums'
 
-export const DEFAULT_MESSAGE_NAME = '_info'
 
-export const supportedApiMethods = { 'GET': 'GET', 'POST': 'POST' } as const
+export const defaultMessageName = '_info'
+
+export const jwtCookieKey = () => config.jwtCookieKey || 'aceJWT'
+
+export const supportedApiMethods = new Enums(['GET', 'POST'])
+
+export type SupportedApiMethods = InferEnums<typeof supportedApiMethods>
 
 export const defaultError = '❌ Sorry but an error just happened'

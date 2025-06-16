@@ -2,9 +2,9 @@ import { BE } from './fundamentals/be'
 import { redirect } from '@solidjs/router'
 import type { API } from './fundamentals/api'
 import { AceError } from './fundamentals/aceError'
-import { getSessionData } from './fundamentals/session'
 import { GoResponse } from './fundamentals/goResponse'
-import type { APIFunction, APIFnOptions, API2Response } from './fundamentals/types'
+import { jwtCookieGet } from './fundamentals/jwtCookieGet'
+import type { APIFunction, APIFnOptions } from './fundamentals/types'
 
 
 export function createAPIFunction<T_API extends API<any, any, any, any>>(api: T_API): APIFunction<T_API> {
@@ -19,7 +19,7 @@ export function createAPIFunction<T_API extends API<any, any, any, any>>(api: T_
       const be = BE.CreateFromFn(params, search, body)
   
       if (typeof api.values.b4 === 'function') {
-        const res = await api.values.b4({ sessionData: await getSessionData() })
+        const res = await api.values.b4(await jwtCookieGet())
         if (res) return res as any
       }
 
@@ -28,12 +28,7 @@ export function createAPIFunction<T_API extends API<any, any, any, any>>(api: T_
       const res = await api.values.resolve(be)
 
       if (res instanceof Response) return await res.json()
-
-      /**
-       * - `const _contracts = load(() => apiContracts(), 'contracts')` calls a server-side function directly, and is then passed to Seroval, this ensures Seroval does not bomb while parsing
-       * - `const _contracts = load(() => beGET('/api/contracts'), 'contracts')` makes a real HTTP request to an API endpoint where await res.json() happens also
-       */
-      return res ? JSON.parse(JSON.stringify(res)) : undefined
+      else return res ? JSON.parse(JSON.stringify(res)) : undefined // `const _contracts = load(() => apiContracts(), 'contracts')` calls a server-side function directly, and is then passed to Seroval, this ensures Seroval does not bomb while parsing
     } catch (error) {
       if (error instanceof GoResponse) throw redirect(error.location)
       else throw AceError.catch({ error })

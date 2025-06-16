@@ -5,7 +5,7 @@ import { buildWrite } from './buildWrite.js'
 import { join, resolve, dirname } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
-import { supportedApiMethods } from '../../fundamentals/vars.js'
+import { SupportedApiMethods, supportedApiMethods } from '../../fundamentals/vars.js'
 
 
 
@@ -226,7 +226,7 @@ export type TreeAccumulator = { importsMap: ImportsMap, consts: string, routes: 
  * }
  * ```
 */
-export const getConstEntry = (urlPath: string, moduleName: string, apiModuleName?: keyof typeof supportedApiMethods) => `  '${urlPath}': ${moduleName}${apiModuleName ? '.' + apiModuleName : ''},\n`
+export const getConstEntry = (urlPath: string, moduleName: string, apiModuleName?: SupportedApiMethods) => `  '${urlPath}': ${moduleName}${apiModuleName ? '.' + apiModuleName : ''},\n`
 
 
 export function getSrcImportEnry({star, moduleName, fsPath, addType }: {star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {

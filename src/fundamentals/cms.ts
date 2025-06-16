@@ -4,7 +4,6 @@
  */
 
 
-import { getData } from './getData'
 import { createEffect, createSignal } from 'solid-js'
 import type { AccessorWithLatest } from '@solidjs/router'
 import type { CMSItem, CMSMap, APIResponse } from './types'
@@ -15,7 +14,7 @@ export class CMS {
 
   constructor(cmsLoad: AccessorWithLatest<APIResponse<CMSItem[]> | undefined>) {
     createEffect(() => {
-      const cmsData = getData(cmsLoad())
+      const cmsData = cmsLoad()?.data
       if (!cmsData || !Array.isArray(cmsData)) return
 
       this.#signal[1](() => {

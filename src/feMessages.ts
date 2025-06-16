@@ -1,5 +1,5 @@
 import { createSignal, type Signal } from 'solid-js'
-import { DEFAULT_MESSAGE_NAME } from './fundamentals/vars'
+import { defaultMessageName } from './fundamentals/vars'
 import { AceErrorType } from './fundamentals/types'
 
 
@@ -18,7 +18,7 @@ export class FEMessages {
    * @param name - Messages are grouped by name
    * @param clearOnSubmit - If on form submit should this signal reset, default to true
    */
-  set({ name = DEFAULT_MESSAGE_NAME, value }: { name?: string, value: string | string[] }): Signal<string[]> {
+  set({ name = defaultMessageName, value }: { name?: string, value: string | string[] }): Signal<string[]> {
     let signal$ = this.#messages.get(name)
     const v = Array.isArray(value) ? value : [value]
 
@@ -37,7 +37,7 @@ export class FEMessages {
    * If the signal has not been gotten yet, set it, this way no matter if the set or get happens first the signal will render
    * @param name - Messages are grouped by name
    */
-  get(name: string = DEFAULT_MESSAGE_NAME): Signal<string[]> {
+  get(name: string = defaultMessageName): Signal<string[]> {
     const current$ = this.#messages.get(name)
     return (current$) ? current$ : this.clear(name)
   }
@@ -47,7 +47,7 @@ export class FEMessages {
    * @param value - If `value` is an array => concat `value` w/ `#messages`, if `value` is a `string` => push `value` onto `#messages`
    * @param name - Messages are grouped by name
    */
-  push({ name = DEFAULT_MESSAGE_NAME, value }: { name?: string, value: string | string[] }): void {
+  push({ name = defaultMessageName, value }: { name?: string, value: string | string[] }): void {
     const [current, setCurent] = this.get(name)
 
     if (Array.isArray(value)) setCurent(current().concat(value))
@@ -97,10 +97,10 @@ export class FEMessages {
     }
 
     if (error.message) {
-      const signal$ = this.#messages.get(DEFAULT_MESSAGE_NAME)
+      const signal$ = this.#messages.get(defaultMessageName)
 
       if (signal$) signal$[1]([error.message])
-      else this.set({ name: DEFAULT_MESSAGE_NAME, value: error.message })
+      else this.set({ name: defaultMessageName, value: error.message })
     }
   }
 }

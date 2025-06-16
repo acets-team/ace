@@ -11,6 +11,8 @@ import type { Route } from './route'
 import type { routes } from './createApp'
 import type * as apisFE from '../apis.fe'
 import type * as apisBE from '../apis.be'
+import type { JWTPayload } from 'ace.config'
+import type { JwtValidateResponse } from './jwtValidate'
 import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
@@ -110,11 +112,20 @@ export type APIEvent = SolidAPIEvent
 export type FetchEvent = SolidFetchEvent
 
 
+/**
+ * - JWTPayload is defined @ ace.config.js
+ * - The FullJWTPayload adds `{iat: number, exp: number}` to the payload to align w/ the `JWT spec (RFC 7519)`
+ * - The `JWTPayload` is what is stored in the jwt and the `JWTResponse` is created if the `JWTPayload` is valid
+ * - We recomend only putting a sessionId in the `JWTPayload`, and also putting the sessionId in the database, so you can always sign someone out by removing the db entry and then putting any goodies ya love in the `JWTResponse` like email, name, isAdmin, etc.
+ */
+export type FullJWTPayload = JWTPayload & {iat: number, exp: number}
+
+
 /** 
  * - Anonymous async function (aaf) that runs b4 api and/or route fn
  * - If the aaf's response is truthy, that response is given to client & the  api and/or route fn is not called, else the fn is called
  */
-export type B4 = (ctx: B4Context) => Promise<any>
+export type B4 = (jwtResponse: JwtValidateResponse) => Promise<any>
 
 
 

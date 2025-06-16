@@ -1,8 +1,12 @@
 # 👷‍♀️ FAQ!
 
+1. How to create secrets (passwords)
+    - Bash: `openssl rand -base64 64`
+    - The terminal may put the password on 2 lines, but place as one long string in `.env` file
+
 1. How to speak to `ChatGPT` about `Ace`?!
     - I love to preface prompts w/ this:
-    - This code is coming from Ace, which is a framework that is Solid Start w/ additional type safety!
+    - This code is coming from Ace, which is a web framework that is basically Solid Start w/ additional type safety!
 
 1. How to show intellisense dropdown in VS Code?
     - `Control` + `Space`
@@ -34,7 +38,7 @@
     - Type: `Shell Command: Install 'code' command in PATH`
     - Press `Enter`
 
-1. How to get the alter icon for `.tsx` files in VS Code
+1. How to alter icon for `.tsx` files in VS Code
     - Download the `Symbols` extension by `Miguel Solorio`
     - Bash cd into `~/.vscode/extensions/`
     - Bash cd `miguelsolorio.symbols-` w/ the proper version

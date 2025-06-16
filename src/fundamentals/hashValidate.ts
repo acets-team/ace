@@ -13,20 +13,19 @@ import { base64UrlDecodeToBinary } from './base64UrlDecode'
  * ### Validate a hash in node or on the Edge (Cloudflare Workers)
  * @example
   ```ts
-    const hashResponse = await hashValidate({ hash, crypto, password: 'example' })
+    const hashResponse = await hashValidate({ hash, password: 'example' })
   ```
  * @param props.password - The plaintext password to validate agains the hash
  * @param props.hash - Hash string response from `hashCreate()`
- * @param props.crypto - A Web Crypto instance (e.g. `globalThis.crypto` or Node’s `webcrypto`)
  * @returns 
  * - A promise resolving to:  
  *     - `{ isValid: true }` on success
  *     - `{ isValid: false, errorId, errorMessage }` on failure  
  */
-export async function hashValidate({ password, hash, crypto: cryptoObj }: HashValidateProps): Promise<HashValidateResponse> {
+export async function hashValidate({ password, hash }: HashValidateProps): Promise<HashValidateResponse> {
   const [algorithm, hashFn, iterationsString, saltB64, reqHashB64] = hash.split('$')
 
-  if (algorithm !== 'PBKDF2') return error('INVALID_ALGORITHM', `Unsupported hash type: ${algorithm}`)
+  if (algorithm !== 'PBKDF2') return error('INVALID_ALGORITHM', `Unsupported algorithm: ${algorithm}`)
   if (!saltB64) return error('FALSY_SALT', 'Salt in hash must be truthy')
   if (!reqHashB64) return error('FALSY_HASH_FN', 'Hash Function in hash must be truthy')
 
@@ -39,9 +38,9 @@ export async function hashValidate({ password, hash, crypto: cryptoObj }: HashVa
 
   const salt = base64UrlDecodeToBinary(saltB64)
 
-  const cryptoKey = await cryptoObj.subtle.importKey( 'raw', passwordBinary, 'PBKDF2', false, ['deriveBits'] )
+  const cryptoKey = await crypto.subtle.importKey( 'raw', passwordBinary, 'PBKDF2', false, ['deriveBits'] )
 
-  const correctHashBinary = await cryptoObj.subtle.deriveBits( { name: 'PBKDF2', salt, iterations, hash: hashFn }, cryptoKey, hashFn === 'SHA-512' ? 512 : 256 )
+  const correctHashBinary = await crypto.subtle.deriveBits( { name: 'PBKDF2', salt, iterations, hash: hashFn }, cryptoKey, hashFn === 'SHA-512' ? 512 : 256 )
 
   const correctHashBinaryArray = new Uint8Array(correctHashBinary) // a binary typed array is easier to compare / loop through then a raw contiguous binary buffer
 
@@ -62,7 +61,7 @@ export async function hashValidate({ password, hash, crypto: cryptoObj }: HashVa
 
   if (isPasswordIncorrect) return error('INVALID_PASSWORD', 'Password is not correct')
 
-  return { valid: true }
+  return { isValid: true }
 }
 
 
@@ -72,16 +71,14 @@ export type HashValidateProps = {
   password: string
   /** Hash string response from `hashCreate()` */
   hash: string
-  /** A Web Crypto instance (e.g. `globalThis.crypto` or Node’s `webcrypto`) */
-  crypto: Crypto
 }
 
 
 
-export type HashValidateSuccess = { valid: true }
+export type HashValidateSuccess = { isValid: true }
 
 export type HashValidateFailure = {
-  valid: false
+  isValid: false
   errorId: 'INVALID_ALGORITHM' | 'FALSY_SALT' | 'FALSY_HASH_FN' | 'INVALID_ITERATIONS' | 'INVALID_HASH' | 'INVALID_PASSWORD'
   errorMessage: string
 }
@@ -90,4 +87,4 @@ export type HashValidateResponse = HashValidateSuccess | HashValidateFailure
 
 
 
-const error = (errorId: HashValidateFailure['errorId'], errorMessage: string): HashValidateFailure => ({valid: false, errorId, errorMessage })
+const error = (errorId: HashValidateFailure['errorId'], errorMessage: string): HashValidateFailure => ({isValid: false, errorId, errorMessage })

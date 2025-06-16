@@ -6,8 +6,6 @@ export const config = {
   apiDir: './src/api',
   appDir: './src/app',
   logCaughtErrors: true,
-  cookieKey: 'ace_cookie',
-  sessionDataTTL: 1000 * 60 * 60 * 24 * 3, // 3 days in ms
   envs: [
     { name: 'local', url: 'http://localhost:3000' },
   ],
@@ -21,7 +19,15 @@ export const config = {
 
 
 /** 
- * @typedef {Object} SessionData
- * @property {string} userId
- * @property {string} sessionId
+ * @typedef {Object} JWTPayload
+ * @property {number} sessionId
+ */
+
+
+/** 
+ * @typedef {Object} JWTResponse
+ * @property {number} sessionId
+ * @property {number} userId
+ * @property {boolean} isAdmin
+ * @property {string} name
  */

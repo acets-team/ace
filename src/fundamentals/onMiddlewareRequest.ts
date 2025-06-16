@@ -11,9 +11,9 @@ import { routes } from './createApp'
 import { gets, posts } from './apis'
 import { AceError } from './aceError'
 import type { FetchEvent } from './types'
-import { getSessionData } from './session'
 import { GoResponse } from './goResponse'
 import { redirect } from '@solidjs/router'
+import { jwtCookieGet } from './jwtCookieGet'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
 
@@ -38,7 +38,7 @@ import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
  */
 export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
   try {
-    event.locals.sessionData = await getSessionData()
+    event.locals.jwtResponse = await jwtCookieGet(event.nativeEvent)
 
     const pathname = eventToPathname(event)
 
@@ -59,10 +59,7 @@ export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
 async function onRouteOrAPIMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
   if (routeMatch.handler.values.b4) {
     try {
-      return await routeMatch.handler.values.b4({
-        event,
-        sessionData: event.locals.sessionData
-      })
+      return await routeMatch.handler.values.b4(event.locals.jwtResponse)
     } catch (error) {
       if (error instanceof GoResponse) return redirect(error.location)
       else throw error
