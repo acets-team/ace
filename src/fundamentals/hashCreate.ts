@@ -20,11 +20,11 @@ import { base64UrlEncode } from './base64UrlEncode'
   ```
  * @param props.password - The plaintext password to hash
  * @param props.saltLength - The National Institute of Standards and Technology (NIST) recommends a random salt length of 16 so we do to. `(default is 16)`
- * @param props.iterations - We recommend 300_000 to 1_000_000 iterations in Node for high security & fast performance `(default is 100_000)`. The default is 100_000 b/c that is the max allowed in the browser, aka @ Cloudflare Workers. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms
+ * @param props.iterations - We recommend 300_000 to 1_000_000 iterations in Node for high security & fast performance `(default is 99_999)`. The default is 99_999 b/c that is the max allowed in the browser, aka @ Cloudflare Workers. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms
  * @param props.hashFn - `SHA-512 (default)` w/ default saltLength & iterations is far beyond classical brute-force capabilities. SHA-256 is slightly weaker but faster.
  * @returns A hashed password using `SHA-256` or `SHA-512`
  */
-export async function hashCreate({ password, saltLength = 16, iterations = 100_000, hashFn = 'SHA-512' }: HashCreateProps): Promise<string> {
+export async function hashCreate({ password, saltLength = 16, iterations = 99_999, hashFn = 'SHA-512' }: HashCreateProps): Promise<string> {
   const encoder = new TextEncoder()
 
   const passwordBinary = encoder.encode(password)
@@ -48,7 +48,7 @@ export type HashCreateProps = {
   password: string
   /** The National Institute of Standards and Technology (NIST) recommends a random salt length of 16 so we do to. `(default is 16)` */
   saltLength?: number
-  /** We recommend 300_000 to 1_000_000 iterations for high security & fast performance `(default is 600_000)`. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms */
+  /** We recommend 300_000 to 1_000_000 iterations in Node for high security & fast performance `(default is 99_999)`. The default is 99_999 b/c that is the max allowed in the browser, aka @ Cloudflare Workers. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms */
   iterations?: number
   /** `SHA-512 (default)` w/ default saltLength & iterations is far beyond classical brute-force capabilities. SHA-256 is slightly weaker but faster. */
   hashFn?: 'SHA-512' | 'SHA-256'
