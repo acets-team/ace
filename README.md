@@ -1,72 +1,19 @@
-![Ace](https://i.imgur.com/jFILQ9P.png)
-
-
-## 🧐 What is `Ace`?!
-- 👋 `Ace` provides **Solid Fundamentals**... For those that ❤️ `fine grained reactivity` **AND** `in-editor autocomplete`!
-
-
-## 👷‍♀️ Create `Ace` App?!
-- Yes please! Just open a `bash` terminal &:
-  ```bash
-  npx create-ace-app@latest
-  ```
-- [Wanna see what "create-ace-app" does automatically 🔮?!](https://github.com/acets-team/create-ace-app)
-
-
-## ✅ Got Features?!
-### Standard
-1. [Free](#-how-to-deploy) global hosting, 💸 thanks to [Cloudflare](https://www.cloudflare.com/)! ☁️
-1. From the **server** or **browser**, call your **API endpoints** as a `typesafe` **function**!
-1. **`In editor`**, **`autocomplete`** & **`typesafety`** @:
-    - Anchor Tags 🔗
-    - Frontend & Backend Redirects 🔀
-    - API Requests started server side during page load 🌐
-    - Async API Requests started in the browser after page load 💫
-1. The initial `page load HTML` is created server-side for lovely `SEO` but then after that initial page load, enjoy **smooth** `Single Page App` routing & navigation! 🧚‍♀️ 
-1. On **update**... Only **update**... What **updated**  💪 all **thanks** to [Solid](https://www.solidjs.com/)! 🙏
+![Ace](https://i.imgur.com/UWcQSn7.png)
 
 
 
-### Security
-1. Smaller than a photo 📸 b/c even when **unminified** `Ace` is less then **`300 kB`**, requires **`0 dependencies`** & was built to be tree shaked! 🌳
-1. Simplify cookies, sessions & auth, thanks to the `set()`, `get()` & `clear()`, session data helpers! 🚨 
-1. Like middleware, run `async` functions **before** your `route`'s or `api`'s boot! 🔐
+### Create an Ace App ✅
+```bash
+npx create-ace-app@latest
+```
 
-
-### Routes & API
-1. Define 0 to many `layouts` for `routes` to be placed within! 📥 
-1. Place your `layouts`, `routes` & `apis` wherever ya love! 💚
-1. `Define`, `read` and `validate`, **path or search** `params`, at **api's or route's**! 🪷
-1. Enjoy fast initial page load times, b/c all static content is in the initial HTML! 😊
-1. Have static content available immediately, make multiple api calls during a page reder, and as each dynamic promise resolves (ex: database data), stream that item back to the frontend! 🎉
-1. So when Request processing begins on the server, so does dynamic data gathering. If dynamic data is ready before the page has been built that dynamic data will be included in the initial page load and all else will stream once that item is ready! 💫
-
-
-### Getting Started
-1. Create new projects 👩‍🍼 and build the **`autocompleting intellisense types`** for existing ones 🏗️ wih our `blazingly-fast cli`! ⚡️
-1. A super simple api, with tons of [JSDOC](https://jsdoc.app/) comments for in editor docs & examples  when hovering over `Ace` **types, functions and components**! 🤓
-
-
-### Honorable Mentions
-1. `<AnimatedFor />` - Animate your lovely lists, with CSS animations! 🌀
-1. `<Messages />` - Show `form save error messages`, for the form as a hole AND per input, by the input! 🎯
-1. `Shimmer` & `LoadSpin`: Show gentle loading animations with CSS! ✨
-1. `ParamEnums`: Simply define all the `enums` a `url param` can be and then validate the url (ex: `'earth' | 'air' | 'fire' | 'water'`)
-1. `parseNumber()`: Also helpful w/ params, to find out is a param `a number`, a `specific` number and/or `between` 2 numbers to help gain url param **confidence**!
-1. `mongoConnect()` & `mongoModel()` - Manage mongo connection pools & enhance its standard typesafety!
-1. `cuteLog()` - Create strings w/ 30+ customization options to add some style to your terminal logs! 🎨
-1. `holdUp()` - Pause for a specific or random amount of time! ⏳
-1. `lorem()` - Generate `lorem ipsum` words & paragraphs! ✍️
-
-
-## 🧚‍♀️ Got code?!
 ### GET! 💖
 ```tsx
 import { API } from '@ace/api'
 
-export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api endpoint @ the path /api/aloha AND we can call the function apiAloha() app-wide w/ request & response typesafety!
+export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api endpoint @ the path /api/aloha AND we can call the function apiAloha() on the frontend or backed w/ request & response typesafety!
   .resolve(async (be) => {
-    return be.json({ aloha: true })
+    return be.success({ aloha: true }) // call be.Success() to set custom status code / headers
   })
 ```
 
@@ -80,7 +27,7 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
   .resolve(async (be) => {
     const {id} = be.getParams() // typesafe!
-    return be.json({ id })
+    return be.success({ id })
   })
 ```
 
@@ -94,7 +41,7 @@ import { authB4 } from '@src/lib/b4'
 export const GET = new API('/api/aloha', 'apiAloha')
   .b4(authB4) // run the `authB4()` async function before this api boots!
   .resolve(async (be) => {
-    return be.json({ aloha: true })
+    return be.success({ aloha: true })
   })
 ```
 
@@ -104,50 +51,94 @@ export const GET = new API('/api/aloha', 'apiAloha')
 import { go } from '@ace/go'
 import type { B4 } from '@ace/types'
 
-export const guestB4: B4 = async (ctx) => {
-  if (ctx.sessionData) return go('/contracts') // go() knows about all your routes & provides autocomplete!
+export const guestB4: B4 = async (jwt) => {
+  if (jwt.isValid) return go('/contracts') // go() knows about all your routes & provides autocomplete!
 }
 
-export const authB4: B4 = async (ctx) => {
-  if (!ctx.sessionData) return go('/sign-in/:messageId?', {messageId: '1'})
+export const authB4: B4 = async (jwt) => {
+  if (!jwt.isValid) return go('/sign-in/:messageId?', {messageId: '1'}) // call Go() to send custom status & headers
 }
 ```
 
 
-### POST! 🧡
+### Redirect @ `resolve()`! 💞
 ```tsx
-import { go } from '@ace/go'
 import { API } from '@ace/api'
-import { compare } from 'bcrypt'
-import { guestB4 } from '@src/lib/b4'
-import { SessionData } from 'ace.config'
-import { M_User } from '@src/db/M_User'
-import { setSessionData } from '@ace/session'
-import { mongoConnect } from '@ace/mongoConnect'
-import { signInSchema, SignInSchema } from '@src/schemas/SignInSchema'
+
+export const GET = new API('/api/aloha/:id', 'apiAloha')
+  .params<{ id: string }>()
+  .resolve(async (be) => {
+    const {id} = be.getParams()
+
+    return id === 9
+      ? be.go('/example') // be.go() knows about all your routes & provides autocomplete!
+      : be.success({ id })
+  })
+```
+
+
+### Redirect @ `b4()`! 🤓
+- If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
+- If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
+```tsx
+import { goThrow } from '@ace/go'
+import { Route } from '@ace/route'
+
+
+export default new Route('/')
+  .b4(async () => {
+    throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
+  })
+```
+
+
+### POST! 🧡
+- All the typesafe `db`, `jwt` & `hash` code in this example works @ `Node` & `Cloudflare Workers` 🥹
+```tsx
+import { API } from '@ace/api'
+import { eq } from 'drizzle-orm'
+import { ttlDay } from '@ace/jwtCreate'
+import { JWTPayload } from 'ace.config'
+import { hashValidate } from '@ace/hashValidate'
+import { jwtCookieSet } from '@ace/jwtCookieSet'
+import { db, sessions, users } from '@src/lib/db'
+import { signInSchema, type SignInSchema } from '@src/schemas/SignInSchema'
 
 
 export const POST = new API('/api/sign-in', 'apiSignIn')
-  .b4(guestB4)
-  .body<SignInSchema>() // tells .resolve() & app-wide the request body this api requires
-  .resolve((be) => {
-    const body = signInSchema.parse(await be.getBody()) // get, validate & parse the request body in 1 line!
+  .body<SignInSchema>()
+  .resolve(async (be) => {
+    const body = signInSchema.parse(await be.getBody()) // get, validate & parse body to { email: string, password: string }
 
-    await mongoConnect() // ensures 1 mongo pool is running
+    const _db = db() // since we'll call db() many times var it out
 
-    const user = await M_User.get().findOne({ email: body.email }).lean()
+    const resGetUser = await _db // using their email, get their userId & hashed password
+      .select({ userId: users.id, hash: users.password })
+      .from(users)
+      .where(eq(users.email, body.email))
 
-    if (!user) throw new Error('Please use valid credentials')
+    const { userId, hash } = resGetUser[0] ?? {}
 
-    if (!await compare(body.password, user.passwordHash)) throw new Error('Please use valid credentials')
+    if (!userId) return be.error('Invalid sign in') // call be.Error() to send custom headers & status codes
+    if (!hash) return be.error('Please sign up')
 
-    const sessionData: SessionData = { id: user.id }
+    const hashResponse = await hashValidate({ hash, password: body.password }) // check if the hash is valid
+    if (!hashResponse.isValid) return be.error('Invalid sign in')
 
-    setSessionData(sessionData)
+    const ttl = ttlDay // we have exports for ttlMinute, ttlHour & ttlWeek too :)
 
-    return be.go('/auhenticated') // go() knows about all your routes & provides autocomplete!
-  }
-})
+    const resCreateSession = await _db.insert(sessions) // add session to db so we can always sign someone out by removing their db session
+      .values({ userId, expiration: new Date(Date.now() + ttl) })
+      .returning({ sessionId: sessions.id })
+
+    const sessionId = resCreateSession[0]?.sessionId // notify if there was a db error
+    if (!sessionId) return be.error('Session create error')
+
+    const payload: JWTPayload = { sessionId } // add jwt to cookie
+    await jwtCookieSet({ jwtCreateProps: { ttl, payload } })
+
+    return be.success({yay: true})
+  })
 ```
 
 
@@ -262,7 +253,7 @@ export default new Route404()
         return <Characters res={{ air, fire, earth, water }} />
       })
 
-    function Characters({ res }: { res: Record<InferEnums<typeof elementEnums>, InferLoadFn<'apiCharacter'>> }) {
+    function Characters({ res }: { res: Record<InferEnums<typeof elementEnums>, InferLoadFn<'apiCharacter'>> }) { // once you type InferLoadFn<''> all the api function names appear in the sring thanks to Ace typesafety!
       return <>
         <div class="characters">
           <Character element={res.fire} />
@@ -285,29 +276,7 @@ export default new Route404()
     }
     ```
 
-### Infer! 🧚‍♀️
-- In the example above we use `InferLoadFn`
-- When using an `Infer`, example: `InferLoadFn<''>`, place your insertion point in the string, press **control + space** & get autocomplete. Every `Infer` has this feature, every `Infer` may be found @ `@ace/types` and the  most frequently used are:
-    - **`✅ InferLoadFn`**
-        - Autocomplete: **All API Functions**
-        - Type: **API Function Response**
-        - Example: `InferLoadFn<'apiCharacter'>`
-    - **`✅ InferResponseGET`**
-        - Autocomplete: **Path to each api GET**
-        - Type: **API Response Body**
-        - Example: `InferResponseGET<'/api/example'>`
-    - **`✅ InferParamsGET`**
-        - Autocomplete: **Path to each api GET**
-        - Type: **API Params**
-        - Example: `InferParamsGET<'/api/example/:id'>`
-    - **`✅ InferBodyPOST`**
-        - Autocomplete: **Path to each api POST**
-        - Type: **API Request Body**
-        - Example: `InferBodyPOST<'/api/example'>`
-    - **`✅ InferParamsRoute`**
-        - Autocomplete: **Path to each route**
-        - Type: **Route Params**
-        - Example: `InferParamsRoute<'/example/:id'>`
+
 ### Form! ✨
 ```tsx
 import { clear } from '@ace/clear'
@@ -391,6 +360,110 @@ export default new Route('/sign-up/:sourceId?')
 ![Bunnies writing code](https://i.imgur.com/d0wINvM.jpeg)
 
 
-## 💖 Next!
-- [FAQ](https://github.com/acets-team/ace/blob/main/README_FAQ.md)
-- [Error Dictionary](https://github.com/acets-team/ace/blob/main/README_ERRORS.md)
+# 🚨 Error Dictionary!
+
+    Anytime you see "Standard Fix" below, do this please
+
+## ✅ Standard Fix
+1. In browser, delete the `Solid Start` cookie that has the cookie name from `./ace.config.js`
+1. Stop all local servers running Ace
+1. Delete generated `.ace` folder
+1. `npm run dev`
+1. Ensure the port shown in `bash`, is the port in your `./ace.config.js`
+1. Open a new browser tab, place the url from `bash` into the browser & press `Enter`
+
+## 🔔 Errors
+1. `TypeError: Comp is not a function at createComponent`
+    - Ensure `app.tsx` has `import { createApp } from '@ace/createApp'` and `export default createApp()`
+    - Standard Fix
+1. `Error: <A> and 'use' router primitives can be only used inside a Route.`
+    - This is typically caused by something in the default export function @ `app.tsx` that should not be there, like `useParams()` or `useLocation()`. This function must only have items like  `<Router />`, `<FileRoutes />` or `<Route />`. Then w/in the component functions of the route or layout we may use router primatives
+    - Standard Fix
+1. `Cannot read properties of null (reading 'push') @ Effects.push.apply(Effects, e);` 
+    - Standard Fix
+1. `Error Unknown error @ solid-js/dist/dev.js`
+    - Fix any browser console errors
+    - Standard Fix
+1. `Type [example] is not assignable to type 'IntrinsicAttributes & [example]. Property [example] does not exist on type 'IntrinsicAttributes & [example].ts(2322)`
+    - Ensure the props on your functional components are destructured so rather then `export function ExampleComponent(fe: FE)` it should be `export function ExampleComponent({ fe }: { fe: FE })` 
+1. `'default' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.`
+    - Change this:
+        ```ts
+        import { go } from '@ace/go'
+        import { Route } from '@ace/route'
+
+        export default new Route('/')
+          .b4(async () => {
+            return go('/sign-in')
+          })
+        ```
+    - To this:
+        ```ts
+        import { goThrow } from '@ace/go'
+        import { Route } from '@ace/route'
+
+        export default new Route('/')
+          .b4(async () => {
+            throw goThrow('/sign-in')
+          })
+        ```
+    - Throwing thankfully ends the inference loop of defining and returning a route 🙌
+
+
+
+# 👷‍♀️ FAQ!
+
+1. How to create secrets (passwords)
+    - Bash: `openssl rand -base64 64`
+    - The terminal may put the password on 2 lines, but place as one long string in `.env` file
+
+1. How to speak to `ChatGPT` about `Ace`?!
+    - If the question `is not` Ace specific then I'll preface w/ `env: SolidJS`
+    - If the question `is` Ace specific then I'll preface w/ `env: Ace which is basically SolidStart w/ additional typesafety`
+
+1. How to show intellisense dropdown in VS Code?
+    - `Control` + `Space`
+    
+1. How to reload VS Code?
+    - `Command` + `Shift` + `P`
+    - Type: `reload window`
+    - Press `Enter`
+
+1. How to open VS Code `settings.json`
+    - `Command` + `Shift` + `P`
+    - Type: `user settings json`
+    - Press `Enter`
+
+1. How to get VS Code to create `<div class="example"></div>` on `.example`
+    - @ VS Code `settings.json` add:
+        ```json
+        {
+          "emmet.includeLanguages": {
+            "typescriptreact": "html",
+            "javascriptreact": "html"
+          }
+        }
+        ```
+    - Reload VS Code!
+
+1. How to run `code .` in VS Code `bash` & have it open a new VS Code in that directory
+    - `Command` + `Shift` + `P`
+    - Type: `Shell Command: Install 'code' command in PATH`
+    - Press `Enter`
+
+1. How to alter icon for `.tsx` files in VS Code
+    - Download the `Symbols` extension by `Miguel Solorio`
+    - Bash cd into `~/.vscode/extensions/`
+    - Bash cd `miguelsolorio.symbols-` w/ the proper version
+    - Bash: `code .`
+    - @ `/src/icons/files/` place image
+    - @ `/src/symbol-icon-theme.json` w/in `iconDefinitions` place `"ace": { "iconPath": "./icons/files/[ image name & extension ]" },`
+    - @ `fileExtensions` update `"tsx": "ace",` & anywhere else ya love!
+    - @ VS Code `settings.json` add:
+        ```js
+        "symbols.files.associations": {
+          "*.jsx": "ace",
+          "*.tsx": "ace"
+        }
+        ```
+    - Reload VS Code!

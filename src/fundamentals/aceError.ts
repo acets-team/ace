@@ -1,6 +1,13 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import { AceError } from '@ace/aceError'
+ *     - import type { AceErrorProps } from '@ace/aceError'
+ */
+
+
 import { config } from 'ace.config'
 import { defaultError } from './vars'
-import type { APIResponse, FlatMessages } from './types'
+import type { RawAPIResponse, FlatMessages } from './types'
 
 
 /**
@@ -17,7 +24,7 @@ export class AceError {
   messages?: FlatMessages
 
 
-  constructor({ status = 400, statusText, message, messages, rawBody }: {  status?: number, statusText?: string, message?: string,messages?: FlatMessages, rawBody?: string }) {
+  constructor({ status = 400, statusText, message, messages, rawBody }: Omit<AceErrorProps, 'isAceError'>) {
     this.status = status
     this.message = message
     this.rawBody = rawBody
@@ -30,17 +37,17 @@ export class AceError {
    * - Typically called in the catch block of a try / cactch
    * @param options `{ error, data, defaultMessage = '❌ Sorry but an error just happened' }`
    */
-  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): APIResponse<T>  {
-    let res: APIResponse<T> | undefined
+  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): RawAPIResponse<T>  {
+    let res: RawAPIResponse<T> | undefined
 
     if (options?.error) {
-      if (options.error instanceof AceError) res = options.error.#get<T>(options.data)
-      else if (typeof options.error === 'object' && typeof options.error.error === 'object' && typeof options.error.error.message === 'string') res = AceError.#simple(options.error.error.message)
-      else if (options.error instanceof Error || (typeof options.error === 'object' && options.error.message)) res = AceError.#simple(options.error.message)
-      else if (typeof options.error === 'string') res = AceError.#simple(options.error)      
+      if (options.error instanceof AceError) res = options.error.get<T>(options.data)
+      else if (typeof options.error === 'object' && typeof options.error.error === 'object' && typeof options.error.error.message === 'string') res = AceError.simple(options.error.error.message)
+      else if (options.error instanceof Error || (typeof options.error === 'object' && options.error.message)) res = AceError.simple(options.error.message)
+      else if (typeof options.error === 'string') res = AceError.simple(options.error)      
     }
 
-    if (!res) res = AceError.#simple(defaultError)
+    if (!res) res = AceError.simple(defaultError)
 
     if (config.logCaughtErrors) console.error(options)
 
@@ -48,8 +55,8 @@ export class AceError {
   }
 
 
-  #get<T extends any>(data?: T): APIResponse {
-    const res: APIResponse = { data, error: null }
+  get<T extends any>(data?: T): RawAPIResponse {
+    const res: RawAPIResponse = { data, error: null, go: null }
 
     if (this.status || this.statusText || this.message || this.messages || this.rawBody) {
       res.error = { isAceError: true }
@@ -65,8 +72,8 @@ export class AceError {
   }
 
 
-  static #simple(message: string, status: number = 400): APIResponse {
-    return { data: null, error: { isAceError: true, status, message } }
+  static simple(message: string, status: number = 400): RawAPIResponse {
+    return { go: null, data: null, error: { isAceError: true, status, message } }
   }
 
 
@@ -122,4 +129,14 @@ export class AceError {
       messages: Object.keys(mergedMessages).length ? mergedMessages : undefined,
     })
   }
+}
+
+
+export type AceErrorProps = {
+  isAceError: true,
+  status?: number,
+  statusText?: string,
+  message?: string,
+  messages?: FlatMessages,
+  rawBody?: string
 }

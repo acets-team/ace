@@ -1,4 +1,10 @@
 /**
+ * 🧚‍♀️ How to access:
+ *     - import { buildURL } from '@ace/buildURL'
+ */
+
+
+/**
  * @param path As it shows in the `Route` config, so w/ params
  * @returns URL with params properly injected
  */

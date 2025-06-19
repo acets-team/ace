@@ -44,7 +44,9 @@
 
 
 ## Readme purpose
-- [ How to / Quick links to ] all possible
+- Descriptive code snippets
+- Error dictionary
+- FAQ
 
 
 
@@ -64,11 +66,6 @@
 
 ## Why is `/dist` not sent to Github?
 - This is the case @ `.gitignore` to simplify our git commits
-
-
-
-## How to do fancy text in the terminal?
-- [ANSI escape code generator](https://ansi.gabebanks.net/)
 
 
 ## Why `&& (chmod +x cli.js || true)`

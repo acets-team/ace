@@ -1,6 +1,6 @@
 import { createSignal, type Signal } from 'solid-js'
 import { defaultMessageName } from './fundamentals/vars'
-import { AceErrorType } from './fundamentals/types'
+import type { AceErrorProps } from './fundamentals/aceError'
 
 
 /**
@@ -84,7 +84,7 @@ export class FEMessages {
   }
 
 
-  #align(error: AceErrorType) {
+  #align(error: AceErrorProps) {
     if (error.messages) {
       for (const name in error.messages) { // messages are grouped by name
         const signal$ = this.#messages.get(name)

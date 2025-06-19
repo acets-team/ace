@@ -5,5 +5,5 @@
 
 
 export class GoResponse {
-  constructor(public location: string) {}
+  constructor(public url: string) {}
 }

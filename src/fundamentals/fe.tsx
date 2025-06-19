@@ -6,12 +6,12 @@
 
 import { Bits } from '../bits'
 import { feFetch } from '../feFetch'
-import { buildURL } from '../buildURL'
+import { buildURL } from './buildURL'
 import { FEMessages } from '../feMessages'
 import { getFEChildren } from '../feChildren'
 import { useParams, useLocation } from '@solidjs/router'
 import { createContext, type JSX, type ParentComponent } from 'solid-js'
-import type { GET_Paths, InferParamsGET, POST_Paths, InferBodyPOST, InferParamsPOST, InferResponseGET, InferResponsePOST, URLParams, URLSearchParams } from './types'
+import type { GET_Paths, GETPath2Params, POST_Paths, POSTPath2Body, POSTPath2Params, GETPath2Data, POSTPath2Data, URLParams, URLSearchParams } from './types'
 
 
 export let fe!: FE // the "!" tells ts: we'll assign this before it’s used but, ex: if a fe.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error 
@@ -66,8 +66,8 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    */
-  async GET<T extends GET_Paths>(path: T, options?: { params?: InferParamsGET<T>, bitKey?: string }): Promise<InferResponseGET<T>> {
-    return this._fetch<InferResponseGET<T>>(buildURL(path, options?.params), {method: 'GET', bitKey: options?.bitKey })
+  async GET<T extends GET_Paths>(path: T, options?: { params?: GETPath2Params<T>, bitKey?: string }): Promise<GETPath2Data<T>> {
+    return this._fetch<GETPath2Data<T>>(buildURL(path, options?.params), {method: 'GET', bitKey: options?.bitKey })
   }
 
 
@@ -78,8 +78,8 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async POST<T extends POST_Paths>(path: T, options?: { params?: InferParamsPOST<T>, body?: InferBodyPOST<T>, bitKey?: string }): Promise<InferResponsePOST<T>> {
-    return this._fetch<InferResponsePOST<T>>(buildURL(path, options?.params), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
+  async POST<T extends POST_Paths>(path: T, options?: { params?: POSTPath2Params<T>, body?: POSTPath2Body<T>, bitKey?: string }): Promise<POSTPath2Data<T>> {
+    return this._fetch<POSTPath2Data<T>>(buildURL(path, options?.params), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
   }
 
 

@@ -5,11 +5,11 @@
  */
 
 
-import { go } from './go'
-import { GoResponse } from './goResponse'
-import { BEMessages } from '../beMessages'
+import { go, Go } from './go'
+import { respond } from './respond'
+import { AceError } from './aceError'
 import { APIEvent } from '@solidjs/start/server'
-import type { APIResponse, APIBody, URLSearchParams, URLParams, AceResponse, Routes, InferParamsRoute } from './types'
+import type { APIBody, URLSearchParams, URLParams, AceResponse, Routes, RoutePath2Params, JSONable } from './types'
 
 
 
@@ -23,7 +23,6 @@ import type { APIResponse, APIBody, URLSearchParams, URLParams, AceResponse, Rou
 export class BE<T_Params extends URLParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}> {
   #source: BESource
   #event: APIEvent | null
-  messages: BEMessages
   #params: T_Params
   #search: T_Search
   #body?: T_Body
@@ -35,7 +34,6 @@ export class BE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
     this.#params = params
     this.#search = search
     this.#body = body
-    this.messages = new BEMessages()
   }
 
 
@@ -48,39 +46,33 @@ export class BE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
     return new BE('fn', null, params, search, body)
   }
 
+  success<T_Data>(data?: T_Data): AceResponse<T_Data> {
+    return respond<T_Data>({ data, status: 200 })
+  }
 
-  /**
-   * - Provides intellisense to current routes
-   * - same as `go()` that is typically used @ `b4()`
-   */
-  go<T extends Routes>(path: T, params?: InferParamsRoute<T>): GoResponse {
+
+  Success<T_Data>({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit }): AceResponse<T_Data> {
+    return respond<T_Data>({ data, status, headers })
+  }
+
+
+  go<T extends Routes>(path: T, params?: RoutePath2Params<T>): AceResponse<null> {
     return go(path, params)
   }
 
 
-  /**
-   * - Typically called when you'd love to respond from the api w/ json
-   * - Will also add any messages to an errors object if you called be.messages.push() during this call
-   * - If you'd rather respond w/ an error and not data `throw new Error()`
-   * @param data - The data to respond w/
-   * @returns An object that has `{ data }` and also too some errors or messages
-   */
-  json<T>(data: T, status = 200, headers?: HeadersInit): AceResponse<T> {
-    let res: APIResponse<T> = { data: null, error: null }
+  Go<T extends Routes>({ path, params, status = 301, headers }: { path: T, params?: RoutePath2Params<T>, status?: number, headers?: HeadersInit}): AceResponse<null> {
+    return Go({path, params, status, headers})
+  }
 
-    if (data) res.data = data
 
-    if (this.messages.has()) {
-      res.error = {
-        isAceError: true,
-        messages: this.messages.get()
-      }
-    }
+  error(message: string, status = 400) {
+    return respond({ error: new AceError({ message }), status })
+  }
 
-    return new Response(JSON.stringify(res), {
-      status,
-      headers: { 'Content-Type': 'application/json', ...headers },
-    }) as AceResponse<T>
+
+  Error({ error, status = 400, headers }: { error: AceError, status?: number, headers?: HeadersInit }): AceResponse<null> {
+    return respond({ error, status, headers })
   }
 
 

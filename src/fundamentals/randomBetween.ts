@@ -4,6 +4,10 @@
  */
 
 
+/**
+ * - Get a random numberbetween 2 numbers
+ * - Set `min` & `max` to the same value, for no random 🤓
+ */
 export function randomBetween(min: number, max: number) {
   return min === max
     ? max

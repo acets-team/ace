@@ -94,7 +94,7 @@ ${build.writes.apiFunctionsBE}
 
 function renderApisFE(build: Build) {
   return `import { fe } from './fundamentals/fe'
-import type { APIFunction } from './fundamentals/types' 
+import type { API2FEFunction } from './fundamentals/types' 
 
 ${build.writes.importsAPIFE}
 

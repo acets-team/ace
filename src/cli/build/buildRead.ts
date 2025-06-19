@@ -57,7 +57,7 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
 
         build.writes.apiFunctionsBE += `export const ${fnName} = createAPIFunction(${apiName})\n`
 
-        build.writes.apiFunctionsFE += `\nexport const ${fnName}: APIFunction<typeof ${apiName}> = async (o) => {
+        build.writes.apiFunctionsFE += `\nexport const ${fnName}: API2FEFunction<typeof ${apiName}> = async (o) => {
   return fe.${apiMethod}('${apiPath}', o)
 }\n`
 

@@ -7,7 +7,7 @@
 
 import { routes } from './createApp'
 import type { Routes } from './types'
-import { buildURL } from '../buildURL'
+import { buildURL } from './buildURL'
 import { useLocation } from '@solidjs/router'
 import { pathnameToMatch } from '../pathnameToMatch'
 import { createSignal, createEffect, onMount, For, Show, type JSX } from 'solid-js'

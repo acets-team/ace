@@ -14,8 +14,9 @@ import { For, Show, createMemo, createSignal, createUniqueId, type JSX } from 's
  * @example
   ```tsx
   <RadioCards
-    label="Choose color"
     name="color"
+    value="blue"
+    label="Choose color"
     activeStyle={blueActiveStyle}
     onChange={(val) => console.log(val)}
     radios={[

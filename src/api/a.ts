@@ -4,7 +4,7 @@ import { API } from '../fundamentals/api'
 export const GET = new API('/api/a/:id', 'apiA')
   .params<{id: string}>()
   .resolve(async (be) => {
-    return be.json({ a: true })
+    return be.success({ a: true })
   })
 
 

@@ -9,7 +9,7 @@ import { randomBetween } from './randomBetween'
 
 /**
  * - Wait a random amount of time between 2 numbers
- * - For no random, set `min` & `max` to the same value 🤓
+ * - Set `min` & `max` to the same value, for no random 🤓
  * @param min Defaults to 900ms
  * @param max Defaults to 1800ms
  */

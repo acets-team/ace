@@ -16,6 +16,7 @@ import { redirect } from '@solidjs/router'
 import { jwtCookieGet } from './jwtCookieGet'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
+import { callB4 } from '../callB4'
 
 
 /**
@@ -43,12 +44,12 @@ export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
     const pathname = eventToPathname(event)
 
     switch(event.request.method) {
-      case 'POST': return await onIsRequestingAnAPI(event, pathname, posts)
+      case 'POST': return await onAPIMatched(event, pathname, posts)
       case 'GET':
         const routeMatch = pathnameToMatch(pathname, routes)
  
-        if (routeMatch?.handler instanceof Route) return await onRouteOrAPIMatched(event, routeMatch)
-        else return await onIsRequestingAnAPI(event, pathname, gets)
+        if (routeMatch?.handler instanceof Route) return await onRouteMatched(event, routeMatch)
+        else return await onAPIMatched(event, pathname, gets)
     }
   } catch (error) {
     return new Response(JSON.stringify(AceError.catch({ error }), null, 2), { status: 401 }) // Only Response objects can be returned from middleware functions. Returning any other value will result in an error. source: https://docs.solidjs.com/solid-start/advanced/middleware#middleware
@@ -56,22 +57,23 @@ export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
 }
  
 
-async function onRouteOrAPIMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
+async function onRouteMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
   if (routeMatch.handler.values.b4) {
     try {
-      return await routeMatch.handler.values.b4(event.locals.jwtResponse)
+      const b4Response = await callB4(routeMatch.handler, event.locals.jwtResponse)
+      if (b4Response) return b4Response
     } catch (error) {
-      if (error instanceof GoResponse) return redirect(error.location)
+      if (error instanceof GoResponse) return redirect(error.url)
       else throw error
     }
   }
 }
 
 
-async function onIsRequestingAnAPI(event: FetchEvent, pathname: string, apis: Record<string, API<any>>) {
-  const routeMatch = pathnameToMatch(pathname, apis)
+async function onAPIMatched(event: FetchEvent, pathname: string, apis: Record<string, API<any>>) {
+  const match = pathnameToMatch(pathname, apis)
 
-  if (routeMatch?.handler instanceof API) {
-    return await onRouteOrAPIMatched(event, routeMatch)
+  if (match?.handler instanceof API) {
+    return await onRouteMatched(event, match)
   }
 }

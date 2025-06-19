@@ -41,7 +41,6 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
    *     - Do a redirect
    *     - Return nothing and allow api fn to to process next
    * - 🚨 If returning the response must be a `Response` object b/c this is what is given to the client
-   * - 🚨 When calling `go()` from w/in a `b4` a return type is required, b/c ts needs to know about all api's when we call `go()` to provide autocomplete but we are defining an api while calling `go()`. So the return type stops the loop of defining & searching
    * @example
     ```ts
     import { API } from '@ace/api'
@@ -52,7 +51,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
       .b4(authB4)
       .params<{contractId: string}>()
       .resolve(async (be) => {
-        return be.json({ params: be.getParams() })
+        return be.success(be.getParams())
       })
     ```
    */
@@ -74,7 +73,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
       .b4(authB4)
       .params<{contractId: string}>()
       .resolve(async (be) => {
-        return be.json({ params: be.getParams() })
+        return be.success(be.getParams())
       })
     ```
     */
@@ -100,8 +99,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
     export const GET = new API('/api/fortune/:id')]
       .params<{ id: number }>()
       .resolve(async (be) => {
-        const params = be.getParams()
-        return be.json({ params })
+        return be.success(be.getParams())
       })
     ```
    */
@@ -129,7 +127,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
 
         const {userId} = await parseSessionData()
 
-        return be.json({ userId, body })
+        return be.success({ userId, body })
       })
     ```
    */

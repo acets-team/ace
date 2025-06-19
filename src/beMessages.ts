@@ -4,7 +4,7 @@ import { defaultMessageName } from './fundamentals/vars'
 
 /**
  * - In `valibot` / `zod`, messages are `[string, string[]][]`
- * - On the `BE` messages are: `Map<string, string[]>`
+ * - On the `BE` messages are: `Record<string, string[]>`
  * - On the `FE` messages are: `Map<string, Signal<string[]>>`
  */
 export class BEMessages {
