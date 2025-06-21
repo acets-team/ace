@@ -35,9 +35,9 @@ export class Build {
   dirWriteRoot: string
   fsSolidTypes?: string
   dirWriteFundamentals: string
-  /** fsPath → moduleName */
   whiteList = new FundamentalWhiteList()
   layoutModuleNames = new Map<string, string>()
+  tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
   writes: Writes = { types: '', importsAPIFE: '', importsAPIBE: '', constGET: '', constPOST: '', apiFunctionsFE: '', apiFunctionsBE: '' }
   counts: { GET: number, POST: number, routes: number, layouts: number } = { GET: 0, POST: 0, routes: 0, layouts: 0 }

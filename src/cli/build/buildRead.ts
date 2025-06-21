@@ -1,12 +1,15 @@
+import { parse } from 'tsconfck'
 import path, { join, resolve } from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
-import { getConstEntry, getSrcImportEnry, ImportsMap, BuildRoute, type Build } from './build.js'
+import { getConstEntry, getSrcImportEnry, BuildRoute, type Build } from './build.js'
 
 
 export async function buildRead(build: Build) {
   if (build.config.plugins.solid) {
     if (!build.config.apiDir || typeof build.config.apiDir !== 'string') throw new Error('❌ When using the solid plugin, `config.apiDir` must be a truthy string')
     if (!build.config.appDir || typeof build.config.appDir !== 'string') throw new Error('❌ When using the solid plugin, `config.appDir` must be a truthy string')
+
+    await setTsconfigPaths(build)
 
     const [fsApp, fsSolidTypes] = await Promise.all([
       readFile(join(build.dirRead, '../../../createApp.txt'), 'utf-8'),
@@ -18,6 +21,27 @@ export async function buildRead(build: Build) {
     build.fsApp = fsApp
     build.fsSolidTypes = fsSolidTypes
   }
+}
+
+
+async function setTsconfigPaths(build: Build) {
+  const {tsconfig} = await parse(join(build.cwd, build.config.tsConfigPath ?? 'tsconfig.json'))
+
+  build.tsConfigPaths = (Object.entries(tsconfig?.compilerOptions?.paths || {}) as [string, string[]][]).map(([aliasPattern, targets]) => {
+    let regex: RegExp
+    const hasWildcard = aliasPattern.includes('*')
+
+    if (!hasWildcard) regex = new RegExp(`^${aliasPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
+    else {
+      const placeholder = '__WILDCARD__'
+      let pattern = aliasPattern.replace(/\*/g, placeholder) // replace * temporarily with the placeholder __WILDCARD__
+      pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // escape all the other regex special characters
+      pattern = pattern.replace(new RegExp(placeholder, 'g'), '(.*)') // put the wildcard back — replacing __WILDCARD__ with the regex capture group (.*)
+      regex = new RegExp(`^${pattern}$`) // turn pattern into a regex
+    }
+
+    return { regex, targets }
+  })
 }
 
 
@@ -89,10 +113,10 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
     if (entry.isDirectory()) await readAppDirectory(fsPath, build)
     else if (entry.isFile() && fsPath.endsWith('.tsx')) {
       const src = removeComments(await readFile(fsPath,'utf-8'))
-      let { routePath, fsLayouts } = doRouteRegex(dir, src)
+      let { routePath, fsLayouts } = doRouteRegex(dir, src, build)
 
       if (!routePath && !build.found404) {
-        const res404 = doRoute404Regex(dir, src)
+        const res404 = doRoute404Regex(dir, src, build)
 
         if (res404.routePath) {
           build.found404 = true
@@ -167,7 +191,7 @@ function getImportsMap(content: string): Map<string, string> {
 
 
 /** Extract filesystem layout paths from a `.layouts([A, B])` call */
-function extractLayouts(dir: string, content: string): string[] {
+function extractLayouts(dir: string, content: string, build: Build): string[] {
   const fsLayouts: string[] = []
   const regexLayouts = /\.layouts\(\s*\[\s*([^\]]+?)\s*\]\s*\)/
   const matchLayouts = regexLayouts.exec(content)
@@ -179,15 +203,46 @@ function extractLayouts(dir: string, content: string): string[] {
     .split(/\s*,\s*/)
     .filter(name => name.length > 0)
 
-  for (const name of layoutNames) {
-    const importFrom = importsMap.get(name)
-    if (importFrom) {
-      fsLayouts.push(path.resolve(dir, importFrom))
-    }
+    for (const name of layoutNames) {
+      const importFrom = importsMap.get(name)
+      if (!importFrom) continue
+
+      const resolvedPath = resolveImport(importFrom, dir, build)
+      if (!resolvedPath) continue
+
+      fsLayouts.push(resolvedPath)
   }
 
   return fsLayouts
 }
+
+
+/**
+ * Resolve an import specifier against tsconfig paths or as a relative path.
+ */
+function resolveImport(
+  importFrom: string,
+  dir: string,
+  build: Build
+): string | null {
+  if (!build.tsConfigPaths) return null
+
+  // 1. Try tsconfig path aliases
+  for (const { regex, targets } of build.tsConfigPaths) {
+    const match = regex.exec(importFrom)
+
+    if (match && match[1] != null) {
+      for (const target of targets) {
+        const substituted = target.replace('*', match[1])
+        return path.resolve(build.cwd, substituted)
+      }
+    }
+  }
+
+  // 2. Fallback to relative/absolute resolution
+  return path.resolve(dir, importFrom)
+}
+
 
 
 /** Extract the route path string from the tail after `new Route(` */
@@ -199,7 +254,7 @@ function extractRoutePath(tail: string): string | undefined {
 
 
 /** Parses a file for `export default new Route(path)` */
-export function doRouteRegex(dir: string, content: string): RouteResult {
+export function doRouteRegex(dir: string, content: string, build: Build): RouteResult {
   const res: RouteResult = { routePath: '', fsLayouts: [] }
 
   const regexExportDefault = /export\s+default\s+new\s+Route\s*\(\s*/m
@@ -210,19 +265,19 @@ export function doRouteRegex(dir: string, content: string): RouteResult {
   const pathStr = extractRoutePath(tail)
   if (pathStr) res.routePath = pathStr
 
-  res.fsLayouts = extractLayouts(dir, content)
+  res.fsLayouts = extractLayouts(dir, content, build)
   return res
 }
 
 
 /** Parses a file for `export default new Route404()` */
-export function doRoute404Regex(dir: string, content: string): RouteResult {
+export function doRoute404Regex(dir: string, content: string, build: Build): RouteResult {
   const res: RouteResult = { routePath: '', fsLayouts: [] }
 
   const regex404 = /export\s+default\s+new\s+Route404\s*\(\s*\)/m
   if (!regex404.test(content)) return res
 
   res.routePath = '*'
-  res.fsLayouts = extractLayouts(dir, content)
+  res.fsLayouts = extractLayouts(dir, content, build)
   return res
 }

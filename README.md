@@ -69,25 +69,7 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>()
   .resolve(async (be) => {
     const {id} = be.getParams()
-
-    return id === 9
-      ? be.go('/example') // be.go() knows about all your routes & provides autocomplete!
-      : be.success({ id })
-  })
-```
-
-
-### Redirect @ `b4()`! 🤓
-- If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
-- If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
-```tsx
-import { goThrow } from '@ace/go'
-import { Route } from '@ace/route'
-
-
-export default new Route('/')
-  .b4(async () => {
-    throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
+    return id === 9 ? be.go('/example') : be.success({ id }) // be.go() knows about all your routes & provides autocomplete!
   })
 ```
 
@@ -165,7 +147,7 @@ export type SignInSchema = InferValibotSchema<typeof signInSchema> // by definin
 ### Layout! ❤️
 ```tsx
 import './Guest.css'
-import GuestNav from './GuestNav'
+import Nav from './Nav'
 import { Layout } from '@ace/layout'
 
 
@@ -173,7 +155,7 @@ export default new Layout()
   .component((fe) => {
     return <>
       <div class="guest">
-        <GuestNav />
+        <Nav />
         {fe.getChildren()}
       </div>
     </>
@@ -208,7 +190,7 @@ import { Route404 } from '@ace/route404'
 
 
 export default new Route404()
-  .layouts([RootLayout]) // zero to many layouts available!
+  .layouts([RootLayout]) // zero to many layouts available @ Route or Route404!
   .component((fe) => {
     return <>
       <Title>😅 404</Title>
@@ -250,7 +232,10 @@ export default new Route404()
         const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
         const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
 
-        return <Characters res={{ air, fire, earth, water }} />
+        return <>
+          <h1>This element will render immediately</h1>
+          <Characters res={{ air, fire, earth, water }} />
+        </>
       })
 
     function Characters({ res }: { res: Record<InferEnums<typeof elementEnums>, InferLoadFn<'apiCharacter'>> }) { // once you type InferLoadFn<''> all the api function names appear in the sring thanks to Ace typesafety!
@@ -265,7 +250,7 @@ export default new Route404()
     }
 
 
-    function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) {
+    function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) { // once a load has finished the character will render
       return <>
         <div class="character">
           <Suspense fallback={<div class="ace-shimmer"></div>}>
@@ -322,6 +307,20 @@ export default new Route('/sign-up/:sourceId?')
     </>
   }
 })
+```
+
+
+### Redirect @ `b4()`! 🤓
+- If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
+- If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
+```tsx
+import { goThrow } from '@ace/go'
+import { Route } from '@ace/route'
+
+export default new Route('/')
+  .b4(async () => {
+    throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
+  })
 ```
 ![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 

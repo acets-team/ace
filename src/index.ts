@@ -25,6 +25,8 @@ export type AceConfig = {
   jwtCookieKey?: string,
   logCaughtErrors?: boolean,
   plugins: PluginsConfig,
+  /** Default is `tsconfig.json` */
+  tsConfigPath?: string,
   envs?: { name: string, url: string }[],
 }
 
