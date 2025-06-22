@@ -9,7 +9,47 @@
 import { createSignal, createEffect, onCleanup, createMemo, Show, Index, type JSX } from 'solid-js'
 
 
-export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl = true, interval = 6000, ...sectionProps }: SlideshowProps) {
+/**
+ * ### Display lovely slideshow
+ * - Slides are tsx, so they can be images and / or html :)
+ * - Add to `app.tsx` => `import '@ace/slideshow.styles.css'` & then:
+ * @example
+  ```tsx
+  import './Home.css'
+  import slide1 from './slide1.webp'
+  import slide2 from './slide2.webp'
+  import slide3 from './slide3.webp'
+  import slide4 from './slide4.webp'
+  import slide5 from './slide5.webp'
+  import { Route } from '@ace/route'
+  import { Slideshow } from '@ace/slideshow'
+
+
+  export default new Route('/')
+    .component(() => {
+      const slides = [
+        <img src={slide1} />,
+        <img src={slide2} />,
+        <img src={slide3} />,
+        <img src={slide4} />,
+        <img src={slide5} />,
+      ]
+
+      return <>
+        <main class="home">
+          <Slideshow items={() => slides} />
+        </main>
+      </>
+    })
+  ```
+ * @param props.items - Anonymous function returning an array of JSX elements
+ * @param props.dots - Optional, show or hide navigation dots; `default = true`
+ * @param props.autoPlay - Optional, autoplay on load;` default = true`
+ * @param props.showPlayControl - Optional, show or hide play/pause control; `default = true`
+ * @param props.interval - Optional, slide interval in milliseconds; `default = 6000`
+ * @param props.sectionProps - Optional, any additional props that you'd love to add to the `<section class="ace-slideshow">` 
+ */
+export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl = true, interval = 6000, sectionProps }: SlideshowProps) {
   const [current, setCurrent] = createSignal(0)
   const [paused, setPaused] = createSignal(false)
   const itemsMemo = createMemo(() => items() || []) // derived, read-only & cached reactive computation
@@ -58,7 +98,7 @@ export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl
 }
 
 
-export type SlideshowProps = JSX.HTMLAttributes<HTMLElement> & {
+export type SlideshowProps = {
   /** Anonymous function returning an array of JSX elements */
   items: () => JSX.Element[]
   /** Show or hide navigation dots; default = true */
@@ -68,5 +108,7 @@ export type SlideshowProps = JSX.HTMLAttributes<HTMLElement> & {
   /** Show or hide play/pause control; default = true */
   showPlayControl?: boolean
   /** Slide interval in milliseconds; default = 6000 */
-  interval?: number
+  interval?: number,
+  /** Any additional props that you'd love to add to the `<section class="ace-slideshow">`  */
+  sectionProps?: JSX.HTMLAttributes<HTMLElement>,
 }

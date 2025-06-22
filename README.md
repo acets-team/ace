@@ -8,6 +8,7 @@ npx create-ace-app@latest
 ```
 
 
+
 ### 👷‍♀️ Route!
 ```tsx
 import { A } from '@ace/a'
@@ -16,13 +17,15 @@ import { Title } from '@solidjs/meta'
 
 
 export default new Route('/yin')
-  .component((fe) => {
+  .component(() => {
     return <>
       <Title>Yin</Title>
       <A path="/yang">Yang</A> {/* The <A /> component knows about your routes & provides autocomplete! 🙌 */}
     </>
   })
 ```
+
+
 
 ### 💞 Layout!
 ```tsx
@@ -41,6 +44,7 @@ export default new Layout()
     </>
   })
 ```
+
 
 
 ### 😅 404 Route!
@@ -66,8 +70,8 @@ export default new Route404()
       </main>
     </>
   })
-
 ```
+
 
 
 ### 💫 Route w/ Async Data!
@@ -79,10 +83,13 @@ export default new Route404()
     import { Route } from '@ace/route'
     import { Suspense } from 'solid-js'
     import { apiCharacter } from '@ace/apis'
+    import RootLayout from '@src/app/RootLayout'
     import type { InferLoadFn } from '@ace/types'
+    import GuestLayout from '@src/app/Guest/GuestLayout'
 
 
     export default new Route('/smooth')
+    .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps this Route!
       .component(() => {
         const air = load(() => apiCharacter({params: {element: 'air'}}), 'air')
         const fire = load(() => apiCharacter({params: {element: 'fire'}}), 'fire')
@@ -114,6 +121,7 @@ export default new Route404()
     ```
 
 
+
 ### ✨ Form!
 - ✅ FE & BE Validation uses the same schema
 - ✅ No BE request is made unless FE validation passes
@@ -126,17 +134,14 @@ export default new Route404()
   import { apiSignUp } from '@ace/apis'
   import { Title } from '@solidjs/meta'
   import { guestB4 } from '@src/lib/b4'
-  import RootLayout from '../RootLayout'
-  import GuestLayout from './Guest.Layout'
   import { Messages } from '@ace/messages'
   import { createOnSubmit } from '@ace/createOnSubmit'
   import { signUpSchema } from '@src/schemas/SignUpSchema'
 
 
   export default new Route('/sign-up/:sourceId?')
-    .b4(guestB4) // run this asyc fn b4 route render
-    .layouts([RootLayout, GuestLayout]) // Root wraps Guest, Guest wraps this Route!
-    .component((fe) => {
+    .b4(guestB4) // run this async fn b4 this route renders
+    .component(() => {
       const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
         const body = signUpSchema.parse({ // get parse & validate request body
           email: fd('email'), // fd() is a form data helper
@@ -151,7 +156,7 @@ export default new Route404()
 
         <form onSubmit={onSubmit}>
           <input placeholder="Email" name="email" type="email" use:clear />
-          <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or fe.POST(), for just the email input! 🚀 */}
+          <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or apiSignUp(), for just the email input! 🚀 */}
 
           <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on first interaction w/ this input! */}
           <Messages name="password" />
@@ -166,7 +171,9 @@ export default new Route404()
   ```
 
 
+
 ![Sloths developing software in a tree](https://i.imgur.com/LognTyf.jpeg)
+
 
 
 ### 💛 Schema!
@@ -198,6 +205,7 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
 ```
 
 
+
 ### 💜 Params!
 - Required & optional params available @ `routes` & `apis`!
 ```tsx
@@ -210,6 +218,7 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
     return be.success({ id })
   })
 ```
+
 
 
 ### 💙 Use Middleware!
@@ -226,12 +235,14 @@ export const GET = new API('/api/aloha', 'apiAloha')
 ```
 
 
+
 ### 💚 Create Middleware!
 ```tsx
 import { go } from '@ace/go'
 import type { B4 } from '@ace/types'
 
-export const guestB4: B4 = async (jwt) => {
+
+export const guestB4: B4 = async (jwt) => { // see how we create a jwt in the POST example below w/ jwtCookieSet()
   if (jwt.isValid) return go('/contracts') // go() knows about all your routes & provides autocomplete!
 }
 
@@ -241,24 +252,9 @@ export const authB4: B4 = async (jwt) => {
 ```
 
 
-### 💞 Redirect @ `resolve()`!
-```tsx
-import { API } from '@ace/api'
-
-export const GET = new API('/api/aloha/:id', 'apiAloha')
-  .params<{ id: string }>()
-  .resolve(async (be) => {
-    const {id} = be.getParams()
-
-return id === 9
-  ? be.go('/example') // be.go() knows about all your routes & provides autocomplete!
-  : be.success({ id })
-})
-```
-
 
 ### 🧡 POST!
-- All the typesafe `db`, `jwt` & `hash` code in this example works @ `Node` & `Cloudflare Workers` 🥹
+- All the typesafe `db`, `jwt` & `hash` code below works @ `Node` & `Cloudflare Workers` 🥹
 ```tsx
 import { API } from '@ace/api'
 import { eq } from 'drizzle-orm'
@@ -306,20 +302,58 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
   })
 ```
 
+
+
+### 💞 Redirect @ `resolve()`!
+```tsx
+import { API } from '@ace/api'
+
+export const GET = new API('/api/aloha/:id', 'apiAloha')
+  .params<{ id: string }>()
+  .resolve(async (be) => {
+    const {id} = be.getParams()
+
+    return id === 9
+      ? be.go('/example') // be.go() knows about all your routes & provides autocomplete!
+      : be.success({ id })
+  })
+```
+
+
+
+### 🤓 Redirect @ `b4()`!
+- If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
+- If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
+```tsx
+import { goThrow } from '@ace/go'
+import { Route } from '@ace/route'
+
+export default new Route('/')
+  .b4(async () => {
+    throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
+  })
+```
+
+
+
 ![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 
 
-### 📣 Show Toast Notification!
+# 🤩 Aria Compliant Components
+
+
+
+### 📣 Toast Notification!
 - Add to `app.tsx` => `import '@ace/toast.styles.css'` & then:
 - Dark Mode
   ```tsx
   <button onClick={() => showToast({ value: ['Dark', 'Info'], type: 'info' })}>Dark Info</button>
-  <button onClick={() => showToast({ value: ['Dark', 'Success'], type: 'success' })}>Dark Success</button>
+  <button onClick={() => showToast({ value: 'Dark Success', type: 'success' })}>Dark Success</button>
   <button onClick={() => showToast({ value: 'Dark Danger', type: 'danger' })}>Dark Danger</button>
   ```
 - Light Mode
   ```tsx
-  <button onClick={() => showToast({ value: 'Light Info', type: 'info', toastProps: {style: toastStyleLight} })}>Light Info</button>
+  <button onClick={() => showToast({ value: ['Light', 'Info'], type: 'info', toastProps: {style: toastStyleLight} })}>Light Info</button>
   <button onClick={() => showToast({ value: 'Light Success', type: 'success', toastProps: {style: toastStyleLight} })}>Light Success</button>
   <button onClick={() => showToast({ value: 'Light Danger', type: 'danger', toastProps: {style: toastStyleLight} })}>Light Danger</button>
   ```
@@ -373,7 +407,30 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
     })
   ```
 
-### 🗂️ Tabs Component
+
+
+### 🗂️ Radio Cards!
+- Add to `app.tsx` => `import '@ace/radioCard.styles.css'` & then:
+  ```tsx
+  import { RadioCards, blueActiveStyle, greenActiveStyle, purpleActiveStyle } from '@ace/radioCards'
+
+  <RadioCards
+    name="color"
+    value="blue"
+    label="Choose color"
+    activeStyle={purpleActiveStyle} // defaults to blueActiveStyle
+    onChange={(val) => console.log(val)}
+    radios={[
+      { id: 'red', value: 'red', title: 'Red', checked: true },
+      { id: 'blue', value: 'blue', title: 'Blue', slot: <div>🌊</div> },
+      { id: 'green', value: 'green', title: 'Green', disabled: true }
+    ]}
+  />
+  ```
+
+
+
+### 🗄️ Tabs!
 - Add to `app.tsx` => `import '@ace/tabs.styles.css'`
 - Add `import { Tabs } from '@ace/tabs'` to the page w/ tabs, & then:
 - Tabs that show content below:
@@ -422,21 +479,41 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
   ```
 
 
-### 🤓 Redirect @ `b4()`!
-- If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
-- If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
-```tsx
-import { goThrow } from '@ace/go'
-import { Route } from '@ace/route'
 
-export default new Route('/')
-  .b4(async () => {
-    throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
-  })
-```
+### 🌠 Slideshow!
+- Slides are tsx, so they can be images and / or html :)
+- Add to `app.tsx` => `import '@ace/slideshow.styles.css'` & then:
+  ```tsx
+  import './Home.css'
+  import slide1 from './slide1.webp'
+  import slide2 from './slide2.webp'
+  import slide3 from './slide3.webp'
+  import slide4 from './slide4.webp'
+  import slide5 from './slide5.webp'
+  import { Route } from '@ace/route'
+  import { Slideshow } from '@ace/slideshow'
+
+  export default new Route('/')
+    .component(() => {
+      const slides = [
+        <img src={slide1} />,
+        <img src={slide2} />,
+        <img src={slide3} />,
+        <img src={slide4} />,
+        <img src={slide5} />,
+      ]
+
+      return <>
+        <main class="home">
+          <Slideshow items={() => slides} />
+        </main>
+      </>
+    })
+  ```
 
 
-## 🚀 How to Deploy!
+
+# 🚀 Deploy!
 ### [Cloudflare](https://www.cloudflare.com/) offers free global hosting! 🥹
 1. Create a GitHub account or Sign in
 1. Push to a public or private repository
@@ -467,7 +544,9 @@ export default new Route('/')
 1. 💫 Push to GitHub aka **Deploy**! ❤️
 
 
+
 ![Bunnies writing code](https://i.imgur.com/d0wINvM.jpeg)
+
 
 
 # 🚨 Error Dictionary!

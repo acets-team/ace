@@ -6,18 +6,19 @@
 
 
 import { clear } from './clear'
-import { For, Show, createMemo, createSignal, createUniqueId, type JSX } from 'solid-js'
+import { For, Show, createSignal, createUniqueId, type JSX } from 'solid-js'
 
 
 /**
- * Display lovely radios
+ * ### Display lovely radios
+ * Add to `app.tsx` => `import '@ace/radioCards.styles.css'` & then:
  * @example
   ```tsx
   <RadioCards
     name="color"
     value="blue"
     label="Choose color"
-    activeStyle={blueActiveStyle}
+    activeStyle={purpleActiveStyle}
     onChange={(val) => console.log(val)}
     radios={[
       { id: 'red', value: 'red', title: 'Red', checked: true },
@@ -26,6 +27,18 @@ import { For, Show, createMemo, createSignal, createUniqueId, type JSX } from 's
     ]}
   />
   ```
+ * @param props.label - The `<label>` that goes w/ these `<input>` radios
+ * @param props.radios - The array of radioCards to display
+ * @param props.radios.id - `<input type="radio" id={radio.id} />`
+ * @param props.radios.value - `<input type="radio" value={radio.value} />`
+ * @param props.radios.title - Optional, the title in the radioCard
+ * @param props.radios.slot - Optional, for custom jsx to be added to a radioCard
+ * @param props.radios.disabled - Optional, if this radioCard is disabled. If true, the <label> aka the card gets a class of disabled & the <input> is disabled
+ * @param props.radios.description - Optional, the description in the radioCard
+ * @param props.name - `<input type="radio" name={name} />` Each radio gets its own name
+ * @param props.value - Optional, Set this if you'd like to default the radioCards to a value, must align w/ a value in `props.radios`
+ * @param props.onChange - Optional, Callback that happens on radio change that recieves the current value
+ * @param props.activeStyle - Optional, what styling you'd love to show when active, defaults to blueActiveStyle, an export of greenActiveStyle and purpleActiveStyle are also available, or your own custom styles
  */
 export function RadioCards({ label, radios, name, value, onChange, activeStyle = blueActiveStyle }: RadioCardsProps) {
   const labelId = createUniqueId()
@@ -43,12 +56,12 @@ export function RadioCards({ label, radios, name, value, onChange, activeStyle =
     <div class="ace-radio-cards" role="radiogroup" aria-labelledby={labelId}>
       <For each={radios}>{
         (radio) => {
-          const isSelected = createMemo(() => selectedValue() === radio.value)
+          const isSelected = () => selectedValue() === radio.value
 
           return <>
             <div class="ace-radio-card">
               <input type="radio" use:clear name={name} id={radio.id} value={radio.value} checked={isSelected()} disabled={radio.disabled} onChange={() => handleChange(radio.value)} />
-              <label role="radio" for={radio.id} style={activeStyle} aria-checked={isSelected()} tabIndex={isSelected() ? 0 : -1}>
+              <label role="radio" for={radio.id} style={activeStyle} classList={{disabled: radio.disabled}} aria-checked={isSelected()} tabIndex={isSelected() ? 0 : -1}>
                 <Show when={radio.slot}>
                   {radio.slot}
                 </Show>
@@ -93,17 +106,29 @@ export const purpleActiveStyle: JSX.CSSProperties = {
 
 
 export type RadioCardsProps = {
+  /** `<input type="radio" name={name} />` Each radio gets its own name */
   name: string,
+  /** The `<label>` that goes w/ these `<input>` radios */
   label: string,
-  value?: string
+  /** Optional, Set this if you'd like to default the radioCards to a value, must align w/ a value in `props.radios` */
+  value?: string,
+  /** Optional, what styling you'd love to show when active, defaults to blueActiveStyle, an export of greenActiveStyle and purpleActiveStyle are also available, or your own custom styles */
+  activeStyle?: JSX.CSSProperties,
+  /** Optional, Callback that happens on radio change that recieves the current value */
+  onChange?: (value: string) => void,
+  /** The array of radioCards to display */
   radios: {
+    /** `<input type="radio" id={radio.id} />` */
     id: string,
+    /** `<input type="radio" value={radio.value} />` */
     value: string,
+    /** Optional, the title in the radioCard */
     title?: string,
+    /** Optional, for custom jsx to be added to a radioCard */
     slot?: JSX.Element,
+    /** Optional, if this radioCard is disabled. If true, the <label> aka the card gets a class of disabled & the <input> is disabled */
     disabled?: boolean,
+    /** Optional, the description in the radioCard */
     description?: string,
   }[],
-  activeStyle?: JSX.CSSProperties,
-  onChange?: (value: string) => void
 }
