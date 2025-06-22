@@ -1,0 +1,52 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - import '@ace/loading.styles.css'
+ */
+
+
+.ace-loading {
+  width: var(--ace-loading-width, 2.1rem);
+  height: var(--ace-loading-height, 2.1rem);
+  border-top: var(--ace-loading-thickness, 0.3rem) solid var(--ace-loading-color, gold);
+  border-right: var(--ace-loading-thickness, 0.3rem) solid transparent;
+  animation: aceLoadingRotation var(--ace-loading-speed, 1s) linear infinite;
+  border-radius: 50%;
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+.ace-loading--two {
+  &::after {
+    width: var(--ace-loading-width, 2.1rem);
+    height: var(--ace-loading-width, 2.1rem);
+    border-bottom: var(--ace-loading-thickness, 0.3rem) solid var(--ace-loading-two-color, white);
+    border-left: var(--ace-loading-thickness, 0.3rem) solid transparent;
+    content: '';  
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+  }
+}
+
+@keyframes aceLoadingRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

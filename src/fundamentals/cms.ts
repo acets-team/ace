@@ -4,15 +4,16 @@
  */
 
 
+import type { API } from './api'
 import { createEffect, createSignal } from 'solid-js'
 import type { AccessorWithLatest } from '@solidjs/router'
-import type { CMSItem, CMSMap, RawAPIResponse } from './types'
+import type { API2APIResponse, APIResponse, CMSItem, CMSMap } from './types'
 
 
 export class CMS {
   #signal = createSignal<CMSMap>(new Map())
 
-  constructor(cmsLoad: AccessorWithLatest<RawAPIResponse<CMSItem[]> | undefined>) {
+  constructor(cmsLoad: AccessorWithLatest<API2APIResponse<API<{}, {}, {}, APIResponse<CMSItem[]>>> | undefined>) {
     createEffect(() => {
       const cmsData = cmsLoad()?.data
       if (!cmsData || !Array.isArray(cmsData)) return

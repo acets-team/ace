@@ -1,4 +1,4 @@
-![Ace](https://i.imgur.com/FW3nufl.png)
+![Ace, the typesafetiest framework!](https://i.imgur.com/ZRHKXKv.png)
 
 
 
@@ -78,47 +78,49 @@ export default new Route404()
 - Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
 - If this page is refreshed, data begins gathering on the server
 - If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser
-    ```tsx
-    import { load } from '@ace/load'
-    import { Route } from '@ace/route'
-    import { Suspense } from 'solid-js'
-    import { apiCharacter } from '@ace/apis'
-    import RootLayout from '@src/app/RootLayout'
-    import type { InferLoadFn } from '@ace/types'
-    import GuestLayout from '@src/app/Guest/GuestLayout'
+  ```tsx
+  import { load } from '@ace/load'
+  import { Route } from '@ace/route'
+  import { Suspense } from 'solid-js'
+  import { guestB4 } from '@src/lib/b4'
+  import { apiCharacter } from '@ace/apis'
+  import RootLayout from '@src/app/RootLayout'
+  import type { InferLoadFn } from '@ace/types'
+  import GuestLayout from '@src/app/Guest/GuestLayout'
 
 
-    export default new Route('/smooth')
-    .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps this Route!
-      .component(() => {
-        const air = load(() => apiCharacter({params: {element: 'air'}}), 'air')
-        const fire = load(() => apiCharacter({params: {element: 'fire'}}), 'fire')
-        const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
-        const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
+  export default new Route('/smooth')
+    .b4(guestB4) // run this async fn b4 this route renders
+    .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps /smooth
+    .component(() => {
+      const air = load(() => apiCharacter({params: {element: 'air'}}), 'air')
+      const fire = load(() => apiCharacter({params: {element: 'fire'}}), 'fire')
+      const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
+      const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
 
-        return <>
-          <h1>🚨 This element will render immediately</h1>
-
-          <div class="characters">
-            <Character element={fire} />
-            <Character element={water} />
-            <Character element={earth} />
-            <Character element={air} />
-          </div>
-        </>
-      })
-
-
-    function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) { // once a load has finished the character will render
       return <>
-        <div class="character">
-          <Suspense fallback={<div class="ace-shimmer"></div>}>
-            {element()?.error?.message || element()?.data?.character}
-          </Suspense>
+        <h1>🚨 This element will render immediately</h1>
+
+        <div class="characters">
+          <Character element={fire} />
+          <Character element={water} />
+          <Character element={earth} />
+          <Character element={air} />
         </div>
       </>
-    }
-    ```
+    })
+
+
+  function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) { // once a load has finished the character will render
+    return <>
+      <div class="character">
+        <Suspense fallback={<div class="ace-shimmer"></div>}>
+          {element()?.error?.message || element()?.data?.character}
+        </Suspense>
+      </div>
+    </>
+  }
+  ```
 
 
 
@@ -133,15 +135,14 @@ export default new Route404()
   import { Submit } from '@ace/submit'
   import { apiSignUp } from '@ace/apis'
   import { Title } from '@solidjs/meta'
-  import { guestB4 } from '@src/lib/b4'
   import { Messages } from '@ace/messages'
   import { createOnSubmit } from '@ace/createOnSubmit'
   import { signUpSchema } from '@src/schemas/SignUpSchema'
 
 
   export default new Route('/sign-up/:sourceId?')
-    .b4(guestB4) // run this async fn b4 this route renders
-    .component(() => {
+    .params<{ sourceId?: 1 | 2 }>() // set params type here & then this route's params are known app-wide 🙌
+    .component((fe) => {
       const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
         const body = signUpSchema.parse({ // get parse & validate request body
           email: fd('email'), // fd() is a form data helper
@@ -152,7 +153,7 @@ export default new Route404()
       })
 
       return <>
-        <Title>Sign Up</Title>
+        <Title>Sign Up {fe.getParams().sourceId}</Title>
 
         <form onSubmit={onSubmit}>
           <input placeholder="Email" name="email" type="email" use:clear />
@@ -215,7 +216,7 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
   .resolve(async (be) => {
     const {id} = be.getParams() // typesafe!
-    return be.success({ id })
+    return be.success(id)
   })
 ```
 
@@ -339,23 +340,49 @@ export default new Route('/')
 ![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 
 
-# 🤩 Aria Compliant Components
+
+# 🙏 Aria Compliant Components
 
 
+
+### 🌀 Loading Spinner!
+- Add to `app.tsx` => `import '@ace/loading.styles.css'` & then:
+- One Spinner
+  ```tsx
+  <Show when={cms.getContent(1)} fallback={<Loading />}>
+    <div innerHTML={cms.getContent(1)}/>
+  </Show>
+  ```
+- 👷‍♀️ Component Props:
+  - `type` - Optional, spinner type: `'one' (default) or 'two'`
+  - `width` - Optional, spinner width, `default: 2.1rem`
+  - `height` - Optional, spinner height, `default: 2.1rem`
+  - `thickness` - Optional, spinner thickness, `default: 0.3rem`
+  - `speed` - Optional, spinner speed, `default: 1s`
+  - `twoColor` - Optional, if type is two, this will set the color for the 2nd spinner, `default: white`
+  - `label` - Optional, text to announce to screen readers, `default: 'Loading...'`
+  - `spanProps` - Optional, additional props to spread onto the outer `span`
+
+- 🎨 Custom CSS Variables:
+  - `--ace-loading-color`: Primary color, default: `gold`
+  - `--ace-loading-two-color`: Secondary color for `type="two"`, default: `white`
+  - `--ace-loading-width`: Spinner width, default: `2.1rem`
+  - `--ace-loading-height`: Spinner height, default: `2.1rem`
+  - `--ace-loading-thickness`: Spinner thickness, default: `0.3rem`
+  - `--ace-loading-speed`: Spin speed, default: `1s`
 
 ### 📣 Toast Notification!
 - Add to `app.tsx` => `import '@ace/toast.styles.css'` & then:
 - Dark Mode
   ```tsx
-  <button onClick={() => showToast({ value: ['Dark', 'Info'], type: 'info' })}>Dark Info</button>
-  <button onClick={() => showToast({ value: 'Dark Success', type: 'success' })}>Dark Success</button>
-  <button onClick={() => showToast({ value: 'Dark Danger', type: 'danger' })}>Dark Danger</button>
+    const res = await apiSignIn({ bitKey: 'signIn', body })
+
+    if (res.data) showToast({ type: 'success', value: 'Welcome!' })
+    else if (res.error?.message) showToast({ type: 'danger', value: res.error.message })
   ```
 - Light Mode
   ```tsx
-  <button onClick={() => showToast({ value: ['Light', 'Info'], type: 'info', toastProps: {style: toastStyleLight} })}>Light Info</button>
-  <button onClick={() => showToast({ value: 'Light Success', type: 'success', toastProps: {style: toastStyleLight} })}>Light Success</button>
-  <button onClick={() => showToast({ value: 'Light Danger', type: 'danger', toastProps: {style: toastStyleLight} })}>Light Danger</button>
+  showToast({ value: ['Light', 'Info'], type: 'info', toastProps: {style: toastStyleLight} })
   ```
 - Custom Styles w/ css, CSS:
   ```css

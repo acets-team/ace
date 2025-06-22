@@ -7,13 +7,11 @@
 
 import { fe } from './fe'
 import { Show, type JSX } from 'solid-js'
+import { Loading, type LoadingProps } from './loading'
 
 
 /**
- * - Button w/ type `"submit"`
- * - Hides `label` and shows `<span class={loadClass}></span>` when `fe.bits.isOn(bitKey)` is `true` ✅
- * - For the loadClass `ace-load` or `ace-load--two` add to your `app.tsx` => `import '@ace/load.styles.css'`
- * - All additional props given to the component flow to the `<button>`
+ * ### Aria compliant submit button w/ loading spinner!
  * @example
     ```tsx
     <form onSubmit={onSubmit}>
@@ -23,22 +21,28 @@ import { Show, type JSX } from 'solid-js'
     </form>
     ```
  */
-export const Submit = ({ label, bitKey, loadClass = 'ace-load', ...buttonProps }: SubmitProps) => {
+export const Submit = ({ label, bitKey, buttonProps, loadingProps }: SubmitProps) => {
+  const isLoading = () => fe.bits.isOn(bitKey)
+
   return <>
-    <button type="submit" disabled={fe.bits.isOn(bitKey)} {...buttonProps} >
-      <Show when={fe.bits.isOn(bitKey)} fallback={label}>
-        <span class={loadClass}></span>
+    <button type="submit" disabled={isLoading()} aria-busy={isLoading()} {...buttonProps} >
+      <Show when={isLoading()} fallback={label}>
+        <span role="status" aria-live="polite">
+          <Loading {...loadingProps} />
+        </span>
       </Show>
     </button>
   </>
 }
 
 
-export type SubmitProps = JSX.HTMLAttributes<HTMLButtonElement> & {
+export type SubmitProps = {
   /** Button text */
   label: string
   /** Bits have a signal to determine if they are `1` or `0` and a `bitKey` to identify them w/in a `Map` */
   bitKey: string
-  /** When loading a span will show, this is the class to put on that span, default is  `ace-load`, another recommended is `ace-load--two` */
-  loadClass?: string
+  /** Optional, additional props for button dom element */
+  buttonProps?: JSX.HTMLAttributes<HTMLButtonElement>
+  /** Optional, loading props for the <Loading /> component */
+  loadingProps?: LoadingProps
 }

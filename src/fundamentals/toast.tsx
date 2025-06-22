@@ -31,7 +31,7 @@ if (!isServer) {
 
 
 /**
- * ### Show lovely toast notifications
+ * ### Aria compliant toast notifications!
  * Add to `app.tsx` => `import '@ace/toast.styles.css'` & then:
  * ### Dark Mode:
  * @example
