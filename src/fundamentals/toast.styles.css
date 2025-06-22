@@ -5,6 +5,7 @@
 
 
 #ace-toast-wrapper {
+  pointer-events: none;
   position: fixed;
   top: 0.9rem;
   width: 45rem;
@@ -14,30 +15,22 @@
   flex-direction: column;
   align-items: center;
   overflow: visible;
+  z-index: 999;
 
   .toast {
+    pointer-events: auto;
     overflow: hidden;
     margin-bottom: 0.9rem;
     padding: 1.2rem;
     border-radius: 1rem;
     display: flex;
     align-items: center;
-    color: rgb(214, 217, 223);
-    border: 1px solid rgb(55, 65, 81);
-    background-color: rgb(31, 41, 55);
+    color: var(--ace-toast-text-color);
+    border: 1px solid var(--ace-toast-border-colo);
+    background-color: var(--ace-toast-bg-color);
     animation: toast-animation 0.9s;
-    transition: all 0.6s ease;
+    transition: var(--ace-toast-transition, all 0.6s ease);
     max-width: calc(100vw - 3rem);
-    &.success .icon {
-      color: rgb(3, 84, 63);
-      border: 1px solid rgb(14, 159, 110);
-      background-color: rgb(188, 240, 218);
-    }
-    &.info .icon {
-      color: rgb(30, 66, 159);
-      border: 1px solid rgb(63, 131, 248);
-      background-color: rgb(195, 221, 253);
-    }
 
     ul, span {
       flex: auto;
@@ -76,6 +69,9 @@
         min-width: 3.6rem;
         height: 3.6rem;
         min-height: 3.6rem;
+        color: var(--ace-toast-icon-color);
+        border: var(--ace-toast-icon-color);
+        background-color: var(--ace-toast-icon-bg-color);
 
         svg {
           flex-grow: 0;
@@ -92,7 +88,7 @@
       border: 1px solid transparent;
       background-color: transparent;
       border-radius: 50%;
-      color: rgb(156, 163, 175);
+      color: var(--ace-toast-close-color);
       transition: all 0.15s;
       margin: 0 0 0 0.9rem;
       display: flex;
@@ -106,8 +102,8 @@
       min-width: 2.97rem;
       &:hover {
         cursor: pointer;
-        border-color: rgb(117, 126, 139);
-        background-color: rgb(75, 85, 99);
+        border-color: var(--ace-toast-close-hover-border);
+        background-color: var(--ace-toast-close-hover-bg-color);
       }
 
       svg {

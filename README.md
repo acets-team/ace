@@ -1,13 +1,193 @@
-![Ace](https://i.imgur.com/UWcQSn7.png)
+![Ace](https://i.imgur.com/Z4edgUb.png)
 
 
 
-### Create an Ace App ✅
+### 🧚‍♀️ Create Ace App!
 ```bash
 npx create-ace-app@latest
 ```
 
-### GET! 💖
+
+### 👷‍♀️ Route!
+```tsx
+import { A } from '@ace/a'
+import { Route } from '@ace/route'
+import { Title } from '@solidjs/meta'
+
+
+export default new Route('/yin')
+  .component((fe) => {
+    return <>
+      <Title>Yin</Title>
+      <A path="/yang">Yang</A> {/* The <A /> component knows about your routes & provides autocomplete! 🙌 */}
+    </>
+  })
+```
+
+### 💞 Layout!
+```tsx
+import './Guest.css'
+import Nav from './Nav'
+import { Layout } from '@ace/layout'
+
+
+export default new Layout()
+  .component((fe) => {
+    return <>
+      <div class="guest-layout">
+        <Nav />
+        {fe.getChildren()}
+      </div>
+    </>
+  })
+```
+
+
+### 😅 404 Route!
+```tsx
+import './404.css'
+import { A } from '@ace/a'
+import { Title } from '@solidjs/meta'
+import { Route404 } from '@ace/route404'
+import RootLayout from '@src/app/RootLayout'
+
+
+export default new Route404()
+  .layouts([RootLayout]) // zero to many layouts available @ Route or Route404!
+  .component((fe) => {
+    return <>
+      <Title>😅 404</Title>
+
+      <main class="not-found">
+        <div class="code">404 😅</div>
+        <div class="message">Oops! We can't find that page.</div>
+        <div class="path">{fe.getLocation().pathname}</div>
+        <A path="/" class="brand">🏡 Go Back Home</A>
+      </main>
+    </>
+  })
+
+```
+
+
+### 💫 Route w/ Async Data!
+- Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
+- If this page is refreshed, data begins gathering on the server
+- If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser
+    ```tsx
+    import { load } from '@ace/load'
+    import { Route } from '@ace/route'
+    import { Suspense } from 'solid-js'
+    import { apiCharacter } from '@ace/apis'
+    import type { InferLoadFn } from '@ace/types'
+
+
+    export default new Route('/smooth')
+      .component(() => {
+        const air = load(() => apiCharacter({params: {element: 'air'}}), 'air')
+        const fire = load(() => apiCharacter({params: {element: 'fire'}}), 'fire')
+        const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
+        const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
+
+        return <>
+          <h1>🚨 This element will render immediately</h1>
+
+          <div class="characters">
+            <Character element={fire} />
+            <Character element={water} />
+            <Character element={earth} />
+            <Character element={air} />
+          </div>
+        </>
+      })
+
+
+    function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) { // once a load has finished the character will render
+      return <>
+        <div class="character">
+          <Suspense fallback={<div class="ace-shimmer"></div>}>
+            {element()?.error?.message || element()?.data?.character}
+          </Suspense>
+        </div>
+      </>
+    }
+    ```
+
+
+### ✨ Form!
+- ✅ FE & BE Validation uses the same schema
+- ✅ No BE request is made unless FE validation passes
+- ✅ Error messages for each input show up next to that input
+- ✅ Start typing an error messages go away for that input
+  ```tsx
+  import { clear } from '@ace/clear'
+  import { Route } from '@ace/route'
+  import { Submit } from '@ace/submit'
+  import { apiSignUp } from '@ace/apis'
+  import { Title } from '@solidjs/meta'
+  import { guestB4 } from '@src/lib/b4'
+  import RootLayout from '../RootLayout'
+  import GuestLayout from './Guest.Layout'
+  import { Messages } from '@ace/messages'
+  import { createOnSubmit } from '@ace/createOnSubmit'
+  import { signUpSchema } from '@src/schemas/SignUpSchema'
+
+
+  export default new Route('/sign-up/:sourceId?')
+    .b4(guestB4) // run this asyc fn b4 route render
+    .layouts([RootLayout, GuestLayout]) // Root wraps Guest, Guest wraps this Route!
+    .component((fe) => {
+      const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
+        const body = signUpSchema.parse({ // get parse & validate request body
+          email: fd('email'), // fd() is a form data helper
+          password: fd('password')
+        }) 
+
+        await apiSignUp({ body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & the body has autocomplete!
+      })
+
+      return <>
+        <Title>Sign Up</Title>
+
+        <form onSubmit={onSubmit}>
+          <input placeholder="Email" name="email" type="email" use:clear />
+          <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or fe.POST(), for just the email input! 🚀 */}
+
+          <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on first interaction w/ this input! */}
+          <Messages name="password" />
+
+          <div class="footer">
+            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses fe.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
+          </div>
+        </form>
+      </>
+    }
+  })
+  ```
+
+
+![Sloths developing software in a tree](https://i.imgur.com/LognTyf.jpeg)
+
+
+### 💛 Schema!
+```tsx
+import { pipe, email, string, object, nonEmpty } from 'valibot'
+import { ValibotSchema, type InferValibotSchema } from '@ace/valibotSchema'
+
+
+export const signInSchema = new ValibotSchema( // schema's validate (be) api's & (fe) forms's!
+  object({
+    email: pipe(string(), email('Please provide a valid email')),
+    password: pipe(string(), nonEmpty('Please provide a password')),
+  })
+)
+
+export type SignInSchema = InferValibotSchema<typeof signInSchema> // by defining runtime validations above, we get compile time types app-wide!
+```
+
+
+
+### 💖 GET!
 ```tsx
 import { API } from '@ace/api'
 
@@ -18,7 +198,7 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
 ```
 
 
-### Params! 💜
+### 💜 Params!
 - Required & optional params available @ `routes` & `apis`!
 ```tsx
 import { API } from '@ace/api'
@@ -32,7 +212,7 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
 ```
 
 
-### Use Middleware! 💙
+### 💙 Use Middleware!
 - Available @ `routes` & `apis`!
 ```tsx
 import { API } from '@ace/api'
@@ -46,7 +226,7 @@ export const GET = new API('/api/aloha', 'apiAloha')
 ```
 
 
-### Create Middleware! 💚
+### 💚 Create Middleware!
 ```tsx
 import { go } from '@ace/go'
 import type { B4 } from '@ace/types'
@@ -61,7 +241,7 @@ export const authB4: B4 = async (jwt) => {
 ```
 
 
-### Redirect @ `resolve()`! 💞
+### 💞 Redirect @ `resolve()`!
 ```tsx
 import { API } from '@ace/api'
 
@@ -69,12 +249,15 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>()
   .resolve(async (be) => {
     const {id} = be.getParams()
-    return id === 9 ? be.go('/example') : be.success({ id }) // be.go() knows about all your routes & provides autocomplete!
-  })
+
+return id === 9
+  ? be.go('/example') // be.go() knows about all your routes & provides autocomplete!
+  : be.success({ id })
+})
 ```
 
 
-### POST! 🧡
+### 🧡 POST!
 - All the typesafe `db`, `jwt` & `hash` code in this example works @ `Node` & `Cloudflare Workers` 🥹
 ```tsx
 import { API } from '@ace/api'
@@ -123,194 +306,123 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
   })
 ```
 
-
-![Sloths developing software in a tree](https://i.imgur.com/LognTyf.jpeg)
-
-
-### Schema 💛
-```tsx
-import { pipe, email, string, object, nonEmpty } from 'valibot'
-import { ValibotSchema, type InferValibotSchema } from '@ace/valibotSchema'
+![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 
 
-export const signInSchema = new ValibotSchema( // schema's validate (be) api's above & (fe) route's below!
-  object({
-    email: pipe(string(), email('Please provide a valid email')),
-    password: pipe(string(), nonEmpty('Please provide a password')),
-  })
-)
-
-export type SignInSchema = InferValibotSchema<typeof signInSchema> // by defining runtime validations above, we get compile time types app-wide!
-```
-
-
-### Layout! ❤️
-```tsx
-import './Guest.css'
-import Nav from './Nav'
-import { Layout } from '@ace/layout'
-
-
-export default new Layout()
-  .component((fe) => {
-    return <>
-      <div class="guest">
-        <Nav />
-        {fe.getChildren()}
-      </div>
-    </>
-  })
-```
-
-
-### Route! 🌟
-```tsx
-import { A } from '@ace/a'
-import { Route } from '@ace/route'
-import { Title } from '@solidjs/meta'
-
-
-export default new Route('/yin') // this route uses no layouts!
-  .component((fe) => {
-    return <>
-      <Title>Yin</Title>
-      <A path="/yang">Yang</A> {/* The <A /> component knows about your routes & provides autocomplete! 🙌 */}
-    </>
-  })
-```
-
-
-### 404 Route! ☀️
-```tsx
-import './404.css'
-import { A } from '@ace/a'
-import { Title } from '@solidjs/meta'
-import RootLayout from '../RootLayout'
-import { Route404 } from '@ace/route404'
-
-
-export default new Route404()
-  .layouts([RootLayout]) // zero to many layouts available @ Route or Route404!
-  .component((fe) => {
-    return <>
-      <Title>😅 404</Title>
-
-      <main class="not-found">
-        <div class="code">404 😅</div>
-        <div class="message">Oops! We can't find that page.</div>
-        <div class="path">{fe.getLocation().pathname}</div>
-        <A path="/" class="brand">🏡 Go Back Home</A>
-      </main>
-    </>
-  })
-
-```
-
-
-### Route w/ Async Data! 💫
-- Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
-- If this page is refreshed, data begins gathering on the server
-- If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser
-- How to:
-    1. First w/in your API definition: `export const GET = new API('/api/character/:element', 'apiCharacter')`
-    1. & then call your API w/in the `route` or `layout` as many times as ya ❤️:
-    ```tsx
-    import '@ace/shimmer.styles.css'
-    import { load } from '@ace/load'
-    import { Route } from '@ace/route'
-    import { Suspense } from 'solid-js'
-    import { apiCharacter } from '@ace/apis'
-    import type { InferLoadFn } from '@ace/types'
-    import type { InferEnums } from '@ace/paramEnums'
-    import type { elementEnums } from '@src/lib/vars'
-
-
-    export default new Route('/smooth')
-      .component(() => {
-        const air = load(() => apiCharacter({params: {element: 'air'}}), 'air')
-        const fire = load(() => apiCharacter({params: {element: 'fire'}}), 'fire')
-        const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
-        const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
-
-        return <>
-          <h1>This element will render immediately</h1>
-          <Characters res={{ air, fire, earth, water }} />
-        </>
-      })
-
-    function Characters({ res }: { res: Record<InferEnums<typeof elementEnums>, InferLoadFn<'apiCharacter'>> }) { // once you type InferLoadFn<''> all the api function names appear in the sring thanks to Ace typesafety!
-      return <>
-        <div class="characters">
-          <Character element={res.fire} />
-          <Character element={res.water} />
-          <Character element={res.earth} />
-          <Character element={res.air} />
-        </div>
-      </>
+### 📣 Show Toast Notification!
+- Add to `app.tsx` => `import '@ace/toast.styles.css'` & then:
+- Dark Mode
+  ```tsx
+  <button onClick={() => showToast({ value: ['Dark', 'Info'], type: 'info' })}>Dark Info</button>
+  <button onClick={() => showToast({ value: ['Dark', 'Success'], type: 'success' })}>Dark Success</button>
+  <button onClick={() => showToast({ value: 'Dark Danger', type: 'danger' })}>Dark Danger</button>
+  ```
+- Light Mode
+  ```tsx
+  <button onClick={() => showToast({ value: 'Light Info', type: 'info', toastProps: {style: toastStyleLight} })}>Light Info</button>
+  <button onClick={() => showToast({ value: 'Light Success', type: 'success', toastProps: {style: toastStyleLight} })}>Light Success</button>
+  <button onClick={() => showToast({ value: 'Light Danger', type: 'danger', toastProps: {style: toastStyleLight} })}>Light Danger</button>
+  ```
+- Custom Styles w/ css, CSS:
+  ```css
+  #ace-toast-wrapper {
+    .toast.emerald {
+      --ace-toast-bg-color: rgb(6, 95, 70);
+      --ace-toast-border-color: rgb(16, 185, 129);
+      --ace-toast-icon-color: rgb(6, 78, 59);
+      --ace-toast-icon-border: 1px solid rgb(16, 185, 129);
+      --ace-toast-icon-bg-color: rgb(209, 250, 229);
+      --ace-toast-close-color: rgb(134, 239, 172);
+      --ace-toast-close-hover-border: rgb(52, 211, 153);
+      --ace-toast-close-hover-bg-color: rgba(16, 185, 129, 0.2);
     }
-
-
-    function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) { // once a load has finished the character will render
-      return <>
-        <div class="character">
-          <Suspense fallback={<div class="ace-shimmer"></div>}>
-            {element()?.error?.message || element()?.data?.character}
-          </Suspense>
-        </div>
-      </>
-    }
-    ```
-
-
-### Form! ✨
-```tsx
-import { clear } from '@ace/clear'
-import { Route } from '@ace/route'
-import { Submit } from '@ace/submit'
-import { apiSignUp } from '@ace/apis'
-import { Title } from '@solidjs/meta'
-import { guestB4 } from '@src/lib/b4'
-import RootLayout from '../RootLayout'
-import GuestLayout from './Guest.Layout'
-import { Messages } from '@ace/messages'
-import { createOnSubmit } from '@ace/createOnSubmit'
-import { signUpSchema } from '@src/schemas/SignUpSchema'
-
-
-export default new Route('/sign-up/:sourceId?')
-  .b4(guestB4) // run this asyc fn b4 route render
-  .layouts([RootLayout, GuestLayout]) // Root wraps Guest, Guest wraps this Route!
-  .component((fe) => {
-    const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
-      const body = signUpSchema.parse({ // get parse & validate request body
-        email: fd('email'), // fd() is a form data helper
-        password: fd('password')
-      }) 
-
-      await apiSignUp({ body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & the body has autocomplete!
-    })
-
-    return <>
-      <Title>Sign Up</Title>
-
-      <form onSubmit={onSubmit}>
-        <input placeholder="Email" name="email" type="email" use:clear />
-        <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or fe.POST(), for just the email input! 🚀 */}
-
-        <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on first interaction w/ this input! */}
-        <Messages name="password" />
-
-        <div class="footer">
-          <Submit label="Sign Up" bitKey="signUp" /> {/* Uses fe.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
-        </div>
-      </form>
-    </>
   }
-})
-```
+  ```
+- Custom Styles w/ css, TSX:
+  ```tsx
+  import { Route } from '@ace/route'
+  import { showToast } from '@ace/toast'
+
+  export default new Route('/')
+    .component(() => {
+      return <button onClick={() => showToast({ value: 'Emerald 🌿', toastProps: {class: 'toast emerald'} })}>Emerald 🌿</button>
+    })
+  ```
+- Custom Styles w/ only tsx:
+  ```tsx
+  import { Route } from '@ace/route'
+  import type { JSX } from 'solid-js'
+  import { showToast, toastStyleLight } from '@ace/toast'
+
+  export default new Route('/')
+    .component(() => {
+      const toastStyleLavender: JSX.CSSProperties = {
+        ...toastStyleLight,
+        '--ace-toast-bg-color': 'rgb(243, 232, 255)',
+        '--ace-toast-text-color': 'rgb(76, 29, 149)',
+        '--ace-toast-border-color': 'rgb(192, 132, 252)',
+        '--ace-toast-icon-color': 'rgb(109, 40, 217)',
+        '--ace-toast-icon-border': '1px solid rgb(192, 132, 252)',
+        '--ace-toast-icon-bg-color': 'rgb(233, 213, 255)',
+        '--ace-toast-close-color': 'rgb(139, 92, 246)',
+        '--ace-toast-close-hover-border': 'rgb(167, 139, 250)',
+        '--ace-toast-close-hover-bg-color': 'rgba(165, 180, 252, 0.2)',
+      }
+
+      return <button onClick={() => showToast({ value: 'Custom Lavender 💜', toastProps: {style: toastStyleLavender} })}>Custom Lavender 💜</button>
+    })
+  ```
+
+### 🗂️ Tabs Component
+- Add to `app.tsx` => `import '@ace/tabs.styles.css'`
+- Add `import { Tabs } from '@ace/tabs'` to the page w/ tabs, & then:
+- Tabs that show content below:
+  ```tsx
+  <Tabs
+    mode="content"
+    variant="classic"
+    tabs={[
+      new ContentTab('Tab 1', <>Tab 1</>),
+      new ContentTab('Tab 2', <>Tab 2</>),
+      new ContentTab('Tab 3', <>Tab 3</>),
+    ]}
+  />
+  ```
+- Tabs that navigate routes:
+  ```tsx
+    <Tabs
+      mode="route"
+      variant="pill"
+      tabs={[
+        new RouteTab('Home', '/'),
+        new RouteTab('About', '/about'),
+        new RouteTab('Members', '/members'),
+      ]}
+    />
+  ```
+- Tabs that scroll to content:
+  ```tsx
+  <Tabs
+    name="nav"
+    mode="scroll"
+    variant="underline"
+    scrollMargin={74}
+    tabs={[
+      new HashTab('Home', '#banner'),
+      new HashTab('Offerings', '#carousel'),
+      new HashTab('Spiritual Retreats', '#retreats'),
+    ]}
+  />
+  ```
+- Tab helper functions:
+  ```ts
+  setActiveByTabIndex('nav', 2)
+  setActiveByPath('route', '/')
+  setActiveByHash('hash', '#bio')
+  ```
 
 
-### Redirect @ `b4()`! 🤓
+### 🤓 Redirect @ `b4()`!
 - If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
 - If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
 ```tsx
@@ -322,7 +434,6 @@ export default new Route('/')
     throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
   })
 ```
-![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 
 
 ## 🚀 How to Deploy!
