@@ -46,8 +46,8 @@ export class BE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
     return new BE('fn', null, params, search, body)
   }
 
-  success<T_Data>(data?: T_Data): AceResponse<T_Data> {
-    return respond<T_Data>({ data, status: 200 })
+  success<T_Data>(data: T_Data, status = 200): AceResponse<T_Data> {
+    return respond<T_Data>({ data, status })
   }
 
 

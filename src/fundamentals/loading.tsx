@@ -48,9 +48,9 @@ import type { JSX, Component } from 'solid-js'
  * @param props.height - Optional, spinner height, `default: 2.1rem`
  * @param props.thickness - Optional, spinner thickness, `default: 0.3rem`
  * @param props.speed - Optional, spinner speed, `default: 1s`
- * @param props.twoColor - Optional, if type is two, this will set the color for the 2nd spinner, `default: white`
+ * @param props.twoColor - Optional, if type is `two`, this will set the color for the 2nd spinner, `default: white`
  * @param props.label - Optional, text to announce to screen readers, `default: 'Loading...'`
- * @param props.spanProps - Optional, additional props to spread onto the outer span
+ * @param props.spanProps - Optional, additional props to spread onto the outer `span`
  */
 export const Loading: Component<LoadingProps> = ({ type, width, height, thickness, color, speed, twoColor, label, spanProps }) => {
   const style: JSX.CSSProperties = {}
@@ -90,10 +90,10 @@ export type LoadingProps = {
   color?: string
   /** Optional, spinner speed, `default: 1s` */
   speed?: string
-  /** Optional, if type is two, this will set the color for the 2nd spinner, `default: white` */
+  /** Optional, if type is `two`, this will set the color for the 2nd spinner, `default: white` */
   twoColor?: string
   /** Optional, text to announce to screen readers, `default: 'Loading...'` */
   label?: string
-  /** Optional, additional props to spread onto the outer span */
+  /** Optional, additional props to spread onto the outer `span` */
   spanProps?: JSX.HTMLAttributes<HTMLSpanElement>
 }

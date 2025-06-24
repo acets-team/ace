@@ -17,7 +17,7 @@ import { Loading, type LoadingProps } from './loading'
     <form onSubmit={onSubmit}>
       <label>Password</label>
       <input name="password" type="password" />
-      <Submit label="Save" bitKey="password" class="btn" />
+      <Submit label="Save" bitKey="password" buttonProps={{ class: 'brand' }} />
     </form>
     ```
  */

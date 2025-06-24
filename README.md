@@ -9,18 +9,26 @@ npx create-ace-app@latest
 
 
 
+### 🚨 When a dev restart is necessary?
+- It only takes 3 seconds, but it's important to restart dev sometimes (in bash `control + c` & then `npm run dev`), b/c HMR updates the majority of types but a restart updates them all, so restart dev when:
+    - An `API` is `created/deleted`
+    - A `Route` is `created/deleted`
+    - A `Layout` is `created/deleted`
+    - A `Layout` is `added/removed` from a `new Route()` or `new Route404()` layout array @ `layouts([])`
+
+
+
 ### 👷‍♀️ Route!
 ```tsx
 import { A } from '@ace/a'
 import { Route } from '@ace/route'
 import { Title } from '@solidjs/meta'
 
-
 export default new Route('/yin')
   .component(() => {
     return <>
       <Title>Yin</Title>
-      <A path="/yang">Yang</A> {/* The <A /> component knows about your routes & provides autocomplete! 🙌 */}
+      <A path="/yang">Yang</A> {/* typesafe! 🙌 */}
     </>
   })
 ```
@@ -32,7 +40,6 @@ export default new Route('/yin')
 import './Guest.css'
 import Nav from './Nav'
 import { Layout } from '@ace/layout'
-
 
 export default new Layout()
   .component((fe) => {
@@ -85,6 +92,7 @@ export default new Route404()
   import { guestB4 } from '@src/lib/b4'
   import { apiCharacter } from '@ace/apis'
   import RootLayout from '@src/app/RootLayout'
+  import { revalidate } from '@solidjs/router'
   import type { InferLoadFn } from '@ace/types'
   import GuestLayout from '@src/app/Guest/GuestLayout'
 
@@ -98,8 +106,14 @@ export default new Route404()
       const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
       const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
 
+      function fetchFireAgain() {
+        revalidate('fire')
+      }
+
       return <>
-        <h1>🚨 This element will render immediately</h1>
+        <h1>🚨 This element / all elements outside the Suspense below, render immediately!</h1>
+
+        <button onClick={fetchFireAgain} type="button">🔥 More Fiya!</button>
 
         <div class="characters">
           <Character element={fire} />
@@ -201,9 +215,16 @@ import { API } from '@ace/api'
 
 export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api endpoint @ the path /api/aloha AND we can call the function apiAloha() on the frontend or backed w/ request & response typesafety!
   .resolve(async (be) => {
-    return be.success({ aloha: true }) // call be.Success() to set custom status code / headers
+    return be.success({ aloha: true })
   })
 ```
+- ✅ Props for: `be.success(data: T_Data, status = 200)`
+    - `data` -  Type: Any valid json prop, so string, number, boolean, array or object
+    - `status` - Optional, HTTP Response Status `default: 200`
+- 👷‍♀️ Props for: `be.Success<T_Data>({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit })`
+    - `data` -  Type: Any valid json prop, so string, number, boolean, array or object
+    - `status` - Optional, HTTP Response Status `default: 200`
+    - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
 
 
 
@@ -216,9 +237,19 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
   .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
   .resolve(async (be) => {
     const {id} = be.getParams() // typesafe!
-    return be.success(id)
+
+    return id === 9
+      ? be.success(id)
+      : be.error('Why you gunna go & do that?!')
   })
 ```
+- 🚨 Props for: `be.error(message: string, status = 400)`
+    - `message` -  Error message
+    - `status` - Optional, HTTP Response Status `default: 400`
+- ‼️ Props for: `be.Error({ error, status = 400, headers }: { error: AceError, status?: number, headers?: HeadersInit })`
+    - `error` - `AceError` constructor takes `{ status = 400, statusText, message, messages, rawBody }`. Setting a status here too can be helpful when you call a BE API and get an error status from them and wanna relay that and set a different status for this HTTP Response 😅 & `messages` are Valibot / Zod error messages of type `Record<string, string[]>`
+    - `status` - Optional, HTTP Response Status `default: 400`
+    - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
 
 
 
@@ -319,6 +350,14 @@ export const GET = new API('/api/aloha/:id', 'apiAloha')
       : be.success({ id })
   })
 ```
+- 💨 Props for: `be.go(path: T, params?: RoutePath2Params<T>)`
+    - `path` -  Path to Route as defined @ `new Route()`
+    - `params` - Optional, Params to route as an object
+- 🏎️ Props for: `be.Go({ path, params, status = 301, headers }: { path: T, params?: RoutePath2Params<T>, status?: number, headers?: HeadersInit})`
+    - `path` -  Path to Route as defined @ `new Route()`
+    - `params` - Optional, Params to route as an object
+    - `status` - Optional, HTTP Response Status `default: 400`
+    - `headers` - Optional, HTTP Response Headers
 
 
 
@@ -347,7 +386,6 @@ export default new Route('/')
 
 ### 🌀 Loading Spinner!
 - Add to `app.tsx` => `import '@ace/loading.styles.css'` & then:
-- One Spinner
   ```tsx
   <Show when={cms.getContent(1)} fallback={<Loading />}>
     <div innerHTML={cms.getContent(1)}/>
@@ -359,7 +397,7 @@ export default new Route('/')
   - `height` - Optional, spinner height, `default: 2.1rem`
   - `thickness` - Optional, spinner thickness, `default: 0.3rem`
   - `speed` - Optional, spinner speed, `default: 1s`
-  - `twoColor` - Optional, if type is two, this will set the color for the 2nd spinner, `default: white`
+  - `twoColor` - Optional, if type is `two`, this will set the color for the 2nd spinner, `default: white`
   - `label` - Optional, text to announce to screen readers, `default: 'Loading...'`
   - `spanProps` - Optional, additional props to spread onto the outer `span`
 
@@ -370,6 +408,8 @@ export default new Route('/')
   - `--ace-loading-height`: Spinner height, default: `2.1rem`
   - `--ace-loading-thickness`: Spinner thickness, default: `0.3rem`
   - `--ace-loading-speed`: Spin speed, default: `1s`
+
+
 
 ### 📣 Toast Notification!
 - Add to `app.tsx` => `import '@ace/toast.styles.css'` & then:
@@ -565,11 +605,33 @@ export default new Route('/')
 1. In the first line place the worker name that you gave to cloudflare: `name = "your-project-name"`
 1. On the 2nd line place today's date: `compatibility_date = "2025-01-30"`
 1. Locally navigate to `.env` at your project root
-1. For each item here, tell cloudflare about it, example: `npx wrangler secret put SESSION_CRYPT_PASSWORD`
+1. For each item here, tell cloudflare about it, example: `npx wrangler secret put JWT_SECRET`
 1. Bash: `ace build prod` or `npx ace build prod` (`npx` is required when a `-g` is not done @ `npm i`)
 1. Navigate to `Workers & Pages` > `Your Project` > `Deployments`
 1. 💫 Push to GitHub aka **Deploy**! ❤️
 
+
+### Add a custom domain! 🎊
+1. Purchase a domain, I love [Namecheap](http://namecheap.com)
+1. Sign into Cloudflare
+1. In the `Dashboard` navigate to `Acount Home`
+1. Click `Add a Domain`
+1. Enter domain @ `Enter an existing domain`
+1. Select radio `Quick scan for DNS records`
+1. Select `Free` Plan
+1. At the Review DNS Records page, delete records w/ errors not covered by a certificate, if unsure, save them somewhere to add again later
+1. Click `Continue to Activation`
+1. Copy Nameservers and paste them where you bought the domain. For namecheap this is @ `Domain List` > `Nameservers` > `Custom DNS`
+1. In Cloudflare click continue
+1. In Cloudflare copy the `Zone ID`
+1. In your wrangler.toml add 
+  ```toml
+  routes = [
+    { pattern = "example.com", zone_id = "123456789", custom_domain = true }
+  ]
+  ```
+1. Update your `ace.config.js` file with your new `env`
+1. When you get an email from cloudflare that your domain is ready, push to Github and the deploy will now go to your custom domain! 💚
 
 
 ![Bunnies writing code](https://i.imgur.com/d0wINvM.jpeg)
