@@ -4,6 +4,7 @@
  */
 
 
+import { env } from './env'
 import { setCookie } from 'h3'
 import { jwtCookieKey } from './vars'
 import { jwtCreate, JwtCreateProps } from './jwtCreate'
@@ -33,7 +34,7 @@ export async function jwtCookieSet({ jwtCreateProps, cookieOptions, nativeEvent 
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.ENV !== 'local',
+    secure: env !== 'local',
     expires: new Date(Date.now() + jwtCreateProps.ttl),
     ...cookieOptions,
   })

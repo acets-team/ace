@@ -5,7 +5,7 @@ import { buildWrite } from './buildWrite.js'
 import { join, resolve, dirname } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
-import { SupportedApiMethods, supportedApiMethods } from '../../fundamentals/vars.js'
+import { SupportedApiMethods } from '../../fundamentals/vars.js'
 
 
 
@@ -29,7 +29,6 @@ export class Build {
   space = '\n'
   fsApp?: string
   dirRead: string
-  baseUrl: string
   found404 = false
   config: AceConfig
   dirWriteRoot: string
@@ -64,13 +63,12 @@ export class Build {
   static async Create(cwd: string) {
     const env = Build.#getEnv()
     const {config, configPath} = await Build.#getConfig(cwd)
-    const baseUrl = Build.#getBaseUrl(env, config)
 
     /** 
-     * - Why get these values (`env`, `baseUrl`, `config`, `configPath`) before creating an jarvis object? 
+     * - Why get these values (`env`, `config`, `configPath`) before creating an jarvis object? 
      * - Better downstream types, example: this way, `jarvis.env` is of type `string`, not type `string` | `undefined`
      */
-    const build = new Build(cwd, env, baseUrl, config, configPath)
+    const build = new Build(cwd, env, config, configPath)
 
     return build
   }
@@ -88,10 +86,9 @@ export class Build {
   }
 
 
-  private constructor(cwd: string, env: string, baseUrl: string, config: AceConfig, configPath: string) {
+  private constructor(cwd: string, env: string, config: AceConfig, configPath: string) {
     this.cwd = cwd
     this.env = env
-    this.baseUrl = baseUrl
     this.config = this.whiteList.populate(config)
 
     this.dirWriteRoot = join(cwd, '.ace')
@@ -104,7 +101,7 @@ export class Build {
 
   static #getEnv() {
     const env = process.argv[3]
-    if (!env) throw new Error(errors.wrongEnv())
+    if (!env) throw new Error(errors.falsyEnv)
     return env
   }
 
@@ -118,24 +115,6 @@ export class Build {
     if (!config) throw new Error(errors.noConfig)
 
     return { config, configPath }
-  }
-
-
-  static #getBaseUrl(env: string, config: AceConfig) {
-    let baseUrl
-
-    if (config?.envs) {
-      for (let configEnv of config.envs) {
-        if (env === configEnv.name) {
-          baseUrl = configEnv.url
-          break
-        }
-      }
-    }
-  
-    if (!baseUrl) throw new Error(errors.wrongEnv(env))
-
-    return baseUrl
   }
 }
 
@@ -245,5 +224,5 @@ export function getSrcImportEnry({star, moduleName, fsPath, addType }: {star?: b
 const errors = {
   noConfig: '❌ Please export a config const @ "./ace.config.js"',
   noGenTypesTxt: '❌ Please re download ace b/c "/** gen */" was not found in your "dist/types.d.txt" and that is odd',
-  wrongEnv: (env?: string) => `❌ Please call with an "env" that is defined @ "./ace.config.js". The env "${env}" did not match any environments set there`
+  falsyEnv: `❌ Please ensure an env is specified when you call ace build, example: "ace build local" or "ace build prod"`
 } as const

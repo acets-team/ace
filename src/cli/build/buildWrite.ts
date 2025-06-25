@@ -62,12 +62,10 @@ async function fsCopy({ dirWrite, srcFileName, aimFileName, build }: { dirWrite:
 function renderEnv(build: Build) {
   return `/**
 * 🧚‍♀️ How to access:
-*     - import { env, url } from '@ace/env'
+*     - import { env } from '@ace/env'
 */
 
-
-export const env: ${build.config.envs?.map(env => `'${env.name}'`).join(' | ')} = '${build.env}'
-export const url: ${build.config.envs?.map(env => `'${env.url}'`).join(' | ')} = '${build.baseUrl}'
+export const env = '${build.env}'
 `
 }
 

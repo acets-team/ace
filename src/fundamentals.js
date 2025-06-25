@@ -58,7 +58,6 @@ export const fundamentals = new Map([
   ['feChildren', new Fundamental('ts', 'solid', 'helper')],
   ['feFetch', new Fundamental('ts', 'solid', 'helper')],
   ['feMessages', new Fundamental('ts', 'solid', 'helper')],
-  ['getBaseUrl', new Fundamental('ts', 'solid', 'copy')],
   ['getMiddleware', new Fundamental('ts', 'solid', 'copy')],
   ['getRequestEvent', new Fundamental('ts', 'solid', 'copy')],
   ['go', new Fundamental('ts', 'solid', 'copy')],

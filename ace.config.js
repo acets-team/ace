@@ -6,9 +6,6 @@ export const config = {
   apiDir: './src/api',
   appDir: './src/app',
   logCaughtErrors: true,
-  envs: [
-    { name: 'local', url: 'http://localhost:3000' },
-  ],
   plugins: {
     solid: true,
     turso: true,

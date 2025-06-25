@@ -9,16 +9,29 @@ npx create-ace-app@latest
 
 
 
+### 🥳 The Ace Stack
+    👷‍♀️ The following docs show how to create the Ace stack, highlights:
+1. **Ace**
+    - Built on top of [Solid Start](https://docs.solidjs.com/), so we get fine grained reactivity, aria compliant components & the typesafetiest framework!
+1. **Brevo**
+    - 300 marketing / API emails a day for [free](https://www.brevo.com/pricing/) & a free email inbox!
+1. **Cloudflare**
+    - 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)!
+1. **Drizzle + Turso**
+    - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
+
+
+
 ### 🚨 When a dev restart is necessary?
-- It only takes 3 seconds, but it's important to restart dev sometimes (in bash `control + c` & then `npm run dev`), b/c HMR updates the majority of types but a restart updates them all, so restart dev when:
+- It only takes 3 seconds, but it's important to restart dev sometimes (in bash `control + c` & then `npm run dev`), b/c HMR updates the majority of types but a restart updates them all, so please restart dev when:
     - An `API` is `created/deleted`
     - A `Route` is `created/deleted`
     - A `Layout` is `created/deleted`
-    - A `Layout` is `added/removed` from a `new Route()` or `new Route404()` layout array @ `layouts([])`
+    - A `Layout` is `added/removed` from a `new Route()` or `new Route404()` 
 
 
 
-### 👷‍♀️ Route!
+### 👩‍💻 Route!
 ```tsx
 import { A } from '@ace/a'
 import { Route } from '@ace/route'
@@ -219,9 +232,9 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
   })
 ```
 - ✅ Props for: `be.success(data: T_Data, status = 200)`
-    - `data` -  Type: Any valid json prop, so string, number, boolean, array or object
+    - `data` - Any valid json prop, so string, number, boolean, array or object
     - `status` - Optional, HTTP Response Status `default: 200`
-- 👷‍♀️ Props for: `be.Success<T_Data>({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit })`
+- 👷‍♀️ Props for: `be.Success({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit })`
     - `data` -  Type: Any valid json prop, so string, number, boolean, array or object
     - `status` - Optional, HTTP Response Status `default: 200`
     - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
@@ -581,7 +594,7 @@ export default new Route('/')
 
 
 # 🚀 Deploy!
-### [Cloudflare](https://www.cloudflare.com/) offers free global hosting! 🥹
+### [Cloudflare](https://www.cloudflare.com/) offers 100,000 requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)! 🥹
 1. Create a GitHub account or Sign in
 1. Push to a public or private repository
 1. Create a Cloudlfare account or Sign in
@@ -592,27 +605,17 @@ export default new Route('/')
     - Build Command: `npm run build`
     - Deploy Command: `npx wrangler deploy`
     - Save & Deploy
-1. Copy worker env url
-1. Add the env url to your `./ace.config.js`
-1. Example:
-    ```js
-    envs: [
-      { name: 'local', url: 'http://localhost:3000' },
-      { name: 'prod', url: 'https://example.ace.workers.dev' },
-    ]
-    ```
 1. Locally at your project root (where package.json is) create `wrangler.toml`
 1. In the first line place the worker name that you gave to cloudflare: `name = "your-project-name"`
-1. On the 2nd line place today's date: `compatibility_date = "2025-01-30"`
+1. On the 2nd line place yesterday's date, example: `compatibility_date = "2025-01-30"`
 1. Locally navigate to `.env` at your project root
 1. For each item here, tell cloudflare about it, example: `npx wrangler secret put JWT_SECRET`
-1. Bash: `ace build prod` or `npx ace build prod` (`npx` is required when a `-g` is not done @ `npm i`)
 1. Navigate to `Workers & Pages` > `Your Project` > `Deployments`
 1. 💫 Push to GitHub aka **Deploy**! ❤️
 
 
 ### Add a custom domain! 🎊
-1. Purchase a domain, I love [Namecheap](http://namecheap.com)
+1. Purchase a domain, I love [Namecheap](http://namecheap.com)!
 1. Sign into Cloudflare
 1. In the `Dashboard` navigate to `Acount Home`
 1. Click `Add a Domain`
@@ -632,6 +635,16 @@ export default new Route('/')
   ```
 1. Update your `ace.config.js` file with your new `env`
 1. When you get an email from cloudflare that your domain is ready, push to Github and the deploy will now go to your custom domain! 💚
+
+
+
+### 💌 Send emails!
+1. [Brevo](https://www.brevo.com/) offers **300** marketing / API emails a day for [free](https://www.brevo.com/pricing/), has a super easy integration w/ Cloudflare, and allows people to reply to your emails, so you get a free email inbox too!
+1. [Setup DNS between Brevo & Cloudflare](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC)
+    - During this process there is an option of `Authenticate the domain automatically`. If you're using Cloudflare we recommend this option, it adds all the DNS records in 1 lovely step!
+1. [Ensure you have a sender setup](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email)
+1. [Create an Email Campaign](https://help.brevo.com/hc/en-us/articles/4413566705298-Create-an-email-campaign)
+1. [API Documentation](https://developers.brevo.com/reference/sendtransacemail)
 
 
 ![Bunnies writing code](https://i.imgur.com/d0wINvM.jpeg)

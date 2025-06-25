@@ -1,7 +1,7 @@
 /**
  * 🧚‍♀️ How to access:
  *     - import { A } from '@ace/a'
- *     - import type { AOptions } from '@ace/a'
+ *     - import type { AProps } from '@ace/a'
  */
 
 
@@ -11,7 +11,16 @@ import { A as SolidA } from '@solidjs/router'
 import type { Routes, RoutePath2Params } from './types'
 
 
-export function A<T extends Routes>({ path, params, children, ...props }: AOptions<T>) {
+/**
+ * ### Anchor component
+ * - When anchor path matches the current route an "active" class is added to the generated anchor
+ * - When anchor path does not match the current route an "inactive" class is added to the generated anchor
+ * - Use the SolidJS `end` prop if the match is too greedy: https://docs.solidjs.com/solid-router/reference/components/a
+ * - Allows all props from SolidJS anchor component, except for `href`, b/c Ace sets the `href` based on your `path` & `props`
+ * @param props.path - Path to navigate to, as defined @ `new Route()`
+ * @param props.params - Optional object of params to send to route
+ */
+export function A<T extends Routes>({ path, params, children, ...props }: AProps<T>) {
   return <>
     <SolidA href={buildURL(path, params)} {...props}>
       {children}
@@ -20,7 +29,7 @@ export function A<T extends Routes>({ path, params, children, ...props }: AOptio
 }
 
 
-export type AOptions<T extends Routes> = {
+export type AProps<T extends Routes> = {
   path: T,
   children: JSX.Element,
   params?: RoutePath2Params<T>,

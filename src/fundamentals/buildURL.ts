@@ -16,7 +16,7 @@ export function buildURL(path: string, params: any): string {
     }
   }
 
-  return path.replace(/\/?:([^/]+)\??/g, (_, param) => { // add baseUrl and remove any param names still in url
+  return path.replace(/\/?:([^/]+)\??/g, (_, param) => { // remove any param names still in url
     return param.includes('?') ? '' : '/'
   })
 }
