@@ -49,6 +49,7 @@ export const fundamentals = new Map([
   ['cmsSchema', new Fundamental('ts', 'turso', 'copy')],
   ['cmsSQL', new Fundamental('ts', 'turso', 'copy')],
   ['createApp', new Fundamental('tsx', 'solid', 'custom')],
+  ['createKey', new Fundamental('ts', 'solid', 'copy')],
   ['createOnSubmit', new Fundamental('ts', 'solid', 'copy')],
   ['dateTimeFormat', new Fundamental('tsx', 'solid', 'copy')],
   ['enums', new Fundamental('ts', 'solid', 'copy')],

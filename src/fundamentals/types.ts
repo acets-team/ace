@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import type { APIResponse, InferPOSTBody, B4 ... } from '@ace/types'
+ *     - import type { APINames, ... } from '@ace/types'
  */
 
 
@@ -18,22 +18,54 @@ import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
 
-/** All api GET paths */
-export type GET_Paths = keyof typeof apisBE.gets
+/** { [api function name]: new Api() } */
+export type APINames = keyof typeof apisBE.apiNames
 
 
-/** All api POST paths */
-export type POST_Paths = keyof typeof apisBE.posts
+/** { [api GET path]: new Api() } */
+export type GETPaths = keyof typeof apisBE.gets
 
 
-/** All application routes */
+/** { [api POST path]: new Api() } */
+export type POSTPaths = keyof typeof apisBE.posts
+
+
+/** { [route path]: new Route() } */
 export type Routes = keyof typeof routes
 
 
+/** 
+ * - Receives: API Function Name
+ * - Gives: API Response
+*/
+export type APIName2Response<T extends APINames> = typeof apisBE.apiNames[T] extends API<any, any, any, infer T_Response>
+  ? T_Response
+  : never
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: API Response Data
+*/
+export type APIName2ResponseData<T_Name extends APINames> = APIName2Response<T_Name> extends PrunedAPIResponse<infer T_Response>
+  ? T_Response
+  : never
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: API Request Props
+*/
+export type APIName2Props<Name extends APINames> =
+  typeof apisBE.apiNames[Name] extends API<infer P, infer S, infer B, infer R>
+    ? BaseAPIFnOptions<API<P, S, B, R>> & { bitKey?: string }
+    : never;
+
+
 /**
- * When we create a Response object the type for data is lost
- * But when we create an AceResponse we can store / infer the type for the data!
- * This is the return type for `be.respond()` which is the return type for an API
+ * - When we create a Response object the type for the stringified json is lost b/c the Response object does not accept generics
+ * - When we create an AceResponse we can store / infer the type for the stringified json in @ `__resType`!
+ * - This is the return type for `respond()` aka this is the return type for a `new API()` > `.resolve()`
  */
 export interface AceResponse<T_Data> extends Response {
   __dataType?: T_Data
@@ -42,17 +74,18 @@ export interface AceResponse<T_Data> extends Response {
 
 /** 
  * - Receives: AceResponse
- * - Gives: The object type for the stringified json 
+ * - Gives: PrunedAPIResponse
 */
-export type InferAceResponse<T> = T extends AceResponse<infer U>
-  ? APIResponse<U>
-  : T
+export type AceResponse2PrunedResponse<T_AceResponse> = T_AceResponse extends AceResponse<infer T_Data>
+  ? PrunedAPIResponse<T_Data>
+  : never;
 
 
 /**
- * - API response that `callAPIResolve()` gets
+ * - Required API response from `new API()` > `.resolve()`
+ * - What is actually returned to the frontend is a pruned version (`PrunedAPIResponse`), where the falsy props are removed
  */
-export type RawAPIResponse<T_Data = any> = {
+export type FullAPIResponse<T_Data = any> = {
   go: string | null
   data: T_Data | null
   error: AceErrorProps | null
@@ -60,9 +93,10 @@ export type RawAPIResponse<T_Data = any> = {
 
 
 /**
- * API response that FE gets
- */
-export type APIResponse<T_Data = any> = {
+ * - What is actually returned from `new API()` > `.resolve()` is `FullAPIResponse`
+ * - What is actually returned to the frontend is this pruned version: `PrunedAPIResponse`, where falsy props are removed
+*/
+export type PrunedAPIResponse<T_Data = any> = {
   data?: T_Data
   error?: AceErrorProps
 }
@@ -70,16 +104,16 @@ export type APIResponse<T_Data = any> = {
 
 /** 
  * - Receives: API
- * - Gives: RawAPIResponse
+ * - Gives: FullAPIResponse
 */
-export type API2RawResponse<T_API extends API<any, any, any, any>> = RawAPIResponse<API2Data<T_API>>
+export type API2FullAPIResponse<T_API extends API<any, any, any, any>> = FullAPIResponse<API2Data<T_API>>
 
 
 /** 
  * - Receives: API
- * - Gives: APIResponse
+ * - Gives: PrunedAPIResponse
 */
-export type API2APIResponse<T_API extends API<any, any, any, any>> = APIResponse<API2Data<T_API>>
+export type API2PrunedAPIResponse<T_API extends API<any, any, any, any>> = PrunedAPIResponse<API2Data<T_API>>
 
 
 /** 
@@ -87,7 +121,7 @@ export type API2APIResponse<T_API extends API<any, any, any, any>> = APIResponse
  * - Gives: Response data type
 */
 export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<any, any, any, infer T_Response>
-  ? T_Response extends APIResponse<infer T_Data>
+  ? T_Response extends PrunedAPIResponse<infer T_Data>
     ? T_Data
     : never
   : never
@@ -98,8 +132,13 @@ export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<
  * - Gives: Type for the FE Function that calls this API
 */
 export type API2FEFunction<T_API extends API<any, any, any, any>> = IsPopulated<BaseAPIFnOptions<T_API>> extends true
-  ? (options: APIFnOptions<T_API>) => Promise<API2APIResponse<T_API>>
-  : (options?: APIFnOptions<T_API>) => Promise<API2APIResponse<T_API>>
+  ? (options: APIFnProps<T_API>) => Promise<API2PrunedAPIResponse<T_API>>
+  : (options?: APIFnProps<T_API>) => Promise<API2PrunedAPIResponse<T_API>>
+
+
+export type RequiredKeys<T> = {
+  [K in keyof T]-?: {} extends Pick<T, K> ? never : K
+}[keyof T];
 
 
 /** If testing item is an object and has keys returns true, else return false */
@@ -108,37 +147,36 @@ export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? fals
 
 /** Building an options object whose properties are only present if they have keys */
 export type BaseAPIFnOptions<T_API extends API<any,any,any,any>> =
-  KeepIfPopulated<'params', API2Params<T_API>> &
-  KeepIfPopulated<'body', API2Body<T_API>> &
-  KeepIfPopulated<'search', API2Search<T_API>>
+  OptionalIfDefined<'params', API2Params<T_API>> &
+  OptionalIfDefined<'body', API2Body<T_API>> &
+  OptionalIfDefined<'search', API2Search<T_API>>
 
 
-/**
- * - If value is a populated object => return { key: value }
- * - Else => return {}
- * - Then we' APIFnOptions we unite the objects w/ & and get one object with only the populated items; unpopulated ones are simply omitted
- */
-export type KeepIfPopulated<T_Prop extends string, T_Value> = IsPopulated<T_Value> extends true
-  ? { [T_Key in T_Prop]: T_Value }
-  : {}
+export type OptionalIfDefined<Prop extends string, Value> =
+  [Value] extends [undefined]
+    ? {}
+    : { [K in Prop]?: Value }
 
 
-/** BitKey is optional */
-export type APIFnOptions<T_API extends API<any,any,any,any>> = BaseAPIFnOptions<T_API> & { bitKey?: string }
+/** 
+ * - The props (arguments) that are sent to an api function
+ * - BitKey is optional
+*/
+export type APIFnProps<T_API extends API<any,any,any,any>> = BaseAPIFnOptions<T_API> & { bitKey?: string }
 
 
 /** 
  * - Receives: API GET path
  * - Gives: Response data type
 */
-export type GETPath2Data<Path extends GET_Paths> = API2APIResponse<(typeof apisBE.gets)[Path]>
+export type GETPath2Data<Path extends GETPaths> = API2PrunedAPIResponse<(typeof apisBE.gets)[Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: Response data type
 */
-export type POSTPath2Data<T_Path extends POST_Paths> = API2APIResponse<typeof apisBE.posts[T_Path]>
+export type POSTPath2Data<T_Path extends POSTPaths> = API2PrunedAPIResponse<typeof apisBE.posts[T_Path]>
 
 
 /** If object has keys return object, else return undefined */
@@ -185,14 +223,14 @@ export type Route2Params<T_Route extends Route<any, any>> = T_Route extends Rout
  * - Receives: API GET path
  * - Gives: The type for that api's params
 */
-export type GETPath2Params<T_Path extends GET_Paths> = API2Params<typeof apisBE.gets[T_Path]>
+export type GETPath2Params<T_Path extends GETPaths> = API2Params<typeof apisBE.gets[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's params
 */
-export type POSTPath2Params<T_Path extends POST_Paths> = API2Params<typeof apisBE.posts[T_Path]>
+export type POSTPath2Params<T_Path extends POSTPaths> = API2Params<typeof apisBE.posts[T_Path]>
 
 
 /** 
@@ -206,48 +244,36 @@ export type RoutePath2Params<T_Path extends keyof typeof routes> = Route2Params<
  * - Receives: API GET path
  * - Gives: The type for that api's search params
 */
-export type GETPath2Search<T_Path extends GET_Paths> = API2Search<typeof apisBE.gets[T_Path]>
+export type GETPath2Search<T_Path extends GETPaths> = API2Search<typeof apisBE.gets[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's body
 */
-export type POSTPath2Body<T_Path extends POST_Paths> = API2Body<typeof apisBE.posts[T_Path]>
+export type POSTPath2Body<T_Path extends POSTPaths> = API2Body<typeof apisBE.posts[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's search params
 */
-export type POSTPath2Search<T_Path extends POST_Paths> = API2Search <typeof apisBE.posts[T_Path]>
+export type POSTPath2Search<T_Path extends POSTPaths> = API2Search <typeof apisBE.posts[T_Path]>
 
 
 /**
- * - Example: `const exampleLoad = load(() => apiExample(), 'example')`
  * - Receives: API Function Name, so => `apiExample`
- * - Gives: The type for the `load()` response, so the type for => `exampleLoad`
- */
-export type InferLoadFn<T_Function_Name extends ApiFunctionKeys> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisFE)[T_Function_Name]>>>
+ * - Gives: The type for the `load()` response
+ * @example
+  ```ts
+  const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
 
-
-/**
- * - `keyof typeof apisFE`: All the modules at apis.fe.ts, ex: 'apiFoo' | 'apiBar' | 'gets' | 'posts'
- * - `typeof apisFE[T_Fn_Name] extends (...args: any[]) => any`: Is the module being exported at this module key a function?
- * - If it is return the module name aka the function name, this gives us
-    ```json
-    {
-      "apiFoo": "apiFoo",
-      "apiBar": "apiBar"
-    }
-    ```
- * - `{ ... }[keyof typeof apisFE]`: Take the object we just built, and index it by all its keys: `"apiFoo" | "apiBar"`
+  function Characters(res: APIName2LoadResponse<'apiCharacter'>) {}
+  ```
  */
-export type ApiFunctionKeys = {
-  [T_Fn_Name in keyof typeof apisFE]: typeof apisFE[T_Fn_Name] extends (...args: any[]) => any
-    ? T_Fn_Name
-    : never
-}[keyof typeof apisFE]
+// export type APIName2LoadResponse<T_Function_Name extends APINames> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisBE)[T_Function_Name]>>>
+export type APIName2LoadResponse<T_Name extends APINames & keyof typeof apisFE> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisFE)[T_Name]>>>
+
  
 
 /** The component to render for a route */
@@ -267,11 +293,9 @@ export type URLSearchParams = Record<string, string | string[]>
 export type URLParams = Record<string, any>
 
 
-export type JSONPrimitive = string | number | boolean | null
-export type JSONValue = JSONPrimitive | JSONObject | JSONValue[]
-export type JSONObject = { [key: string]: JSONValue }
-export type JSONable = JSONValue
-
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonObject = { [key: string]: JsonPrimitive | JsonObject | JsonPrimitive[] | JsonObject[] | (JsonPrimitive | JsonObject)[] }
+export type Json = JsonPrimitive | Json[] | JsonObject
 
 /** 
  * - Source: `import type { APIEvent } from '@solidjs/start/server'`

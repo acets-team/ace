@@ -12,4 +12,9 @@ export const posts = {
   '/api/b': POST1.POST,
 }
 
+export const apiNames = {
+  'apiA': GET1.GET,
+  'apiB': POST1.POST,
+}
+
 export const apiA = createAPIFunction(GET1.GET)

@@ -87,6 +87,8 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
 
         // only add an import to the fe if a fnAlias was requested
         build.writes.importsAPIFE += getSrcImportEnry({ moduleName: apiMethod + build.counts[apiMethod], fsPath, star: true, addType: true })
+
+        build.writes.apiNames += `  '${fnName}': ${apiName},\n`
       }
 
       switch (apiMethod) {

@@ -13,4 +13,5 @@ try {
   }
 } catch(e) {
   console.error('❌ Ace CLI Error:', e)
+  process.exit(1)
 }

@@ -33,12 +33,13 @@ export class Build {
   config: AceConfig
   dirWriteRoot: string
   fsSolidTypes?: string
+  
   dirWriteFundamentals: string
   whiteList = new FundamentalWhiteList()
   layoutModuleNames = new Map<string, string>()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
-  writes: Writes = { types: '', importsAPIFE: '', importsAPIBE: '', constGET: '', constPOST: '', apiFunctionsFE: '', apiFunctionsBE: '' }
+  writes: Writes = { types: '', importsAPIFE: '', importsAPIBE: '', constGET: '', constPOST: '', apiFunctionsFE: '', apiFunctionsBE: '', apiNames: '' }
   counts: { GET: number, POST: number, routes: number, layouts: number } = { GET: 0, POST: 0, routes: 0, layouts: 0 }
 
   /**
@@ -177,6 +178,7 @@ export type TreeNode = {
 type Writes = {
   types: string,
   constGET: string,
+  apiNames: string,
   constPOST: string,
   importsAPIFE: string,
   importsAPIBE: string,
@@ -217,7 +219,7 @@ export function getSrcImportEnry({star, moduleName, fsPath, addType }: {star?: b
     .replace('.tsx', '')
     .replace('.ts', '')
 
-  return `import ${addType ? 'type' : ''} ${star ? '* as ' : ''}${moduleName} from '@src/${from}'\n`
+  return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from '@src/${from}'\n`
 }
 
 

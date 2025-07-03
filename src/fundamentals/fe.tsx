@@ -7,11 +7,12 @@
 import { Bits } from '../bits'
 import { feFetch } from '../feFetch'
 import { buildURL } from './buildURL'
+import { isServer } from 'solid-js/web'
 import { FEMessages } from '../feMessages'
 import { getFEChildren } from '../feChildren'
 import { useParams, useLocation } from '@solidjs/router'
 import { createContext, type JSX, type ParentComponent } from 'solid-js'
-import type { GET_Paths, GETPath2Params, POST_Paths, POSTPath2Body, POSTPath2Params, GETPath2Data, POSTPath2Data, URLParams, URLSearchParams } from './types'
+import type { GETPaths, GETPath2Params, POSTPaths, POSTPath2Body, POSTPath2Params, GETPath2Data, POSTPath2Data, URLParams, URLSearchParams, RoutePath2Params, Routes, JsonObject } from './types'
 
 
 export let fe!: FE // the "!" tells ts: we'll assign this before it’s used but, ex: if a fe.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error 
@@ -47,6 +48,38 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
   messages = new FEMessages()
 
 
+  /**
+   * Frontend redirect w/ simple options
+   * @param path - Redirect to this path, as defined @ new Route()
+   * @param params - Params to put in the url
+   */
+  go<T extends Routes>(path: T, params?: RoutePath2Params<T>) {
+    this.Go({ path, params })
+  }
+
+
+  /**
+   * Frontend redirect w/ extra options
+   * @param path - Redirect to this path, as defined @ new Route()
+   * @param params - Params to put in the url
+   * @param replace - Optional, defaults to false, when true this redirect will clear out a history stack entry 
+   * @param scroll - Optional, defaults to true, if you'd like to scroll to the top of the page when done redirecting
+   * @param state - Optional, defaults to an empty object, must be an object that is serializable, available @ the other end via `fe.getLocation().state`
+   */
+  Go<T extends Routes>({ path, params, replace = false, scroll = true, state = {} }: { path: T, params?: RoutePath2Params<T>, replace?: boolean, scroll?: boolean, state?: JsonObject }) {
+    if (isServer) return
+
+    const url = buildURL(path, params)
+
+    if (replace) window.history.replaceState(state, '', url)
+    else window.history.pushState(state, '', url)
+
+    window.dispatchEvent(new PopStateEvent('popstate', { state }))
+
+    if (scroll) window.scrollTo(0, 0)
+  }
+
+
   /** @returns The url params object  */
   getParams() {
     const params = useParams<T_Params>()
@@ -66,7 +99,7 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    */
-  async GET<T extends GET_Paths>(path: T, options?: { params?: GETPath2Params<T>, bitKey?: string }): Promise<GETPath2Data<T>> {
+  async GET<T extends GETPaths>(path: T, options?: { params?: GETPath2Params<T>, bitKey?: string }): Promise<GETPath2Data<T>> {
     return this._fetch<GETPath2Data<T>>(buildURL(path, options?.params), {method: 'GET', bitKey: options?.bitKey })
   }
 
@@ -78,7 +111,7 @@ export class FE<T_Params extends URLParams = {}, T_Search extends URLSearchParam
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async POST<T extends POST_Paths>(path: T, options?: { params?: POSTPath2Params<T>, body?: POSTPath2Body<T>, bitKey?: string }): Promise<POSTPath2Data<T>> {
+  async POST<T extends POSTPaths>(path: T, options?: { params?: POSTPath2Params<T>, body?: POSTPath2Body<T>, bitKey?: string }): Promise<POSTPath2Data<T>> {
     return this._fetch<POSTPath2Data<T>>(buildURL(path, options?.params), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
   }
 

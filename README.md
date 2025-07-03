@@ -106,7 +106,7 @@ export default new Route404()
   import { apiCharacter } from '@ace/apis'
   import RootLayout from '@src/app/RootLayout'
   import { revalidate } from '@solidjs/router'
-  import type { InferLoadFn } from '@ace/types'
+  import type { APIName2LoadResponse } from '@ace/types'
   import GuestLayout from '@src/app/Guest/GuestLayout'
 
 
@@ -138,7 +138,7 @@ export default new Route404()
     })
 
 
-  function Character({ element }: { element: InferLoadFn<'apiCharacter'> }) { // once a load has finished the character will render
+  function Character({ element }: { element: APIName2LoadResponse<'apiCharacter'> }) { // once a load has finished the character will render
     return <>
       <div class="character">
         <Suspense fallback={<div class="ace-shimmer"></div>}>
@@ -643,7 +643,28 @@ export default new Route('/')
 1. [Setup DNS between Brevo & Cloudflare](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC)
     - During this process there is an option of `Authenticate the domain automatically`. If you're using Cloudflare we recommend this option, it adds all the DNS records in 1 lovely step!
 1. [Ensure you have a sender setup](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email)
-1. [Create an Email Campaign](https://help.brevo.com/hc/en-us/articles/4413566705298-Create-an-email-campaign)
+1. [Create an API Key](https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys)
+    - Add api key to `.env` file
+1. [Create an Email Template](https://help.brevo.com/hc/en-us/articles/360019787120-Create-an-email-template)
+    - On the edit template page, to have a link point to a param, set the `Link Target` to `{{params.RESET_LINK}}` & then:
+    ```ts
+    if (!process.env.BREVO_API_KEY) return be.error('!process.env.BREVO_API_KEY')
+
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        to: [{ email: 'chris@gmail.com', name: 'Christopher Carrington' }],
+        templateId: 1,
+        params: {
+          RESET_LINK: 'http://example.com/yay'
+        }
+      })
+    })
+    ```
 1. [API Documentation](https://developers.brevo.com/reference/sendtransacemail)
 
 

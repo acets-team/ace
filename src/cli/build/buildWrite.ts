@@ -83,6 +83,10 @@ export const posts = {
 ${build.writes.constPOST.slice(0,-1)}
 }
 
+export const apiNames = {
+${build.writes.apiNames.slice(0, -1)}
+}
+
 ${build.writes.apiFunctionsBE}
 `
 }

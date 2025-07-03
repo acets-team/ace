@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { go, Go } from '@ace/go'
+ *     - import { go, Go, goThrow } from '@ace/go'
  */
 
 
@@ -11,20 +11,27 @@ import type { Routes, RoutePath2Params, AceResponse } from './types'
 
 
 
+
+
 /**
- * - Provides intellisense to current routes
- * - Returns a Response object that will be redirected server side
- * - Does a status of 301 and sends no custom headers, if you'd love custom headers sent call `Go()`
+ * - Redirect response w/ simple options
+ * @param path - As specified at `new Route()`, press control+space to get intellisense to current routes
+ * @param params - Maybe optional, as specified at `new Route()`, press control+space to get intellisense to current routes
+ * @returns - An API Response of type `AceResponse<null>`
  */
 export function go<T_Path extends Routes>(path: T_Path, params?: RoutePath2Params<T_Path>): AceResponse<null> {
   return respond({ go: buildURL(path, params), status: 301 })
 }
 
 
+
 /**
- * - Provides intellisense to current routes
- * - Returns a Response object that will be redirected server side
- * - If you'd love a simpler function call `go()`
+ * - Redirect response w/ all options
+ * @param options.path - As specified at `new Route()`, press control+space to get intellisense to current routes
+ * @param options.params - Maybe optional, as specified at `new Route()`, press control+space to get intellisense to current routes
+ * @param options.status - Optional, HTTP Response Status, Defaults to `301`
+ * @param options.headers - Optional, HTTP Response Headers
+ * @returns - An API Response of type `AceResponse<null>`
  */
 export function Go<T_Path extends Routes>({path, params, status = 301, headers}: { path: T_Path, params?: RoutePath2Params<T_Path>, status?: number, headers?: HeadersInit }): AceResponse<null> {
   return respond({ go: buildURL(path, params), status, headers })
@@ -46,7 +53,8 @@ export function Go<T_Path extends Routes>({path, params, status = 301, headers}:
     return response
   }
   ```
- * - Also helpful if you'd love to do a redirect in a `new Route().b4()` to avoid the circular dependency
+ * - Also helpful if you'd love to do a redirect @ `new Route().b4()` to avoid the circular dependency of defining a route and asking for all route paths in the .b4() > .go() in the same chain, throw breaks that chain and works the same :)
+ * - When the .b4() is declared as a variable like .b4(authB4) you can just `return go()` in the authB4, this is when the b4 function is defined on the `new Route()` and not as a variable
  * @example
   ```ts
   import { goThrow } from '@ace/go'
@@ -58,6 +66,9 @@ export function Go<T_Path extends Routes>({path, params, status = 301, headers}:
       throw goThrow('/sign-in')
     })
   ```
+ * @param path - As specified at `new Route()`, press control+space to get intellisense to current routes
+ * @param params - Maybe optional, as specified at `new Route()`, press control+space to get intellisense to current routes
+ * @returns - A `GoResponse` object which when found in a catch block (b/c it's thrown) will handle the redirect for us
  */
 export function goThrow<T_Path extends Routes>(path: T_Path, params?: RoutePath2Params<T_Path>) {
   return new GoResponse(buildURL(path, params))

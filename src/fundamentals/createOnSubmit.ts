@@ -19,12 +19,19 @@ import { fe } from './fe'
  * ---
  * 
  * @example
- * ```ts
- * const onSubmit = createOnSubmit(async (fd) => {
- *   const body = signUpSchema.parse({ email: fd('email') })
- *   await apiSignUp({ body, bitKey: 'save' }) // a bit is a boolean signal
- * })
- * ```
+ ```ts
+  const onSubmit = createOnSubmit(async (fd, event) => {
+    const body = signUpSchema.parse({ email: fd('email') })
+
+    const res = await apiSignUp({ body, bitKey: 'save' }) // a bit is a boolean signal
+
+    if (res.error?.message) showToast({type: 'danger', value: res.error.message})
+    else {
+      event.currentTarget.reset()
+      showToast({type: 'success', value: 'Success!'})
+    }
+  })
+  ```
  * 
  * ---
  * 
@@ -36,13 +43,14 @@ export function createOnSubmit(callback: OnSubmitCallback) {
   return async function (event: SubmitEvent) {
     try {
       event.preventDefault()
-
       fe.messages.clearAll()
 
-      const formData = new FormData(event.currentTarget as HTMLFormElement)
+      if (!(event.currentTarget instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
+
+      const formData = new FormData(event.currentTarget)
       const fd = (name: string) => formData.get(name)
 
-      await callback(fd, event)
+      await callback(fd, { ...event, currentTarget: event.currentTarget })
     } catch (e) {
       fe.messages.align(e)
     }
@@ -54,7 +62,7 @@ export function createOnSubmit(callback: OnSubmitCallback) {
 /**
  * - When a form onSubmit happens, `OnSubmitCallback` happens
  */
-export type OnSubmitCallback = (fd: FormDataFunction, event: SubmitEvent) => Promise<any>
+export type OnSubmitCallback = (fd: FormDataFunction, event: SubmitEvent & { currentTarget: HTMLFormElement }) => Promise<any>
 
 
 

@@ -35,24 +35,24 @@ import { onMount, type JSX } from 'solid-js'
  * 
  * @example
     ```tsx
-    import '@ace/load.styles.css'
+    import { For, Show } from 'solid-js'
     import { Loading } from '@ace/loading'
-    import { createSignal, For, Show } from 'solid-js'
+    import { createKey } from '@ace/createKey'
     import { AnimatedFor, ForAnimator } from '@ace/animatedFor'
 
 
     export default new Route('/fortunes')
       .component((fe) => {  
         const forAnimator = new ForAnimator()
-        const [items, setItems] = createSignal<string[]>([])
+        const [fortunes, setFortunes] = createKey<APIName2ResponseData<'apiFortune'>[]>([])
 
         async function onClick() {
           forAnimator.preFetch()
 
-          const res = await fe.GET('/api/example', { bitKey: 'example'})
+          const res = await apiFortune({params, bitKey: 'fortune'})
 
           if (res.data) {
-            setItems([ res.data.items, ...items() ]) // bind dom
+            setFortunes([ res.data, ...fortunes ]) // bind dom, add to beginning
             forAnimator.postSet()
           }
         }
@@ -64,20 +64,20 @@ import { onMount, type JSX } from 'solid-js'
             </Show>
           </button>
 
-          <AnimatedFor class="items" forAnimator={ forAnimator } items={
-            <For each={items()}>
-              {item => <div class="item">{item}</div>}
+          <AnimatedFor forAnimator={forAnimator} divProps={{class: 'items'}}>
+            <For each={fortunes}>
+              {({fortune}) => <div class="fortune">{fortune}</div>}
             </For>
-          } />
+          </AnimatedFor>
         </>
       })
     ```
  * 
- * @param options.items - SolidJS For Component 
+ * @param options.children - SolidJS For Component 
  * @param options.forAnimator - Helper object to keep track of element positions
- * @param ...props - Go on the wrapper div element
+ * @param options.divProps - Optional, go on the wrapper div element
  */
-export function AnimatedFor({ items, forAnimator, ...props }: { items: JSX.Element, forAnimator: ForAnimator } & JSX.HTMLAttributes<HTMLDivElement>) {
+export function AnimatedFor({ children, forAnimator, divProps }: { children: JSX.Element, forAnimator: ForAnimator, divProps?: JSX.HTMLAttributes<HTMLDivElement> }) {
   let domElementsWrapper: HTMLDivElement
 
   onMount(() => {
@@ -85,8 +85,8 @@ export function AnimatedFor({ items, forAnimator, ...props }: { items: JSX.Eleme
   })
 
   return <>
-    <div ref={el => (domElementsWrapper = el)} {...props} class="animated-for">
-      {items}
+    <div ref={el => (domElementsWrapper = el)} class="animated-for" {...divProps}>
+      {children}
     </div>
   </>
 }

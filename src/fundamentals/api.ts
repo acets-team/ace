@@ -1,18 +1,18 @@
 /**
  * 🧚‍♀️ How to access:
  *     - import { API } from '@ace/api'
- *     - import type { APIResolveFunction, UnwrapAceResponse } from '@ace/api'
+ *     - import type { APIResolveFunction } from '@ace/api'
  */
 
 
 import type { BE } from './be'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { APIBody, URLSearchParams, URLParams, B4, AceResponse, InferAceResponse } from './types'
+import type { APIBody, URLSearchParams, URLParams, B4, AceResponse, AceResponse2PrunedResponse } from './types'
 
 
 
 /** - Create a GET or POST, API endpoint */
-export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams = {}, T_Body extends URLParams = {}, T_Response extends any | unknown = unknown> {
+export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams = {}, T_Body extends URLParams = {}, T_Response = unknown> {
   public readonly values: {
     path: string
     pattern: RegExp
@@ -45,7 +45,6 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
     ```ts
     import { API } from '@ace/api'
     import { authB4 } from '@src/lib/b4'
-    import { M_Contract } from '@src/db/M_Contract'
 
     export const GET = new API('/api/contract/:contractId')
       .b4(authB4)
@@ -67,9 +66,8 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
     ```ts
     import { API } from '@ace/api'
     import { authB4 } from '@src/lib/b4'
-    import { M_Contract } from '@src/db/M_Contract'
 
-    export const GET = new API('/api/contract/:contractId')
+    export const GET = new API('/api/contract/:contractId', 'apiContract')
       .b4(authB4)
       .params<{contractId: string}>()
       .resolve(async (be) => {
@@ -77,18 +75,10 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
       })
     ```
     */
-    resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, InferAceResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
-
-      (this.values as any).resolve = resolveFunction as any
-
-      return this as unknown as API<
-        T_Params,
-        T_Search,
-        T_Body,
-        InferAceResponse<Awaited<ReturnType<T_Resolve_Fn>> >
-      >
+    resolve<T_Resolve_Fn extends (be: BE<T_Params, T_Search, T_Body>) => Promise<AceResponse<any>>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponse2PrunedResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
+      this.values.resolve = resolveFunction
+      return this as any
     }
-
 
 
   /**
@@ -96,7 +86,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
    * - If `.params()` is below `.resolve() `then `.resolve()` won't have typesafety
    * @example
     ```ts
-    export const GET = new API('/api/fortune/:id')]
+    export const GET = new API('/api/fortune/:id', 'apiFortune')
       .params<{ id: number }>()
       .resolve(async (be) => {
         return be.success(be.getParams())
@@ -119,7 +109,7 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
     import { createIndividualSchema, CreateIndividualSchema } from '@src/schemas/CreateIndividualSchema'
 
 
-    export const POST = new API('/api/create-individual')
+    export const POST = new API('/api/create-individual', 'apiCreateIndividual')
       .b4(authB4)
       .body<CreateIndividualSchema>()
       .resolve(async (be) => {
@@ -146,5 +136,5 @@ export type APIResolveFunction<
   T_Params extends URLParams,
   T_Search extends URLSearchParams,
   T_Body extends APIBody,
-  T_Fn_Response
-> = (be: BE<T_Params, T_Search, T_Body>) => Promise<T_Fn_Response | AceResponse<T_Fn_Response>>
+  T_Response_Data
+> = (be: BE<T_Params,T_Search,T_Body>) => Promise<AceResponse<T_Response_Data>>
