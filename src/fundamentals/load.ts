@@ -23,14 +23,14 @@ export function load<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: s
 
     return createAsync(async () => {
       try {
-        const res = await loaded()
+        const response = await loaded()
 
-        if (res instanceof Response) {
-          const json = await res.json()
-          return json as T_Response
+        if (response instanceof Response) {
+          const clonedResponse = response.clone()
+          return await clonedResponse.json() as T_Response
         }
 
-        return res as T_Response
+        return response as T_Response
       } catch (error) {
         return AceError.catch({ error }) as T_Response
       }

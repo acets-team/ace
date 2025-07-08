@@ -13,7 +13,7 @@ import { flatten, safeParse, type BaseSchema, type InferOutput, type Config } fr
 
 /**
  * - Ensures that we validate an entire schema before thowing
- * - When we throw, the error is formatted as a `FunError`, aka same shape as all errors we throw
+ * - When we throw, the error is formatted as a `AceError`, aka same shape as all errors we throw
  * - Comes w/ a convenience InferValibotSchema
  */
 export class ValibotSchema<T extends BaseSchema<any, any, any>> {
@@ -26,7 +26,7 @@ export class ValibotSchema<T extends BaseSchema<any, any, any>> {
   /**
    * 1. Validbot safe parse an entire input
    * - On Success: Return parsed
-   * - On Fail: Throw FunError w/ flattened errors
+   * - On Fail: Throw AceError w/ flattened errors
    * @param input - Input to parse
    * @param schema - Schema the input should look like
    * @returns - Parsed output or throws an error if any issues
@@ -53,7 +53,7 @@ export class ValibotSchema<T extends BaseSchema<any, any, any>> {
 
 
 /**
- * - Recieves: Fun ValibotSchema 
+ * - Recieves: ValibotSchema 
  * - Gives: The type of that schema / shape
  */
 export type InferValibotSchema<T_ValibotSchema> = T_ValibotSchema extends ValibotSchema<infer T_Shape>

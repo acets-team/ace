@@ -7,6 +7,7 @@
 
 import { Layout } from './layout'
 import { Route404 } from './route404'
+import { aceParams } from './aceParams'
 import { Route as AceRoute } from './route'
 import { fe, FEContextProvider } from './fe'
 import { MetaProvider } from '@solidjs/meta'
@@ -30,8 +31,11 @@ const routeB = new AceRoute('/b')
   .component(() => <></>)
   .layouts([layout1])
 
-const routeC = new AceRoute('/c')
-  .params<{ id: string }>()
+const routeC = new AceRoute('/c:id')
+  .pathParams(aceParams(({ id }) => {
+    if (typeof id !== 'number') throw new Error('id must be a number')
+    return { id }
+  }))
   .layouts([layout1])
   .component(fe => {
     const params = fe.getParams()
@@ -41,6 +45,7 @@ const routeC = new AceRoute('/c')
 export const routes = {
   '/a': routeA,
   '/b': routeB,
+  '/c:id': routeC
 }
 /** gen2 */
 

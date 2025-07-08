@@ -24,7 +24,7 @@ import { getRequestEvent, HTTPEvent } from './getRequestEvent'
 
   const payload: JWTPayload = { sessionId }
 
-  await jwtCookieSet({ jwtCreateProps: { ttl: ttlDay, payload: { sessionId } } })
+  await jwtCookieSet({ jwtCreateProps: {ttl: ttlDay, payload} })
   ``` 
  */
 export async function jwtCookieSet({ jwtCreateProps, cookieOptions, nativeEvent = getRequestEvent().nativeEvent }: JWTCookieSetProps) {

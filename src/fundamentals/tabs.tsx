@@ -6,10 +6,10 @@
 
 
 import { routes } from './createApp'
-import type { Routes } from './types'
 import { buildURL } from './buildURL'
 import { useLocation } from '@solidjs/router'
 import { pathnameToMatch } from '../pathnameToMatch'
+import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
 import { createSignal, createEffect, onMount, For, Show, type JSX } from 'solid-js'
 
 
@@ -79,7 +79,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   let foundContentInitial = false
 
   tabs.forEach((tab, i) => {
-    if (tab instanceof RouteTab) pathToTabIndex.set(tab.route, i)
+    if (tab instanceof RouteTab) pathToTabIndex.set(tab.path, i)
     else if (tab instanceof HashTab) hashToTabIndex.set(tab.hash, i)
     else if (tab instanceof ContentTab && tab.isInitiallyActive && !foundContentInitial) {
       initialContentIndex = i
@@ -179,7 +179,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
     }
   }
 
-  function onTabClick(i: number, tab: RouteTab | HashTab | ContentTab, ev?: MouseEvent) {
+  function onTabClick(i: number, tab: RouteTab<any> | HashTab | ContentTab, ev?: MouseEvent) {
     if (mode === 'content' || mode === 'route') setActive(i)
     else if (mode === 'scroll' && tab instanceof HashTab) {
       ev?.preventDefault()
@@ -260,7 +260,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
             return <>
               { tab instanceof HashTab && <a href={tab.hash} class={`tab ${isActive() ? 'active' : ''}`} aria-current={isActive() ? 'page' : undefined} onClick={ev => onTabClick(i(), tab, ev)}>{tab.label}</a> }
 
-              { tab instanceof RouteTab && <a href={buildURL((tab as RouteTab).route, (tab as RouteTab).params)} class={`tab ${isActive() ? 'active' : ''}`} onClick={ev => onTabClick(i(), tab, ev)} > {tab.label} </a> }
+              { tab instanceof RouteTab && <a href={buildURL((tab as RouteTab<any>).path, {pathParams: (tab as RouteTab<any>).pathParams, searchParams: (tab as RouteTab<any>).searchParams})} class={`tab ${isActive() ? 'active' : ''}`} onClick={ev => onTabClick(i(), tab, ev)} > {tab.label} </a> }
 
               { tab instanceof ContentTab && <div id={`tab-${i()}`} role="tab" tabindex={isActive() ? 0 : -1} aria-selected={isActive()} aria-controls={`tab-content-${i()}`} class={`tab ${isActive() ? 'active' : ''}`} onClick={() => onTabClick(i(), tab)} > {tab.label} </div> }
             </>
@@ -322,15 +322,17 @@ export function setActiveByHash(name: string, hash: string) {
 }
 
 /** Used when the mode is `route` */
-export class RouteTab {
+export class RouteTab<T_Path extends Routes> {
   label: string
-  route: Routes
-  params?: any
+  path: T_Path
+  pathParams?: RoutePath2PathParams<T_Path>
+  searchParams?: RoutePath2SearchParams<T_Path>
 
-  constructor(label: string, route: Routes, params?: any) {
+  constructor(label: string, route: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }) {
     this.label = label
-    this.route = route
-    this.params = params
+    this.path = route
+    this.pathParams = params?.pathParams
+    this.pathParams = params?.searchParams
   }
 }
 
@@ -377,4 +379,4 @@ export type TabsProps = {
 }
 
 
-export type Tabs = RouteTab[] | HashTab[] | ContentTab[]
+export type Tabs = RouteTab<any>[] | HashTab[] | ContentTab[]

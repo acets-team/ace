@@ -56,6 +56,14 @@ export type PluginsConfig = {
   valibot?: boolean
 
   /**
+   * Enables **Zod** fundamentals (helpful modules @ `./ace`)
+   *
+   * Requires the following npm dev imports:
+   * - `zod`
+   */
+  zod?: boolean
+
+  /**
    * Enables **Turso** fundamentals (helpful modules @ `./ace`)
    *
    * Requires the following npm dev imports:

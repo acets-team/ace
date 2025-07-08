@@ -7,18 +7,20 @@
 
 import type { BE } from './be'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { APIBody, URLSearchParams, URLParams, B4, AceResponse, AceResponse2PrunedResponse } from './types'
+import type { APIBody, URLSearchParams, URLPathParams, B4, AceResponse, AceResponse2PrunedResponse, ValidateSchema } from './types'
 
 
 
 /** - Create a GET or POST, API endpoint */
-export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams = {}, T_Body extends URLParams = {}, T_Response = unknown> {
+export class API<T_Params extends URLPathParams = any, T_Search extends URLSearchParams = any, T_Body extends URLPathParams = {}, T_Response = unknown> {
   public readonly values: {
     path: string
     pattern: RegExp
     b4?: B4
     resolve?: APIResolveFunction<T_Params, T_Search, T_Body, T_Response>,
     fn?: string
+    pathParamsSchema?: ValidateSchema<any>
+    searchParamsSchema?: ValidateSchema<any>
   }
 
   constructor(path: string, fnName?: string) {
@@ -74,28 +76,12 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
         return be.success(be.getParams())
       })
     ```
-    */
-    resolve<T_Resolve_Fn extends (be: BE<T_Params, T_Search, T_Body>) => Promise<AceResponse<any>>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponse2PrunedResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
-      this.values.resolve = resolveFunction
-      return this as any
-    }
-
-
-  /**
-   * ### Set the type for the url params
-   * - If `.params()` is below `.resolve() `then `.resolve()` won't have typesafety
-   * @example
-    ```ts
-    export const GET = new API('/api/fortune/:id', 'apiFortune')
-      .params<{ id: number }>()
-      .resolve(async (be) => {
-        return be.success(be.getParams())
-      })
-    ```
-   */
-  params<T_New_Params extends URLParams>(): API<T_New_Params, T_Search, T_Body, T_Response> {
+  */
+  resolve<T_Resolve_Fn extends (be: BE<T_Params, T_Search, T_Body>) => Promise<AceResponse<any>>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponse2PrunedResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
+    this.values.resolve = resolveFunction
     return this as any
   }
+
 
 
   /**
@@ -129,11 +115,22 @@ export class API<T_Params extends APIBody = {}, T_Search extends URLSearchParams
   search<T_New_Search extends URLSearchParams>(): API<T_Params, T_New_Search, T_Body, T_Response> {
     return this as any
   }
+
+
+  pathParams<NewParams extends URLPathParams>(schema: ValidateSchema<NewParams>): API<NewParams, T_Search> {
+    this.values.pathParamsSchema = schema
+    return this as unknown as API<NewParams, T_Search>
+  }
+
+  searchParams<NewSearch extends URLSearchParams>(schema: ValidateSchema<NewSearch>): API<T_Params, NewSearch> {
+    this.values.searchParamsSchema = schema
+    return this as unknown as API<T_Params, NewSearch>
+  }
 }
 
 
 export type APIResolveFunction<
-  T_Params extends URLParams,
+  T_Params extends URLPathParams,
   T_Search extends URLSearchParams,
   T_Body extends APIBody,
   T_Response_Data

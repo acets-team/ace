@@ -8,7 +8,7 @@ export async function callAPIResolve<T_API extends API<any, any, any, any>>(api:
   if (typeof api.values.resolve === 'function') {
     const originalResponse = await api.values.resolve(be)
 
-    if (!(originalResponse instanceof Response)) throw new Error('API\'s must return a Response, either create your own Response object or please feel free to use respond(), be.success(), be.Success(), be.error(), be.Error(), be.go() or be.Go()')
+    if (!(originalResponse instanceof Response)) throw new Error(`Error w/ API ${api.values.fn} aka ${api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), be.success(), be.Success(), be.error(), be.Error(), be.go(), be.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${originalResponse}`)
 
     const inferResponse: API2FullAPIResponse<T_API> = (await originalResponse.json())
 

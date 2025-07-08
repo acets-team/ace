@@ -5,10 +5,10 @@
  */
 
 
-import { type JSX } from 'solid-js'
+import type { JSX } from 'solid-js'
 import { buildURL } from './buildURL'
 import { A as SolidA } from '@solidjs/router'
-import type { Routes, RoutePath2Params } from './types'
+import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
 
 
 /**
@@ -20,9 +20,9 @@ import type { Routes, RoutePath2Params } from './types'
  * @param props.path - Path to navigate to, as defined @ `new Route()`
  * @param props.params - Optional object of params to send to route
  */
-export function A<T extends Routes>({ path, params, children, ...props }: AProps<T>) {
+export function A<T extends Routes>({ path, pathParams, searchParams, children, solidAProps }: AProps<T>) {
   return <>
-    <SolidA href={buildURL(path, params)} {...props}>
+    <SolidA href={buildURL(path, {pathParams: pathParams, searchParams: searchParams})} {...solidAProps}>
       {children}
     </SolidA>
   </>
@@ -30,10 +30,12 @@ export function A<T extends Routes>({ path, params, children, ...props }: AProps
 
 
 export type AProps<T extends Routes> = {
-  path: T,
-  children: JSX.Element,
-  params?: RoutePath2Params<T>,
-} & SolidAProps
+  path: T
+  children: JSX.Element
+  pathParams?: RoutePath2PathParams<T>
+  searchParams?: RoutePath2SearchParams<T>
+  solidAProps?: SolidAProps
+}
 
 
 /**

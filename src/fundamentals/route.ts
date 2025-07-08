@@ -6,11 +6,11 @@
 
 import type { Layout } from './layout'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { B4, RouteComponent, URLParams, URLSearchParams } from './types'
+import type { B4, RouteComponent, URLPathParams, URLSearchParams, ValidateSchema } from './types'
 
 
 
-export class Route<T_Params extends URLParams = any, T_Search extends URLSearchParams = any> {
+export class Route<T_Params extends URLPathParams = any, T_Search extends URLSearchParams = any> {
   public readonly values: RouteValues<T_Params, T_Search>
 
 
@@ -93,22 +93,14 @@ export class Route<T_Params extends URLParams = any, T_Search extends URLSearchP
   }
 
 
-  /**
-   * ### Set the type for the url params
-   * - If `.params()` is below `.component() `then `.component()` won't have typesafety
-   * @example
-    ```ts
-    import { Route } from '@ace/route'
+  pathParams<NewParams extends URLPathParams>(schema: ValidateSchema<NewParams>): Route<NewParams, T_Search> {
+    this.values.pathParamsSchema = schema
+    return this as unknown as Route<NewParams, T_Search>
+  }
 
-    export default new Route('/sign-in/:messageId?')
-      .params<{ messageId?: '1' }>()
-      .component((fe) => {
-        return <>hi</>
-      })
-    ```
-   */
-  params<T_New_Params extends URLParams>(): Route<T_New_Params, T_Search> {
-    return this as unknown as Route<T_New_Params, T_Search>
+  searchParams<NewSearch extends URLSearchParams>(schema: ValidateSchema<NewSearch>): Route<T_Params, NewSearch> {
+    this.values.searchParamsSchema = schema
+    return this as unknown as Route<T_Params, NewSearch>
   }
 }
 
@@ -116,11 +108,13 @@ export class Route<T_Params extends URLParams = any, T_Search extends URLSearchP
 type RouteFilters = Record<string, any>
 
 
-type RouteValues<T_Params extends URLParams, T_Search extends URLSearchParams> = {
+type RouteValues<T_Params extends URLPathParams, T_Search extends URLSearchParams> = {
   path: string
   pattern: RegExp
   b4?: B4
   layouts?: Layout[]
   filters?: RouteFilters
   component?: RouteComponent<T_Params, T_Search>
+  pathParamsSchema?: ValidateSchema<any>
+  searchParamsSchema?: ValidateSchema<any>
 }

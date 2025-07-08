@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'valibot' | 'turso' | 'mongoose'} pluginName - Name of plugin
+   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'mongoose'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -28,6 +28,7 @@ class Fundamental {
 export const fundamentals = new Map([
   ['a', new Fundamental('tsx', 'solid', 'copy')],
   ['aceError', new Fundamental('ts', 'solid', 'copy')],
+  ['aceParams', new Fundamental('ts', 'solid', 'copy')],
   ['api', new Fundamental('ts', 'solid', 'copy')],
   ['apis', new Fundamental('ts', 'solid', 'copy')],
   ['animatedFor', new Fundamental('tsx', 'solid', 'copy')],
@@ -60,6 +61,7 @@ export const fundamentals = new Map([
   ['feFetch', new Fundamental('ts', 'solid', 'helper')],
   ['feMessages', new Fundamental('ts', 'solid', 'helper')],
   ['getMiddleware', new Fundamental('ts', 'solid', 'copy')],
+  ['getSearchParams', new Fundamental('ts', 'solid', 'helper')],
   ['getRequestEvent', new Fundamental('ts', 'solid', 'copy')],
   ['go', new Fundamental('ts', 'solid', 'copy')],
   ['goResponse', new Fundamental('ts', 'solid', 'copy')],
@@ -107,7 +109,11 @@ export const fundamentals = new Map([
   ['tooltip.styles', new Fundamental('css', 'solid', 'copy')],
   ['tursoConnect', new Fundamental('ts', 'turso', 'copy')],
   ['types', new Fundamental('ts', 'solid', 'custom')],
-  ['url', new Fundamental('ts', 'solid', 'copy')],
   ['valibotSchema', new Fundamental('ts', 'valibot', 'copy')],
+  ['valibotString2Boolean', new Fundamental('ts', 'valibot', 'copy')],
+  ['valibotString2Int', new Fundamental('ts', 'valibot', 'copy')],
+  ['valibotParams', new Fundamental('ts', 'valibot', 'copy')],
+  ['validateParams', new Fundamental('ts', 'solid', 'helper')],
   ['vars', new Fundamental('ts', 'solid', 'copy')],
+  ['zodParams', new Fundamental('ts', 'zod', 'copy')],
 ])

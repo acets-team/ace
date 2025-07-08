@@ -3,36 +3,25 @@
  *     - import '@ace/carousel.styles.css'
  */
 
-
 .ace-carousel {
   overflow: hidden;
-  -ms-overflow-style: none;  /* IE/Edge */
-  scrollbar-width: none;     /* Firefox */
-  &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-
-  .loops {
-    display: flex;
-    will-change: transform;
-    animation: carousel-scroll-left var(--loop-duration) linear infinite;
-    &:hover,
-    &.pause {
-      animation-play-state: paused;
-    }
-  }
-
-  .loop {
-    display: flex;
-    white-space: normal;
-  }
 }
 
-@keyframes carousel-scroll-left {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(calc(-1 * var(--loop-width)));
-  }
+.ace-carousel .loops {
+  display: flex;
+  overflow-x: scroll;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  width: 100%;
+  touch-action: pan-y;
+  scrollbar-width: none;
+}
+
+.ace-carousel .loops::-webkit-scrollbar {
+  display: none;
+}
+
+.ace-carousel .loop {
+  display: flex;
+  flex-shrink: 0;
 }

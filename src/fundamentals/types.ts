@@ -58,7 +58,7 @@ export type APIName2ResponseData<T_Name extends APINames> = APIName2Response<T_N
 */
 export type APIName2Props<Name extends APINames> =
   typeof apisBE.apiNames[Name] extends API<infer P, infer S, infer B, infer R>
-    ? BaseAPIFnOptions<API<P, S, B, R>> & { bitKey?: string }
+    ? BaseAPIFnProps<API<P, S, B, R>> & { bitKey?: string }
     : never;
 
 
@@ -131,7 +131,7 @@ export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<
  * - Receives: API
  * - Gives: Type for the FE Function that calls this API
 */
-export type API2FEFunction<T_API extends API<any, any, any, any>> = IsPopulated<BaseAPIFnOptions<T_API>> extends true
+export type API2FEFunction<T_API extends API<any, any, any, any>> = IsPopulated<BaseAPIFnProps<T_API>> extends true
   ? (options: APIFnProps<T_API>) => Promise<API2PrunedAPIResponse<T_API>>
   : (options?: APIFnProps<T_API>) => Promise<API2PrunedAPIResponse<T_API>>
 
@@ -146,10 +146,10 @@ export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? fals
 
 
 /** Building an options object whose properties are only present if they have keys */
-export type BaseAPIFnOptions<T_API extends API<any,any,any,any>> =
-  OptionalIfDefined<'params', API2Params<T_API>> &
+export type BaseAPIFnProps<T_API extends API<any,any,any,any>> =
   OptionalIfDefined<'body', API2Body<T_API>> &
-  OptionalIfDefined<'search', API2Search<T_API>>
+  OptionalIfDefined<'pathParams', API2PathParams<T_API>> &
+  OptionalIfDefined<'searchParams', API2SearchParams<T_API>>
 
 
 export type OptionalIfDefined<Prop extends string, Value> =
@@ -162,7 +162,7 @@ export type OptionalIfDefined<Prop extends string, Value> =
  * - The props (arguments) that are sent to an api function
  * - BitKey is optional
 */
-export type APIFnProps<T_API extends API<any,any,any,any>> = BaseAPIFnOptions<T_API> & { bitKey?: string }
+export type APIFnProps<T_API extends API<any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string }
 
 
 /** 
@@ -187,7 +187,7 @@ export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
  * - Receives: API
  * - Gives: Request params type
 */
-export type API2Params<T_API extends API<any, any, any, any>> = T_API extends API<infer T_Params, any, any, any>
+export type API2PathParams<T_API extends API<any, any, any, any>> = T_API extends API<infer T_Params, any, any, any>
   ? GetPopulated<T_Params>
   : undefined  
 
@@ -205,17 +205,26 @@ export type API2Body<T_API extends API<any, any, any, any>> = T_API extends API<
  * - Receives: API
  * - Gives: Request search params type
 */
-export type API2Search<T_API extends API<any, any, any, any>> = T_API extends API<any, infer T_Search, any, any>
+export type API2SearchParams<T_API extends API<any, any, any, any>> = T_API extends API<any, infer T_Search, any, any>
   ? GetPopulated<T_Search>
-  : undefined  
+  : undefined
 
 
 /** 
  * - Receives: Route
- * - Gives: Route params type
+ * - Gives: Route path params type
 */
-export type Route2Params<T_Route extends Route<any, any>> = T_Route extends Route<infer T_Params, any>
+export type Route2PathParams<T_Route extends Route<any, any>> = T_Route extends Route<infer T_Params, any>
   ? GetPopulated<T_Params>
+  : undefined
+
+
+/** 
+ * - Receives: Route
+ * - Gives: Route search params type
+*/
+export type Route2SearchParams<T_Route extends Route<any, any>> = T_Route extends Route<any, infer T_Search>
+  ? GetPopulated<T_Search>
   : undefined
 
 
@@ -223,28 +232,35 @@ export type Route2Params<T_Route extends Route<any, any>> = T_Route extends Rout
  * - Receives: API GET path
  * - Gives: The type for that api's params
 */
-export type GETPath2Params<T_Path extends GETPaths> = API2Params<typeof apisBE.gets[T_Path]>
+export type GETPath2PathParams<T_Path extends GETPaths> = API2PathParams<typeof apisBE.gets[T_Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's params
 */
-export type POSTPath2Params<T_Path extends POSTPaths> = API2Params<typeof apisBE.posts[T_Path]>
+export type POSTPath2PathParams<T_Path extends POSTPaths> = API2PathParams<typeof apisBE.posts[T_Path]>
 
 
 /** 
  * - Receives: Route path
- * - Gives: The type for that route's params
+ * - Gives: The type for that route's path params
 */
-export type RoutePath2Params<T_Path extends keyof typeof routes> = Route2Params<(typeof routes)[T_Path]>
+export type RoutePath2PathParams<T_Path extends Routes> = Route2PathParams<(typeof routes)[T_Path]>
+
+
+/** 
+ * - Receives: Route path
+ * - Gives: The type for that route's search params
+*/
+export type RoutePath2SearchParams<T_Path extends Routes> = Route2SearchParams<(typeof routes)[T_Path]>
 
 
 /** 
  * - Receives: API GET path
  * - Gives: The type for that api's search params
 */
-export type GETPath2Search<T_Path extends GETPaths> = API2Search<typeof apisBE.gets[T_Path]>
+export type GETPath2SearchParams<T_Path extends GETPaths> = API2SearchParams<typeof apisBE.gets[T_Path]>
 
 
 /** 
@@ -258,7 +274,7 @@ export type POSTPath2Body<T_Path extends POSTPaths> = API2Body<typeof apisBE.pos
  * - Receives: API POST path
  * - Gives: The type for that api's search params
 */
-export type POSTPath2Search<T_Path extends POSTPaths> = API2Search <typeof apisBE.posts[T_Path]>
+export type POSTPath2SearchParams<T_Path extends POSTPaths> = API2SearchParams <typeof apisBE.posts[T_Path]>
 
 
 /**
@@ -277,7 +293,7 @@ export type APIName2LoadResponse<T_Name extends APINames & keyof typeof apisFE> 
  
 
 /** The component to render for a route */
-export type RouteComponent<T_Params extends URLParams, T_Search extends URLSearchParams> = (fe: FE<T_Params, T_Search>) => JSX.Element
+export type RouteComponent<T_Params extends URLPathParams, T_Search extends URLSearchParams> = (fe: FE<T_Params, T_Search>) => JSX.Element
 
 
 /** The component to render for a layout */
@@ -290,7 +306,7 @@ export type FlatMessages = Record<string, string[]>
 
 export type APIBody = Record<any, any>
 export type URLSearchParams = Record<string, string | string[]>
-export type URLParams = Record<string, any>
+export type URLPathParams = Record<string, any>
 
 
 export type JsonPrimitive = string | number | boolean | null;
@@ -324,7 +340,12 @@ export type FullJWTPayload = JWTPayload & {iat: number, exp: number}
  * - Anonymous async function (aaf) that runs b4 api and/or route fn
  * - If the aaf's response is truthy, that response is given to client & the  api and/or route fn is not called, else the fn is called
  */
-export type B4 = (jwtResponse: JwtValidateResponse) => Promise<any>
+export type B4 = ({ jwt, pathParams, searchParams }: { jwt: JwtValidateResponse, pathParams: URLPathParams, searchParams: URLSearchParams }) => Promise<any>
+
+
+export type ValidateSchema<T> = {
+  parse(input: any): T
+}
 
 
 export type CMSItem = {

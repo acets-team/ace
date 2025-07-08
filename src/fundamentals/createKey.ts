@@ -4,6 +4,7 @@
  */
 
 
+import { createEffect, type Accessor } from 'solid-js';
 import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
 
 
@@ -14,6 +15,7 @@ import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
  *    - But the references may change (ex: API responses) & you'd love fine grained reactivity
  * - When items update it'll use the `key` to compare objects, do a deep diff, if same skip, if different, update the difference
  * - How the update is done is based on the `merge` boolean prop
+ * ### API Example TS
  * @example
   ```ts
   const [clothing, setClothing] = createKey<APIName2ResponseData<'apiClothing'>>([])
@@ -23,6 +25,7 @@ import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
     if (res.data) setClothing(res.data)
   }
   ```
+ * ### API Example TSX
  * @example
   ```tsx
   <For each={clothing}>{
@@ -35,26 +38,40 @@ import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
     </>  
   }</For>
   ```
- * @param items - Default to `null`, an `empty array` or your `items`
+ * ### Example where items update async
+ * @example
+  ```ts
+  const [offerings] = createKey(() => [ 
+    { id: 1, title: content().get(4)?.content },
+    { id: 2, title: content().get(6)?.content },
+  ])
+  // if you wanna call the setter don't pass a function, just pass the items
+  // calling the setter after the initial items resolve will update the dom
+  // calling the setter before the initial items resolve will update the dom to the setter items and then once they resolve it'll update again
+  ```
+ * @param items - Default to `null`, an `empty array`, your `items` OR a function that returns your items (accessor). Only do the accessor when the items may change and not by the setter but the actual contents are async
  * @param options.key - `Optional`, defaults to `id`, Specifies the key to be used for matching items during reconciliation
  * @param options.merge - `Optional`, defaults to `false`: Solid first tries a deep compare via `key`. If it sees two objects are identical, it keeps them—no further inspection. If it sees two objects are different => w/ `merge: false`, It replaces the whole object, regardless of nested equality. w/ `merge: true`, Solid will preserve object references, & only change nested fields which is more work & unnecessary if your objects are not changing
  */
-export function createKey<
-  T_Union extends (Record<string, any>)[] | null,
-  T_Item extends Record<string, any> = MaybeArray<NonNullable<T_Union>>,
-  T_Key extends Extract<keyof T_Item, string> = Extract<keyof T_Item, string>
->(items: T_Union, options?: { key?: T_Key, merge?: boolean }): readonly [T_Union, (updated: T_Union) => void] {
-  const store = createMutable<{ items: T_Union }>({ items })
+export function createKey<T extends Record<string, any>>(
+  source: T[] | Accessor<T[]>,
+  options: { key?: Extract<keyof T, string>; merge?: boolean } = {}
+): readonly [T[], (updated: T[]) => void] {
+  const initial: T[] = typeof source === 'function' ? (source as Accessor<T[]>)() : source // set initial items
+  const store = createMutable<{ items: T[] }>({ items: initial }) // mutable store w/ the initial array
 
-  const update = (updatedItems: T_Union) => {
-    if (updatedItems) modifyMutable(store, reconcile({ items: updatedItems }, options || {}))
-    else store.items = null as T_Union
+  
+  const setItems = (updated: T[]) => { // setter that can be called manually
+    modifyMutable(store,
+      reconcile({ items: updated }, options)
+    )
   }
 
-  return [store.items, update] as const
+  if (typeof source === 'function') { // if they passed an accessor, wire up an effect
+    createEffect(() => {
+      const next = (source as Accessor<T[]>)()
+      setItems(next)
+    })
+  }
+  return [store.items, setItems] as const // return the current array and the setter
 }
-
-
-type MaybeArray<T> = T extends (infer U)[]
- ? U
- : never

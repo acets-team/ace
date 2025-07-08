@@ -1,10 +1,14 @@
 import { API } from '../fundamentals/api'
+import { aceParams } from '../fundamentals/aceParams'
 
 
 export const GET = new API('/api/a/:id', 'apiA')
-  .params<{id: string}>()
+  .pathParams(aceParams(({ id }) => {
+    if (typeof id !== 'number') throw new Error('id must be a number')
+    return { id }
+  }))
   .resolve(async (be) => {
-    return be.success({ a: true })
+    return be.success(be.pathParams.id)
   })
 
 

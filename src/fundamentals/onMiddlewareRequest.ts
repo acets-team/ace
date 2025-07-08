@@ -7,6 +7,7 @@
 
 import { API } from './api'
 import { Route } from './route'
+import { callB4 } from '../callB4'
 import { routes } from './createApp'
 import { gets, posts } from './apis'
 import { AceError } from './aceError'
@@ -14,9 +15,10 @@ import type { FetchEvent } from './types'
 import { GoResponse } from './goResponse'
 import { redirect } from '@solidjs/router'
 import { jwtCookieGet } from './jwtCookieGet'
+import { validateParams } from '../validateParams'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
-import { callB4 } from '../callB4'
+import { getSearchParams } from '../getSearchParams'
 
 
 /**
@@ -58,14 +60,21 @@ export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
  
 
 async function onRouteMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
-  if (routeMatch.handler.values.b4) {
-    try {
-      const b4Response = await callB4(routeMatch.handler, event.locals.jwtResponse)
+  try {
+    const { pathParams, searchParams } = validateParams({
+      rawParams: routeMatch.params,
+      rawSearch: getSearchParams(event),
+      pathParamsSchema: routeMatch.handler.values.pathParamsSchema,
+      searchParamsSchema: routeMatch.handler.values.searchParamsSchema
+    })
+
+    if (routeMatch.handler.values.b4) {
+      const b4Response = await callB4(routeMatch.handler, event.locals.jwtResponse, { pathParams, searchParams })
       if (b4Response) return b4Response
-    } catch (error) {
-      if (error instanceof GoResponse) return redirect(error.url)
-      else throw error
     }
+  } catch (error) {
+    if (error instanceof GoResponse) return redirect(error.url)
+    else throw error
   }
 }
 

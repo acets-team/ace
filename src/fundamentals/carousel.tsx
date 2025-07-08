@@ -6,63 +6,162 @@
  */
 
 
-import { For, onMount, type JSX } from 'solid-js'
+import { onMount, createEffect, For, type JSX } from 'solid-js'
 
 
 /**
- * ### Create a carousel that pauses on hover and is swipable on mobile
- * @param items - `() => JSX.Element` - Anonymous function that returns a `For` component
- * @param duplicateCount - `number` - Default / Minimum = 2 - So there are more items at the end of the carousel
- * @param speed - `number` - Pixels per second - Default is 81
+ * ### Aria compliant carousel
+ * - Autoscroll
+ * - Touch swipe `(touchscreen)`
+ * - Scrollable `(not touchscreen)`
+ * - Hover to pause `(not touchscreen)`
  * @example
-  ```tsx
-    const goals = [{title: 'relax 🏖️'}, {title: 'bliss 🌤️'}, {title: 'peace 🧘‍♀️'}]
-
-    return <> 
-      <Carousel id="carousel" style="width: 21rem" duplicateCount={3} items={() =>
-        <For each={goals}>{
-          (o) => <>
-            <div style="width: 9rem; text-align: center;">{o.title}</div>
-          </>
-        }</For>
-      }/>
-    </>
-  ```
+    ```tsx
+    <Carousel
+      duration={3}
+      sectionProps={{ style: {width: '21rem'} }}
+      items={() => [{title: 'relax 🏖️'}, {title: 'bliss 🌤️'}, {title: 'peace 🧘‍♀️'}]}
+      render={(goal) => <div style="width: 9rem; text-align: center;">{goal.title}</div>} />
+    ```
+ * @example
+    ```tsx
+    <Carousel items={offerings} duration={18} render={(o) => <>
+      <div class="offering">
+        <img src={o.src} alt={o.title} />
+        <div class="title">{o.title}</div>
+      </div>
+    </>} />
+    ```
+ * @param props.items Accessor (anonymous function) that returns an array of items to render
+ * @param props.render Function that gets the `item` and returns the JSX to render for each item
+ * @param props.duplicateCount Optional, default is `2`, minimum is `2`, We duplicate items to ensure that when we get to the end of the carousel there are still items to show
+ * @param props.duration Optional, default is `9`, how many seconds it will take to get to the end of the carousel
+ * @param props.sectionProps Optional, dom props to place onto wrapper `<section>`
  */
-export function Carousel({ items, duplicateCount = 2, speed = 81, ...props }: CarouselProps) {
+export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, sectionProps }: CarouselProps<T>) {
   if (duplicateCount < 2) duplicateCount = 2
 
-  let divLoops: undefined | HTMLDivElement
+  let rafId = 0
+  let loopWidth = 0
+  let paused = false
+  let startX = 0, scrollX = 0
+  let loopsEl: undefined | HTMLDivElement
 
-  const loops = Array.from({ length: duplicateCount })
+  function measure() {
+    if (!loopsEl) return
 
-  onMount(async () => {
-    if (!divLoops) return
+    const firstLoop = loopsEl.querySelector('.loop') as HTMLElement
+    if (!firstLoop) return
 
-    const imgs = Array.from(divLoops.querySelectorAll('img')) as HTMLImageElement[];
+    loopWidth = firstLoop.offsetWidth
+    loopsEl.style.setProperty('--loop-width', `${loopWidth}px`)
+    loopsEl.style.setProperty('--loop-duration', `${duration}s`)
+  }
 
-    if (imgs.length) {
-      await Promise.all( // allow images to load b4 checking total width
-        imgs.map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise<void>((resolve) => { img.onload = img.onerror = () => resolve()}) // IF onload or onerror => resolve
-        )
-      )
+  function startAutoScroll() {
+    cancelAnimationFrame(rafId)
+    const pxPerFrame = loopWidth / (duration * 60)
+
+    function step() {
+      if (!loopsEl || paused) return
+
+      loopsEl.scrollLeft += pxPerFrame
+
+      if (loopsEl.scrollLeft >= loopWidth * (duplicateCount - 1)) {
+        loopsEl.scrollLeft -= loopWidth
+      }
+
+      rafId = requestAnimationFrame(step)
     }
 
-    const firstLoop = divLoops.children[0] as HTMLElement
-    const loopWidth = firstLoop.getBoundingClientRect().width
+    rafId = requestAnimationFrame(step)
+  }
 
-    divLoops.style.setProperty("--loop-width", `${loopWidth}px`)
-    divLoops.style.setProperty("--loop-duration", `${loopWidth / speed}s`) // loop width is total pixels to go, speed is pixels per second, so divinding gives us seconds
+  function stopAutoScroll() {
+    cancelAnimationFrame(rafId)
+  }
+
+  onMount(async () => {
+    if (!loopsEl) return
+
+    measure()
+
+    const imgs = Array.from(loopsEl.querySelectorAll('img'))
+
+    await Promise.all(
+      imgs.map(img =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>(res => { img.onload = img.onerror = () => res() })
+      )
+    )
+
+    measure()
+    startAutoScroll()
   })
 
+  createEffect(() => {
+    items()
+    queueMicrotask(measure)
+  })
+
+  function onTouchStart(e: TouchEvent) {
+    if (!loopsEl) return
+    stopAutoScroll()
+    startX = e.touches[0]?.clientX ?? 0
+    scrollX = loopsEl.scrollLeft
+  }
+
+  function onTouchMove(e: TouchEvent) {
+    if (!loopsEl) return
+    const dx = startX - (e.touches[0]?.clientX ?? 0)
+    loopsEl.scrollLeft = scrollX + dx
+  }
+
+  function onTouchEnd() {
+    startAutoScroll()
+  }
+
+  function onMouseEnter() {
+    if (window.matchMedia('(hover: hover)').matches) {
+      paused = true
+    }
+  }
+
+  function onMouseLeave() {
+    if (window.matchMedia('(hover: hover)').matches) {
+      paused = false
+      startAutoScroll()
+    }
+  }
+
   return <>
-    <section class="ace-carousel" role="region" aria-label="Carousel" aria-roledescription="Carousel" {...props}>
-      <div class="loops" ref={divLoops}>
-        <For each={loops}>{
-          () => <div class="loop">{items()}</div>
+    <section
+      class="ace-carousel"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Image carousel"
+      {...sectionProps}
+    >
+      <div
+        class="loops"
+        ref={el => (loopsEl = el!)}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        aria-live="off"
+      >
+        <For each={Array.from({ length: duplicateCount })}>{
+          () => <>
+            <div class="loop">
+              <For each={items()}>{
+                (item, i) => <div role="group" aria-roledescription="slide" aria-label={`Slide ${i() + 1}`} > {render(item)} </div>
+              }</For>
+            </div>
+          </>
         }</For>
       </div>
     </section>
@@ -70,11 +169,15 @@ export function Carousel({ items, duplicateCount = 2, speed = 81, ...props }: Ca
 }
 
 
-type CarouselProps = JSX.HTMLAttributes<HTMLElement> & {
-  /** items to render */
-  items: () => JSX.Element
-  /** Carousel duplicates items so that at the end of the scroll there are more items to show, minimum / default is 2 */
+export type CarouselProps<T> = {
+  /** Accessor (anonymous function) that returns an array of items to render */
+  items: () => T[]
+  /** Function that gets the `item` and returns the JSX to render for each item */
+  render: (item: T) => JSX.Element
+  /** Optional, default is `2`, minimum is `2`, We duplicate items to ensure that when we get to the end of the carousel there are still items to show */
   duplicateCount?: number
-  /** px per second, default is 81 */
-  speed?: number
+  /** Optional, default is `10`, how many seconds it will take to get to the end of the carousel */
+  duration?: number
+  /** Optional, dom props to place onto wrapper `<section>` */
+  sectionProps?: JSX.HTMLAttributes<HTMLElement>
 }
