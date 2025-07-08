@@ -10,10 +10,9 @@
 .ace-carousel .loops {
   display: flex;
   overflow-x: scroll;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
   scroll-behavior: auto;
   width: 100%;
-  touch-action: pan-y;
   scrollbar-width: none;
 }
 
