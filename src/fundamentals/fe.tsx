@@ -10,7 +10,7 @@ import { buildURL } from './buildURL'
 import { isServer } from 'solid-js/web'
 import { FEMessages } from '../feMessages'
 import { getFEChildren } from '../feChildren'
-import { useParams, useLocation } from '@solidjs/router'
+import { useParams, useLocation, useSearchParams } from '@solidjs/router'
 import { createContext, type JSX, type ParentComponent } from 'solid-js'
 import type { GETPaths, GETPath2PathParams, GETPath2SearchParams, POSTPaths, POSTPath2Body, POSTPath2PathParams, GETPath2Data, POSTPath2Data, URLPathParams, URLSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, POSTPath2SearchParams } from './types'
 
@@ -80,10 +80,15 @@ export class FE<T_Params extends URLPathParams = {}, T_Search extends URLSearchP
   }
 
 
-  /** @returns The url params object  */
-  getParams() {
-    const params = useParams<T_Params>()
-    return { ...params } // params is a Proxy(Object) & this spread allows us to do for (const param in params)
+  /** @returns The url path params object  */
+  getPathParams(): T_Params {
+    return { ...useParams<T_Params>() } as T_Params // params is a Proxy(Object) & this spread allows us to do for (const param in params)
+  }
+
+
+  /** @returns The url search params object  */
+  getSearchParams(): T_Search {
+    return Object.fromEntries(new URLSearchParams(useLocation().search).entries()) as T_Search
   }
   
 

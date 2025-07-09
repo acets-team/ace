@@ -7,7 +7,7 @@
 
 import { config } from 'ace.config'
 import { defaultError } from './vars'
-import type { FullAPIResponse, FlatMessages } from './types'
+import type { APIResponse, FlatMessages } from './types'
 
 
 /**
@@ -37,8 +37,8 @@ export class AceError {
    * - Typically called in the catch block of a try / cactch
    * @param options `{ error, data, defaultMessage = '❌ Sorry but an error just happened' }`
    */
-  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): FullAPIResponse<T>  {
-    let res: FullAPIResponse<T> | undefined
+  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): APIResponse<T>  {
+    let res: APIResponse<T> | undefined
 
     if (options?.error) {
       if (options.error instanceof AceError) res = options.error.get<T>(options.data)
@@ -55,8 +55,8 @@ export class AceError {
   }
 
 
-  get<T extends any>(data?: T): FullAPIResponse {
-    const res: FullAPIResponse = { data, error: null, go: null }
+  get<T extends any>(data?: T): APIResponse {
+    const res: APIResponse = { data }
 
     if (this.status || this.statusText || this.message || this.messages || this.rawBody) {
       res.error = { isAceError: true }
@@ -72,8 +72,8 @@ export class AceError {
   }
 
 
-  static simple(message: string, status: number = 400): FullAPIResponse {
-    return { go: null, data: null, error: { isAceError: true, status, message } }
+  static simple(message: string, status: number = 400): APIResponse {
+    return { error: { isAceError: true, status, message } }
   }
 
 

@@ -7,7 +7,7 @@
 
 import type { BE } from './be'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { APIBody, URLSearchParams, URLPathParams, B4, AceResponse, AceResponse2PrunedResponse, ValidateSchema } from './types'
+import type { APIBody, URLSearchParams, URLPathParams, B4, AceResponse, AceResponseResponse, ValidateSchema } from './types'
 
 
 
@@ -77,7 +77,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
       })
     ```
   */
-  resolve<T_Resolve_Fn extends (be: BE<T_Params, T_Search, T_Body>) => Promise<AceResponse<any>>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponse2PrunedResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
+  resolve<T_Resolve_Fn extends (be: BE<T_Params, T_Search, T_Body>) => Promise<AceResponse<any>>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponseResponse<Awaited<ReturnType<T_Resolve_Fn>>>> {
     this.values.resolve = resolveFunction
     return this as any
   }

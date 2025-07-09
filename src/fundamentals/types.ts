@@ -47,8 +47,8 @@ export type APIName2Response<T extends APINames> = typeof apisBE.apiNames[T] ext
  * - Receives: API Function Name
  * - Gives: API Response Data
 */
-export type APIName2ResponseData<T_Name extends APINames> = APIName2Response<T_Name> extends PrunedAPIResponse<infer T_Response>
-  ? T_Response
+export type APIName2Data<T_Name extends APINames> = APIName2Response<T_Name> extends APIResponse<infer T_Response>
+  ? Exclude<T_Response, null>
   : never
 
 
@@ -74,29 +74,19 @@ export interface AceResponse<T_Data> extends Response {
 
 /** 
  * - Receives: AceResponse
- * - Gives: PrunedAPIResponse
+ * - Gives: API Response
 */
-export type AceResponse2PrunedResponse<T_AceResponse> = T_AceResponse extends AceResponse<infer T_Data>
-  ? PrunedAPIResponse<T_Data>
+export type AceResponseResponse<T_AceResponse> = T_AceResponse extends AceResponse<infer T_Data>
+  ? APIResponse<T_Data>
   : never;
 
 
 /**
  * - Required API response from `new API()` > `.resolve()`
- * - What is actually returned to the frontend is a pruned version (`PrunedAPIResponse`), where the falsy props are removed
+ * - The go prop never get's to the fe, by then the redirect will happen
  */
-export type FullAPIResponse<T_Data = any> = {
-  go: string | null
-  data: T_Data | null
-  error: AceErrorProps | null
-}
-
-
-/**
- * - What is actually returned from `new API()` > `.resolve()` is `FullAPIResponse`
- * - What is actually returned to the frontend is this pruned version: `PrunedAPIResponse`, where falsy props are removed
-*/
-export type PrunedAPIResponse<T_Data = any> = {
+export type APIResponse<T_Data = any> = {
+  go?: string
   data?: T_Data
   error?: AceErrorProps
 }
@@ -106,14 +96,7 @@ export type PrunedAPIResponse<T_Data = any> = {
  * - Receives: API
  * - Gives: FullAPIResponse
 */
-export type API2FullAPIResponse<T_API extends API<any, any, any, any>> = FullAPIResponse<API2Data<T_API>>
-
-
-/** 
- * - Receives: API
- * - Gives: PrunedAPIResponse
-*/
-export type API2PrunedAPIResponse<T_API extends API<any, any, any, any>> = PrunedAPIResponse<API2Data<T_API>>
+export type API2Response<T_API extends API<any, any, any, any>> = APIResponse<API2Data<T_API>>
 
 
 /** 
@@ -121,7 +104,7 @@ export type API2PrunedAPIResponse<T_API extends API<any, any, any, any>> = Prune
  * - Gives: Response data type
 */
 export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<any, any, any, infer T_Response>
-  ? T_Response extends PrunedAPIResponse<infer T_Data>
+  ? T_Response extends APIResponse<infer T_Data>
     ? T_Data
     : never
   : never
@@ -132,8 +115,8 @@ export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<
  * - Gives: Type for the FE Function that calls this API
 */
 export type API2FEFunction<T_API extends API<any, any, any, any>> = IsPopulated<BaseAPIFnProps<T_API>> extends true
-  ? (options: APIFnProps<T_API>) => Promise<API2PrunedAPIResponse<T_API>>
-  : (options?: APIFnProps<T_API>) => Promise<API2PrunedAPIResponse<T_API>>
+  ? (options: APIFnProps<T_API>) => Promise<API2Response<T_API>>
+  : (options?: APIFnProps<T_API>) => Promise<API2Response<T_API>>
 
 
 export type RequiredKeys<T> = {
@@ -169,14 +152,14 @@ export type APIFnProps<T_API extends API<any,any,any,any>> = BaseAPIFnProps<T_AP
  * - Receives: API GET path
  * - Gives: Response data type
 */
-export type GETPath2Data<Path extends GETPaths> = API2PrunedAPIResponse<(typeof apisBE.gets)[Path]>
+export type GETPath2Data<Path extends GETPaths> = API2Response<(typeof apisBE.gets)[Path]>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: Response data type
 */
-export type POSTPath2Data<T_Path extends POSTPaths> = API2PrunedAPIResponse<typeof apisBE.posts[T_Path]>
+export type POSTPath2Data<T_Path extends POSTPaths> = API2Response<typeof apisBE.posts[T_Path]>
 
 
 /** If object has keys return object, else return undefined */
@@ -287,7 +270,6 @@ export type POSTPath2SearchParams<T_Path extends POSTPaths> = API2SearchParams <
   function Characters(res: APIName2LoadResponse<'apiCharacter'>) {}
   ```
  */
-// export type APIName2LoadResponse<T_Function_Name extends APINames> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisBE)[T_Function_Name]>>>
 export type APIName2LoadResponse<T_Name extends APINames & keyof typeof apisFE> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisFE)[T_Name]>>>
 
  
@@ -304,8 +286,8 @@ export type LayoutComponent = (fe: FE) => JSX.Element
 export type FlatMessages = Record<string, string[]>
 
 
-export type APIBody = Record<any, any>
-export type URLSearchParams = Record<string, string | string[]>
+export type APIBody = Record<string, any>
+export type URLSearchParams = Record<string, any>
 export type URLPathParams = Record<string, any>
 
 

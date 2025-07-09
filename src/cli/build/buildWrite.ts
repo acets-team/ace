@@ -65,7 +65,7 @@ function renderEnv(build: Build) {
 *     - import { env } from '@ace/env'
 */
 
-export const env = '${build.env}'
+export const env: string = '${build.env}'
 `
 }
 

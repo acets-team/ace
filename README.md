@@ -1,4 +1,4 @@
-![Ace, the typesafetiest framework!](https://i.imgur.com/ZRHKXKv.png)
+![Ace, the typesafetiest framework!](https://i.imgur.com/e1iE8O5.jpeg)
 
 
 
@@ -9,25 +9,27 @@ npx create-ace-app@latest
 
 
 
-### 🥳 The Ace Stack
-    👷‍♀️ The following docs show how to create the Ace stack, highlights:
-1. **Ace**
-    - Built on top of [Solid Start](https://docs.solidjs.com/), so we get fine grained reactivity, aria compliant components & the typesafetiest framework!
-1. **Brevo**
-    - 300 marketing / API emails a day for [free](https://www.brevo.com/pricing/) & a free email inbox!
-1. **Cloudflare**
-    - 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)!
-1. **Drizzle + Turso**
-    - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
-
-
-
 ### 🚨 When a dev restart is necessary?
 - It only takes 3 seconds, but it's important to restart dev sometimes (in bash `control + c` & then `npm run dev`), b/c HMR updates the majority of types but a restart updates them all, so please restart dev when:
     - An `API` is `created/deleted`
     - A `Route` is `created/deleted`
     - A `Layout` is `created/deleted`
     - A `Layout` is `added/removed` from a `new Route()` or `new Route404()` 
+
+
+
+### 🥳 The Ace Stack
+    👷‍♀️ The following docs show how to create the Ace stack, highlights:
+1. **Ace**
+    - Built on top of [Solid Start](https://docs.solidjs.com/), so we get fine grained reactivity, [aria compliant components](#-aria-compliant-components) & the typesafetiest framework! [Vite](https://vite.dev/) + [Lighning CSS](https://lightningcss.dev/) & [Easy Tailwind setup](#add-tailwind) too btw!
+1. **Brevo**
+    - 300 marketing and/or API emails a day for [free](https://wsearchParamssearchParamsww.brevo.com/pricing/) & a free email inbox w/ your custom domain!
+1. **Cloudflare**
+    - 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)!
+1. **Drizzle + Turso**
+    - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
+1. **Valibot**
+    - To validate a simple sign in form, Zod requires 13.5 kB whereas Valibot require only 1.37 kB. That's a [90% reduction in bundle size](https://valibot.dev/guides/comparison/).
 
 
 
@@ -114,19 +116,19 @@ export default new Route404()
     .b4(guestB4) // run this async fn b4 this route renders
     .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps /smooth
     .component(() => {
-      const air = load(() => apiCharacter({params: {element: 'air'}}), 'air')
-      const fire = load(() => apiCharacter({params: {element: 'fire'}}), 'fire')
-      const earth = load(() => apiCharacter({params: {element: 'earth'}}), 'earth')
-      const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
+      const air = load(() => apiCharacter({pathParams: {element: 'air'}}), 'air')
+      const fire = load(() => apiCharacter({pathParams: {element: 'fire'}}), 'fire')
+      const earth = load(() => apiCharacter({pathParams: {element: 'earth'}}), 'earth')
+      const water = load(() => apiCharacter({pathParams: {element: 'water'}}), 'water')
 
-      function fetchFireAgain() {
-        revalidate('fire')
+      function getFresh() {
+        revalidate(['air', 'fire', 'earth', 'water'])
       }
 
       return <>
         <h1>🚨 This element / all elements outside the Suspense below, render immediately!</h1>
 
-        <button onClick={fetchFireAgain} type="button">🔥 More Fiya!</button>
+        <button onClick={getFresh} type="button">🔥 Get Fresh Data!</button>
 
         <div class="characters">
           <Character element={fire} />
@@ -163,12 +165,14 @@ export default new Route404()
   import { apiSignUp } from '@ace/apis'
   import { Title } from '@solidjs/meta'
   import { Messages } from '@ace/messages'
+  import { valibotParams } from '@ace/valibotParams'
+  import { object, optional, picklist } from 'valibot'
   import { createOnSubmit } from '@ace/createOnSubmit'
   import { signUpSchema } from '@src/schemas/SignUpSchema'
 
 
   export default new Route('/sign-up/:sourceId?')
-    .params<{ sourceId?: 1 | 2 }>() // set params type here & then this route's params are known app-wide 🙌
+    .pathParams(valibotParams(object({ sourceId: optional(picklist([1, 2]) )}))) // set path params type here & then this route's params are known app-wide 🙌
     .component((fe) => {
       const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
         const body = signUpSchema.parse({ // get parse & validate request body
@@ -180,13 +184,13 @@ export default new Route404()
       })
 
       return <>
-        <Title>Sign Up {fe.getParams().sourceId}</Title>
+        <Title>Sign Up {fe.getPathParams().sourceId}</Title>
 
         <form onSubmit={onSubmit}>
           <input placeholder="Email" name="email" type="email" use:clear />
           <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or apiSignUp(), for just the email input! 🚀 */}
 
-          <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on first interaction w/ this input! */}
+          <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on fresh interaction w/ this input! */}
           <Messages name="password" />
 
           <div class="footer">
@@ -197,28 +201,45 @@ export default new Route404()
     }
   })
   ```
+  
+
+### 🥹 Search Params!
+- Required and/or optional search params available @ `routes` & `apis`!
+```tsx
+import { API } from '@ace/api'
+import { guestB4 } from '@src/lib/b4'
+import { valibotParams } from '@ace/valibotParams'
+import { object, optional, picklist } from 'valibot'
+
+
+export const GET = new API('/api/clothing', 'apiClothing')
+  .b4(guestB4)
+  .searchParams(valibotParams(object({ category: optional(picklist(['men', 'women'])) })))
+  .resolve(async (be) => {
+    switch (be.searchParams.category) { // ❤️ Typesafe Search Params
+      case 'men':
+      case 'women':
+        return be.success(clothing.filter(c => c.category === be.searchParams.category))
+      default:
+        if (be.searchParams.category) return be.error('🚨 The valid categories are "men" & "women"')
+        else return be.success(clothing) // call be.Success() to send custom headers :)
+    }
+  })
+
+
+const clothing = [
+  {id: 1, category: 'men', name: 'A'},
+  {id: 2, category: 'men', name: 'B'},
+  {id: 3, category: 'men', name: 'C'},
+  {id: 4, category: 'women', name: 'D'},
+  {id: 5, category: 'women', name: 'E'},
+  {id: 6, category: 'women', name: 'F'},
+]
+```
 
 
 
 ![Sloths developing software in a tree](https://i.imgur.com/LognTyf.jpeg)
-
-
-
-### 💛 Schema!
-```tsx
-import { pipe, email, string, object, nonEmpty } from 'valibot'
-import { ValibotSchema, type InferValibotSchema } from '@ace/valibotSchema'
-
-
-export const signInSchema = new ValibotSchema( // schema's validate (be) api's & (fe) forms's!
-  object({
-    email: pipe(string(), email('Please provide a valid email')),
-    password: pipe(string(), nonEmpty('Please provide a password')),
-  })
-)
-
-export type SignInSchema = InferValibotSchema<typeof signInSchema> // by defining runtime validations above, we get compile time types app-wide!
-```
 
 
 
@@ -241,20 +262,29 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
 
 
 
-### 💜 Params!
-- Required & optional params available @ `routes` & `apis`!
+### 💜 Path Params!
+- Required and/or optional path params available @ `routes` & `apis`!
 ```tsx
 import { API } from '@ace/api'
+import { object } from 'valibot'
+import { valibotParams } from '@ace/valibotParams'
+import { valibotString2Number } from '@ace/valibotString2Number'
 
-export const GET = new API('/api/aloha/:id', 'apiAloha')
-  .params<{ id: string }>() // set params type here & then this api's params are known @ .resolve() & app-wide 🙌
+
+export const GET = new API('/api/fortune/:id', 'apiFortune')
+  .pathParams(valibotParams(object({ id: valibotString2Number() })))
   .resolve(async (be) => {
-    const {id} = be.getParams() // typesafe!
-
-    return id === 9
-      ? be.success(id)
-      : be.error('Why you gunna go & do that?!')
+    return be.pathParams.id < 0 || be.pathParams.id > 2
+      ? be.error('🐛') // call be.Error() to send custom headers :)
+      : be.success({ id: be.pathParams.id, fortune: fortunes[be.pathParams.id] })
   })
+
+
+const fortunes = [
+  'Your inner light guides the way',
+  'Kindness is your superpower',
+  'Your laughter spreads sunshine',
+]
 ```
 - 🚨 Props for: `be.error(message: string, status = 400)`
     - `message` -  Error message
@@ -287,13 +317,31 @@ import { go } from '@ace/go'
 import type { B4 } from '@ace/types'
 
 
-export const guestB4: B4 = async (jwt) => { // see how we create a jwt in the POST example below w/ jwtCookieSet()
+export const guestB4: B4 = async ({jwt}) => { // see how we create a jwt in the POST example below w/ jwtCookieSet()
   if (jwt.isValid) return go('/contracts') // go() knows about all your routes & provides autocomplete!
 }
 
-export const authB4: B4 = async (jwt) => {
+export const authB4: B4 = async ({jwt}) => {
   if (!jwt.isValid) return go('/sign-in/:messageId?', {messageId: '1'}) // call Go() to send custom status & headers
 }
+```
+
+
+
+### 💛 Schema (For Request Body)!
+```tsx
+import { pipe, email, string, object, nonEmpty } from 'valibot'
+import { ValibotSchema, type InferValibotSchema } from '@ace/valibotSchema'
+
+
+export const signInSchema = new ValibotSchema( // schema's validate (be) api's & (fe) forms's!
+  object({
+    email: pipe(string(), email('Please provide a valid email')),
+    password: pipe(string(), nonEmpty('Please provide a password')),
+  })
+)
+
+export type SignInSchema = InferValibotSchema<typeof signInSchema> // by defining runtime validations above, we get compile time types app-wide!
 ```
 
 
@@ -352,15 +400,16 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
 ### 💞 Redirect @ `resolve()`!
 ```tsx
 import { API } from '@ace/api'
+import { object, picklist } from 'valibot'
+import { valibotParams } from '@ace/valibotParams'
 
-export const GET = new API('/api/aloha/:id', 'apiAloha')
-  .params<{ id: string }>()
+
+export const GET = new API('/api/element/:element', 'apiElement')
+  .pathParams(valibotParams(object({ element: picklist(['ether', 'fire', 'water', 'air', 'earth']) })))
   .resolve(async (be) => {
-    const {id} = be.getParams()
-
-    return id === 9
-      ? be.go('/example') // be.go() knows about all your routes & provides autocomplete!
-      : be.success({ id })
+    return be.pathParams.element === 'fire' // ✨ Typesafe API Path Params
+      ? be.error('🔥')
+      : be.go('/') // 💫 Typesafe API Redirects
   })
 ```
 - 💨 Props for: `be.go(path: T, params?: RoutePath2Params<T>)`
@@ -488,6 +537,44 @@ export default new Route('/')
   ```
 
 
+### 📣 Modal!
+- Add to `app.tsx` => `import '@ace/modal.styles.css'` & then:
+```tsx
+import './Spark.css'
+import { Route } from '@ace/route'
+import { Title } from '@solidjs/meta'
+import { createEffect } from 'solid-js'
+import { object, optional } from 'valibot'
+import RootLayout from '@src/app/RootLayout'
+import { valibotParams } from '@ace/valibotParams'
+import { valibotString2Boolean } from '@ace/valibotString2Boolean'
+import { showModal, hideModal, onHideModal, isModalVisible, Modal } from '@ace/modal'
+
+
+export default new Route('/spark')
+  .layouts([RootLayout])
+  .searchParams(valibotParams(object({ modal: optional(valibotString2Boolean()) })))
+  .component((fe) => {
+    onHideModal('⚡️', () => fe.Go({path: '/spark', replace: true})) // 💜 Typesafe Frontend Redirects
+
+    createEffect(() => {
+      if (fe.getSearchParams().modal) showModal('⚡️') // 💚 Typesafe Search Params
+      else if (isModalVisible('⚡️')) hideModal('⚡️')
+    })
+
+    return <>
+      <Title>🧚‍♀️ Spark</Title>
+
+      <button onClick={() => fe.Go({path: '/spark', searchParams: {modal: true}})} type="button">Show Modal</button>
+
+      <Modal id="⚡️"> {/* 🚨 The id prop defines how we identify modal's in helper functions :) */}
+        <h1>Your creative spark will ignite something beautiful!</h1>
+        <button onClick={() => hideModal('⚡️')} type="button">Hide Modal</button>
+      </Modal>
+    </>
+  })
+```
+
 
 ### 🗂️ Radio Cards!
 - Add to `app.tsx` => `import '@ace/radioCard.styles.css'` & then:
@@ -590,6 +677,42 @@ export default new Route('/')
       </>
     })
   ```
+
+
+# Add Tailwind
+1. `Bash`
+  ```bash
+  npm install -D tailwindcss@latest postcss autoprefixer @tailwindcss/vite
+  ```
+1. In `src/app.css`:
+  ```css
+  @import "tailwindcss";
+  ```
+1. In `app.config.ts`:
+  ```ts
+  import tailwindcss from '@tailwindcss/vite'
+  import { defineConfig } from '@solidjs/start/config'
+
+  export default defineConfig({
+    vite: {
+      plugins: [tailwindcss()]
+    }
+  })
+  ```
+
+# 🔐 Create Password Hash
+### If you would love to deploy to Cloudflare, here's a way to hash on the edge :)
+1. `import { hashCreate } from @ace/hashCreate`
+1.  `hashCreate({ password, saltLength = 16, iterations = 99_999, hashFn = 'SHA-512' })()`
+    - `@param props.password` - The plaintext password to hash
+    - `@param props.saltLength` - The National Institute of Standards and Technology (NIST) recommends a random salt length of 16 so we do to. `(default is 16)`
+    - `@param props.iterations` - We recommend 300_000 to 1_000_000 iterations in Node for high security & fast performance `(default is 99_999)`. The default is 99_999 b/c that is the max allowed in the browser, aka @ Cloudflare Workers. More iterations = More security = Slower performance, Test & time, a good ballpark time is 100 to 300ms
+    - `@param props.hashFn` - `SHA-512 (default)` w/ default saltLength & iterations is far beyond classical brute-force capabilities. SHA-256 is slightly weaker but faster.
+1. `import { hashValidate } from @ace/hashValidate`
+1. `hashValidate({ password, hash })`
+    - `@param props.password` - The plaintext password to validate agains the hash
+    - `@param props.hash` - Hash string response from `hashCreate()`
+
 
 
 

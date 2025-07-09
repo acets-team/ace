@@ -17,7 +17,7 @@ export function buildURL(path: string, options?: { pathParams?: URLPathParams, s
   if (options?.pathParams) { // add params to url
     for (const param in options.pathParams) {
       const regex = new RegExp(`:${param}\\?*`, 'g')
-      url = url.replace(regex, encodeURIComponent(String(options.pathParams[param])))
+      url = url.replace(regex, parseParam(options.pathParams[param]))
     }
   }
 
@@ -28,17 +28,17 @@ export function buildURL(path: string, options?: { pathParams?: URLPathParams, s
   if (url !== '/') url = url.replace(/\/+$/, '') // trim trailing slash
 
   if (options?.searchParams) {
-    const usp = new URLSearchParams() // does encodeURIComponent() for us
+    const usp = new URLSearchParams()
 
     for (const key in options.searchParams) {
       const value = options.searchParams[key]
 
-      if (typeof value === 'string') usp.set(key, value)
-      else if (Array.isArray(value)) {
+      if (!Array.isArray(value)) usp.set(key, parseParam(value))
+      else {
         for (const v of value) {
-          usp.append(key, v)
+          usp.append(key, parseParam(v))
         }
-      }
+      } 
     }
 
     const query = usp.toString()
@@ -46,4 +46,9 @@ export function buildURL(path: string, options?: { pathParams?: URLPathParams, s
   }
 
   return url
+}
+
+
+function parseParam(param: unknown): string {
+  return encodeURIComponent(String(param))
 }

@@ -1,4 +1,4 @@
-import { number, pipe, string, regex, transform } from 'valibot'
+import { number, pipe, string, regex, transform, type BaseSchema } from 'valibot'
 
 
 /**
@@ -6,7 +6,7 @@ import { number, pipe, string, regex, transform } from 'valibot'
  * @param options.allowDecimals - Optional, defaults to `false`, may the number have decimals
  * @param options.allowNegative - Optional, defaults to `false`, may the number be negative
  */
-export function valibotString2Int(options?: { allowDecimals: boolean, allowNegative: boolean }) {
+export function valibotString2Number(options?: { allowDecimals: boolean, allowNegative: boolean }) {
   const regularExpression =  options?.allowDecimals && options?.allowNegative
     ? /^-?\d+(\.\d+)?$/
     : !options?.allowDecimals && options?.allowNegative

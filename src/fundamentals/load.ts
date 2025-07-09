@@ -11,28 +11,31 @@ import { query, createAsync, AccessorWithLatest } from '@solidjs/router'
 
 /**
  * ### Does the lovely Solid Start `query()` + `createAsync()` combo for us!
- * - On initial page load if a load() is present on the page, this request will begin on the server, if it's done before the page has rendered the content will be in the original render, else will be streamed in, so please put responsees w/in <Suspense>
+ * - On initial page load if a load() is present on the page, this request will begin on the server, if the request finishes before the page has rendered the content will be in the original render, else will be streamed in
  * - On SPA navigation this request will begin in the browser
- * - We recommend calling .fn() on your API when you'd love to use that api w/in a load() b/c then on page load, a function call will be made, which is 100x faster then an HTTP, TCP, Serialization handshake on the backend
+ * - 🚨 Please put response w/in `<Suspense>`
+ * @example
+    ```ts
+    const air = load(() => apiCharacter({pathParams: {element: 'air'}}), 'air')
+    ```
  * @param fetchFn - Anonymous async function
- * @param cacheKey - Helps browser cache this data for back button, or multi calls on page, but a page refresh is always fresh data
- * @returns `AccessorWithLatest<undefined | Awaited<ReturnType<fetchFn>>>`
+ * @param cacheKey - Helps browser cache this data for back button, or multi calls on page, but a page refresh is always fresh data and can be used w/ `revalidate()` https://docs.solidjs.com/solid-router/reference/data-apis/revalidate
  */
 export function load<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: string): AccessorWithLatest<T_Response | undefined> {
-    const loaded = query(fetchFn, cacheKey)
+  const loaded = query(fetchFn, cacheKey)
 
-    return createAsync(async () => {
-      try {
-        const response = await loaded()
+  return createAsync(async () => {
+    try {
+      const response = await loaded()
 
-        if (response instanceof Response) {
-          const clonedResponse = response.clone()
-          return await clonedResponse.json() as T_Response
-        }
-
-        return response as T_Response
-      } catch (error) {
-        return AceError.catch({ error }) as T_Response
+      if (response instanceof Response) {
+        const clonedResponse = response.clone()
+        return await clonedResponse.json() as T_Response
       }
-    })
+
+      return response as T_Response
+    } catch (error) {
+      return AceError.catch({ error }) as T_Response
+    }
+  })
 }

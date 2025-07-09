@@ -18,7 +18,7 @@ import { clientOnly } from '@solidjs/start'
   import { feComponent } from '@ace/feComponent'
 
 
-  export default feComponent((props: { name: string }) => {
+  export const Example = feComponent((props: { name: string }) => {
     onMount(() => {
       document.addEventListener('click', onClick)
     })

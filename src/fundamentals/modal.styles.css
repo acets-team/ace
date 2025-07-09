@@ -1,0 +1,28 @@
+.ace-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+
+  .content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    max-height: 100vh;
+  }
+
+  .modal {
+    background-color: white;
+    border-radius: 0.6rem;
+    padding: 0.9rem;
+    width: 69rem;
+    max-width: 90vw;
+    max-height: 100%;
+    overflow: auto;
+  }
+}

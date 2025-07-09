@@ -332,7 +332,7 @@ export class RouteTab<T_Path extends Routes> {
     this.label = label
     this.path = route
     this.pathParams = params?.pathParams
-    this.pathParams = params?.searchParams
+    this.searchParams = params?.searchParams
   }
 }
 

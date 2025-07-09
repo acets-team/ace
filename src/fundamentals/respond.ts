@@ -6,7 +6,7 @@
 
 
 import { AceError } from './aceError'
-import type { AceResponse, FullAPIResponse } from './types'
+import type { AceResponse, APIResponse } from './types'
 
 
 /**
@@ -19,11 +19,11 @@ import type { AceResponse, FullAPIResponse } from './types'
  * @returns 
  */
 export function respond<T_Data>({ data, error, go, status, headers }: RespondProps<T_Data>): AceResponse<T_Data> {
-  const responseJSON: FullAPIResponse<T_Data> = {
-    go: go ?? null,
-    data: data ?? null,
-    error: error instanceof AceError ? error.get().error : null,
-  }
+  const responseJSON: APIResponse<T_Data> = {}
+
+  if (go) responseJSON.go = go
+  if (data !== null && data !== undefined) responseJSON.data = data
+  if (error instanceof AceError) responseJSON.error = error.get().error
 
   const init: ResponseInit = {
     status,
@@ -37,9 +37,9 @@ export function respond<T_Data>({ data, error, go, status, headers }: RespondPro
 
 
 export type RespondProps<T_Data> = {
-  data?: T_Data | null,
-  error?: AceError | null,
-  go?: string | null,
+  data?: T_Data,
+  error?: AceError,
+  go?: string,
   status: number,
   headers?: HeadersInit
 }

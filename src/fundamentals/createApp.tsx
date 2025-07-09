@@ -38,7 +38,7 @@ const routeC = new AceRoute('/c:id')
   }))
   .layouts([layout1])
   .component(fe => {
-    const params = fe.getParams()
+    const params = fe.getPathParams()
     return <></>
   })
 
