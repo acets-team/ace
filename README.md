@@ -1,4 +1,4 @@
-![Ace, the typesafetiest framework!](https://i.imgur.com/clhoUsl.jpeg)
+![Ace, the typesafetiest framework!](https://i.imgur.com/ieagrbr.jpeg)
 
 
 
@@ -25,7 +25,7 @@ npx create-ace-app@latest
 1. **Brevo**
     - 300 marketing and/or API emails a day for [free](https://wsearchParamssearchParamsww.brevo.com/pricing/) & a free email inbox w/ your custom domain!
 1. **Cloudflare**
-    - 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)!
+    - 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/), and deployment is as simple as [git push](#-deploy)!
 1. **Drizzle + Turso**
     - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
 1. **Valibot**
@@ -108,8 +108,8 @@ export default new Route404()
   import { apiCharacter } from '@ace/apis'
   import RootLayout from '@src/app/RootLayout'
   import { revalidate } from '@solidjs/router'
+  import GuestLayout from '@src/app/GuestLayout'
   import type { APIName2LoadResponse } from '@ace/types'
-  import GuestLayout from '@src/app/Guest/GuestLayout'
 
 
   export default new Route('/smooth')
@@ -144,7 +144,7 @@ export default new Route404()
     return <>
       <div class="character">
         <Suspense fallback={<div class="ace-shimmer"></div>}>
-          {element()?.error?.message || element()?.data?.character}
+          {element()?.error?.message || element()?.data}
         </Suspense>
       </div>
     </>
