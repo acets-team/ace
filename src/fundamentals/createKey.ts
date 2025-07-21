@@ -18,7 +18,7 @@ import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
  * ### API Example TS
  * @example
   ```ts
-  const [clothing, setClothing] = createKey<APIName2ResponseData<'apiClothing'>>([])
+  const [clothing, setClothing] = createKey<APIName2Data<'apiClothing'>>([])
 
   async function onChange() {
     const res = await apiClothing({ bitKey: 'clothing' })
@@ -53,27 +53,21 @@ import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
  * @param options.key - `Optional`, defaults to `id`, Specifies the key to be used for matching items during reconciliation
  * @param options.merge - `Optional`, defaults to `false`: Solid first tries a deep compare via `key`. If it sees two objects are identical, it keeps them—no further inspection. If it sees two objects are different => w/ `merge: false`, It replaces the whole object, regardless of nested equality. w/ `merge: true`, Solid will preserve object references, & only change nested fields which is more work & unnecessary if your objects are not changing
  */
-export function createKey<T extends Record<string, any>>(
-  source?: T[] | Accessor<T[]>,
-  options: { key?: Extract<keyof T, string>; merge?: boolean } = {}
-): readonly [T[], (updated: T[]) => void] {
-  const initial: T[] = typeof source === 'function' // if source is undefined OR returns undefined, treat it as []
-    ? (source as Accessor<T[]>)() ?? []
-    : source ?? []
+export function createKey<T extends Record<string, any>[]>( source?: T | Accessor<T>, options: { key?: Extract<keyof T[number], string>, merge?: boolean } = {} ): readonly [T, (updated: T) => void] {
+  const initial: T = typeof source === 'function' // if source is undefined OR returns undefined, treat it as []
+    ? ((source as Accessor<T>)() ?? []) as T
+    : (source ?? []) as T
 
-  const store = createMutable<{ items: T[] }>({ items: initial }) // store always has a defined array
+  const store = createMutable<{ items: T }>({ items: initial }) // set initial items into a mutatable store
 
-  const setItems = (updated: T[]) => { // setter accepts T[]
-    modifyMutable(
-      store,
-      reconcile({ items: updated }, options)
-    )
+  const setItems = (updated: T) => { // create a setItems function
+    modifyMutable(store, reconcile({ items: updated }, options))
   }
 
   if (typeof source === 'function') { // if source is an accessor, keep in sync
     createEffect(() => {
-      const next = (source as Accessor<T[]>)() ?? []
-      setItems(next)
+      const next = (source as Accessor<T>)() ?? []
+      setItems(next as T)
     })
   }
 

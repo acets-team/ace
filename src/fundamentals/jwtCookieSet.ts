@@ -7,6 +7,7 @@
 import { env } from './env'
 import { setCookie } from 'h3'
 import { jwtCookieKey } from './vars'
+import type { BaseJWTPayload } from './types'
 import { jwtCreate, JwtCreateProps } from './jwtCreate'
 import type { CookieSerializeOptions } from 'cookie-es'
 import { getRequestEvent, HTTPEvent } from './getRequestEvent'
@@ -14,23 +15,28 @@ import { getRequestEvent, HTTPEvent } from './getRequestEvent'
 
 /**
  * ### Create JWT & store it in browser cookie
- * @param props.jwtCreateProps - Props sent to `jwtCreate()`
- * @param props.cookieOptions - Props sent to `setCookie()`. Typically not necessary b/c the defaults are very good. If no cookieOptions.expires is sent, we use `jwtCreateProps.ttl`
- * @param props.nativeEvent - We use `h3` to set/get/clear cookies. A `nativeEvent` is an `h3` event. @ an api the default `getRequestEvent().nativeEvent` will work, in middleware use `fetchEvent.nativeEvent`
  * @example
   ```ts
+  // ./src/lib/types.d.ts
+  export type JWTPayload = { sessionId: string }
+
+
+  // be code
   import { ttlDay } from '@ace/jwtCreate'
-  import { JWTPayload } from 'ace.config'
+  import type { JWTPayload } from '@src/lib/types'
 
   const payload: JWTPayload = { sessionId }
 
-  await jwtCookieSet({ jwtCreateProps: {ttl: ttlDay, payload} })
+  const jwt = await jwtCookieSet<JWTPayload>({ jwtCreateProps: {ttl: ttlDay * 3, payload} })
   ``` 
+ * @param props.jwtCreateProps - Props sent to `jwtCreate()`
+ * @param props.cookieOptions - Props sent to `setCookie()`. Typically not necessary b/c the defaults are very good. If no cookieOptions.expires is sent, we use `jwtCreateProps.ttl`
+ * @param nativeEvent - 🚨 We use `h3` to set/get/clear cookies. A `nativeEvent` is an `h3` event. When calling from an api there is no need to pass a `nativeEvent`. When calling from a `b4()` function it's necessary to pass `event.nativeEvent`, example: `jwtCookieSet({ nativeEvent: event.nativeEvent })`
  */
-export async function jwtCookieSet({ jwtCreateProps, cookieOptions, nativeEvent = getRequestEvent().nativeEvent }: JWTCookieSetProps) {
-  const jwt = await jwtCreate(jwtCreateProps)
+export async function jwtCookieSet<T_JWTPayload extends BaseJWTPayload = {}>({ jwtCreateProps, cookieOptions, nativeEvent = getRequestEvent().nativeEvent }: JWTCookieSetProps<T_JWTPayload>): Promise<string> {
+  const jwt = await jwtCreate<T_JWTPayload>(jwtCreateProps)
 
-  return setCookie(nativeEvent, jwtCookieKey(), jwt, {
+  setCookie(nativeEvent, jwtCookieKey(), jwt, {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
@@ -38,14 +44,16 @@ export async function jwtCookieSet({ jwtCreateProps, cookieOptions, nativeEvent 
     expires: new Date(Date.now() + jwtCreateProps.ttl),
     ...cookieOptions,
   })
+
+  return jwt
 }
 
 
-export type JWTCookieSetProps = {
+export type JWTCookieSetProps<T_JWTPayload extends BaseJWTPayload = {}> = {
   /** Props sent to `jwtCreate()` */
-  jwtCreateProps: JwtCreateProps,
+  jwtCreateProps: JwtCreateProps<T_JWTPayload>,
   /** Props sent to `setCookie()`. Typically not necessary b/c the defaults are very good. If no cookieOptions.expires is sent, we use `jwtCreateProps.ttl` */
   cookieOptions?: CookieSerializeOptions,
-  /** We use `h3` to set/get/clear cookies. A `nativeEvent` is an `h3` event. @ an api the default `getRequestEvent().nativeEvent` will work, in middleware use `fetchEvent.nativeEvent` */
+  /** 🚨 We use `h3` to set/get/clear cookies. A `nativeEvent` is an `h3` event. When calling from an api there is no need to pass a `nativeEvent`. When calling from a `b4()` function it's necessary to pass `event.nativeEvent`, example: `jwtCookieSet({ nativeEvent: event.nativeEvent }) */
   nativeEvent?: HTTPEvent
 }

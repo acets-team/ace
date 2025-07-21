@@ -7,7 +7,8 @@
 import { go, Go } from './go'
 import { respond } from './respond'
 import { AceError } from './aceError'
-import { APIEvent } from '@solidjs/start/server'
+import type { RequestEvent } from 'solid-js/web'
+import type { APIEvent } from '@solidjs/start/server'
 import type { APIBody, URLSearchParams, URLPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
 
 
@@ -20,12 +21,12 @@ import type { APIBody, URLSearchParams, URLPathParams, AceResponse, Routes, Rout
  */
 export class BE<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}> {
   #body?: T_Body
-  readonly event: APIEvent | null
+  readonly event: RequestEvent
   readonly pathParams: T_Params
   readonly searchParams: T_Search
 
 
-  private constructor(event: APIEvent | null, params: T_Params, search: T_Search, body?: T_Body) {
+  private constructor(event: RequestEvent, params: T_Params, search: T_Search, body?: T_Body) {
     this.#body = body
     this.event = event
     this.pathParams = params
@@ -34,12 +35,12 @@ export class BE<T_Params extends URLPathParams = {}, T_Search extends URLSearchP
 
 
   static CreateFromHttp<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}>(event: APIEvent, params: T_Params, search: T_Search) {
-    return new BE(event, params, search, {})
+    return new BE(event, params, search)
   }
 
 
-  static CreateFromFn<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(params: T_Params, search: T_Search, body?: T_Body) {
-    return new BE(null, params, search, body)
+  static CreateFromFn<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: RequestEvent, params: T_Params, search: T_Search, body?: T_Body) {
+    return new BE(event, params, search, body)
   }
 
 

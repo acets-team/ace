@@ -1,23 +1,25 @@
 import type { API } from './fundamentals/api'
 import type { Route } from './fundamentals/route'
 import { GoResponse } from './fundamentals/goResponse'
-import type { JwtValidateResponse } from './fundamentals/jwtValidate'
-import type { URLPathParams, URLSearchParams } from './fundamentals/types'
+import { getRequestEvent } from './fundamentals/getRequestEvent'
+import type { FetchEvent, URLPathParams, URLSearchParams } from './fundamentals/types'
 
 
-export async function callB4(api: API | Route, jwt: JwtValidateResponse, { pathParams, searchParams }: { pathParams: URLPathParams, searchParams: URLSearchParams }): Promise<Response | undefined> {
-  if (!api.values.b4) return
+export async function callB4(api: API | Route, { pathParams, searchParams }: { pathParams: URLPathParams, searchParams: URLSearchParams }, event?: FetchEvent): Promise<Response | undefined> {
+  if (!api.values.b4 || !api.values.b4.length) return
 
-  const response = await api.values.b4({ jwt, pathParams, searchParams })
+  for (const fn of api.values.b4) {
+    const response = await fn({ event: event || getRequestEvent(), pathParams, searchParams })
 
-  if (response) { // if b4 gives us a response, give that response to the user
-    if (!(response instanceof Response)) throw new Error('b4 function must return a Response object')
-    else {
-      const clonedResponse = response.clone()
-      const jsonResponse = await clonedResponse.json()
+    if (response) {
+      if (!(response instanceof Response)) throw new Error('b4 function must return a Response object')
+      else {
+        const clonedResponse = response.clone()
+        const jsonResponse = await clonedResponse.json()
 
-      if (jsonResponse.go) throw new GoResponse(jsonResponse.go)
-      else return response
+        if (jsonResponse.go) throw new GoResponse(jsonResponse.go)
+        else return response
+      }
     }
   }
 }

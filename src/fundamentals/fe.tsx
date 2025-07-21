@@ -10,7 +10,7 @@ import { buildURL } from './buildURL'
 import { isServer } from 'solid-js/web'
 import { FEMessages } from '../feMessages'
 import { getFEChildren } from '../feChildren'
-import { useParams, useLocation, useSearchParams } from '@solidjs/router'
+import { useParams, useLocation } from '@solidjs/router'
 import { createContext, type JSX, type ParentComponent } from 'solid-js'
 import type { GETPaths, GETPath2PathParams, GETPath2SearchParams, POSTPaths, POSTPath2Body, POSTPath2PathParams, GETPath2Data, POSTPath2Data, URLPathParams, URLSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, POSTPath2SearchParams } from './types'
 
@@ -59,7 +59,7 @@ export class FE<T_Params extends URLPathParams = {}, T_Search extends URLSearchP
 
 
   /**
-   * Frontend redirect w/ extra options
+   * Frontend redirect w/ all options
    * @param path - Redirect to this path, as defined @ new Route()
    * @param params - Params to put in the url
    * @param replace - Optional, defaults to false, when true this redirect will clear out a history stack entry 
@@ -80,21 +80,89 @@ export class FE<T_Params extends URLPathParams = {}, T_Search extends URLSearchP
   }
 
 
-  /** @returns The url path params object  */
-  getPathParams(): T_Params {
-    return { ...useParams<T_Params>() } as T_Params // params is a Proxy(Object) & this spread allows us to do for (const param in params)
+  /**
+   * - Path params as an object
+   * - If you'd like reactive path params that can be used in a `createEffect()` call `fe.PathParams()`
+   * @example
+    ```ts
+    if (fe.pathParams.modal) showModal('⚡️')
+    ```
+   */
+  get pathParams() { return this.PathParams() }
+
+
+  /**
+   * - Reactive path params that can be used in a createEffect()
+   * @example
+    ```ts
+    createEffect(() => {
+      if (fe.PathParams().modal) showModal('⚡️')
+    })
+    ```
+   */
+  PathParams(): T_Params {
+    return useParams<T_Params>() as T_Params // params is a Proxy(Object) & this spread allows us to do for (const param in params)
   }
 
 
-  /** @returns The url search params object  */
-  getSearchParams(): T_Search {
+  /**
+   * - Search params as an object
+   * - If you'd like reactive path params that can be used in a `createEffect()` call `fe.SearchParams()`
+   * @example
+    ```ts
+    if (fe.searchParams.modal) showModal('⚡️')
+    ```
+   */
+  get searchParams() { return this.SearchParams() }
+
+
+  /**
+   * - Reactive search params that can be used in a `createEffect()`
+   * @example
+    ```ts
+    createEffect(() => {
+      if (fe.SearchParams().modal) showModal('⚡️')
+    })
+    ```
+   */
+  SearchParams(): T_Search {
     return Object.fromEntries(new URLSearchParams(useLocation().search).entries()) as T_Search
   }
   
 
   /** @returns The url location data  */
-  getLocation() {
+  /**
+   * - Reactive location that can be used in a `createEffect()`
+   * @example
+    ```ts
+    createEffect(() => {
+      if (fe.Location().pathname) window.scrollTo(0, 0)
+    })
+    ```
+   */
+  Location() {
     return useLocation<T_Search>()
+  }
+
+
+  /**
+   * - Location as an object
+   * - If you'd like reactive location that can be used in a `createEffect()` call `fe.Location()`
+   * @example
+    ```tsx
+    <div class="path">{fe.location.pathname}</div>
+    ```
+   */
+  get location() { return this.Location() }
+
+
+  /**
+   * - Get the children for a layout
+   * - Returns the jsx elemement or undefined if no children
+   * - With `Ace` only a `Layout` has children btw, routes do not
+   */
+  get children(): JSX.Element | undefined {
+    return getFEChildren(this)
   }
 
 
@@ -131,15 +199,5 @@ export class FE<T_Params extends URLPathParams = {}, T_Search extends URLSearchP
     if (bitKey) this.bits.set(bitKey, false)
 
     return res
-  }
-
-
-  /**
-   * - Get the children for a layout
-   * - Returns the jsx elemement or undefined if no children
-   * - With `Ace` only a `Layout` has children btw, routes do not
-   */
-  getChildren(): JSX.Element | undefined {
-    return getFEChildren(this)
   }
 }

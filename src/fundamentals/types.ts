@@ -11,9 +11,8 @@ import type { Route } from './route'
 import type { routes } from './createApp'
 import type * as apisFE from '../apis.fe'
 import type * as apisBE from '../apis.be'
-import type { JWTPayload } from 'ace.config'
 import type { AceErrorProps } from './aceError'
-import type { JwtValidateResponse } from './jwtValidate'
+import type { RequestEvent } from 'solid-js/web'
 import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
@@ -38,7 +37,7 @@ export type Routes = keyof typeof routes
  * - Receives: API Function Name
  * - Gives: API Response
 */
-export type APIName2Response<T extends APINames> = typeof apisBE.apiNames[T] extends API<any, any, any, infer T_Response>
+export type APIName2Response<T extends APINames> = typeof apisBE.apiNames[T] extends API<any, any, any, infer T_Response, any>
   ? T_Response
   : never
 
@@ -56,10 +55,9 @@ export type APIName2Data<T_Name extends APINames> = APIName2Response<T_Name> ext
  * - Receives: API Function Name
  * - Gives: API Request Props
 */
-export type APIName2Props<Name extends APINames> =
-  typeof apisBE.apiNames[Name] extends API<infer P, infer S, infer B, infer R>
-    ? BaseAPIFnProps<API<P, S, B, R>> & { bitKey?: string }
-    : never;
+export type APIName2Props<Name extends APINames> = typeof apisBE.apiNames[Name] extends API<infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals>
+  ? BaseAPIFnProps<API<T_PathParams, T_SearchParams, T_Body, T_Response, T_Locals>> & { bitKey?: string }
+  : never;
 
 
 /**
@@ -96,14 +94,14 @@ export type APIResponse<T_Data = any> = {
  * - Receives: API
  * - Gives: FullAPIResponse
 */
-export type API2Response<T_API extends API<any, any, any, any>> = APIResponse<API2Data<T_API>>
+export type API2Response<T_API extends API<any, any, any, any, any>> = APIResponse<API2Data<T_API>>
 
 
 /** 
  * - Receives: API
  * - Gives: Response data type
 */
-export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<any, any, any, infer T_Response>
+export type API2Data<T_API extends API<any, any, any, any, any>> = T_API extends API<any, any, any, infer T_Response, any>
   ? T_Response extends APIResponse<infer T_Data>
     ? T_Data
     : never
@@ -113,15 +111,26 @@ export type API2Data<T_API extends API<any, any, any, any>> = T_API extends API<
 /** 
  * - Receives: API
  * - Gives: Type for the FE Function that calls this API
+ * - How: No required API params => allow missing options altogether, otherwise options object must be passed
 */
-export type API2FEFunction<T_API extends API<any, any, any, any>> = IsPopulated<BaseAPIFnProps<T_API>> extends true
-  ? (options: APIFnProps<T_API>) => Promise<API2Response<T_API>>
-  : (options?: APIFnProps<T_API>) => Promise<API2Response<T_API>>
+export type API2FEFunction<T_API extends API<any, any, any, any, any>> = RequiredKeys<APIFnProps<T_API>> extends never
+  ? (options?: APIFnProps<T_API>) => Promise<API2Response<T_API>>
+  : (options: APIFnProps<T_API>) => Promise<API2Response<T_API>>
 
 
-export type RequiredKeys<T> = {
-  [K in keyof T]-?: {} extends Pick<T, K> ? never : K
-}[keyof T];
+/** Utility to extract the *required* keys of some object */
+export type RequiredKeys<T_Object> = {
+  [K in keyof T_Object]-?: {} extends Pick<T_Object, K> ? never : K
+}[keyof T_Object];
+
+
+/**
+ * – If there are no required keys, you get an optional prop
+ * – Otherwise it’s a required prop
+ */
+export type OptionalIfNoRequired<Name extends string, T> = RequiredKeys<T> extends never
+  ? { [P in Name]?: T }
+  : { [P in Name]: T }
 
 
 /** If testing item is an object and has keys returns true, else return false */
@@ -129,24 +138,17 @@ export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? fals
 
 
 /** Building an options object whose properties are only present if they have keys */
-export type BaseAPIFnProps<T_API extends API<any,any,any,any>> =
-  OptionalIfDefined<'body', API2Body<T_API>> &
-  OptionalIfDefined<'pathParams', API2PathParams<T_API>> &
-  OptionalIfDefined<'searchParams', API2SearchParams<T_API>>
-
-
-export type OptionalIfDefined<Prop extends string, Value> =
-  [Value] extends [undefined]
-    ? {}
-    : { [K in Prop]?: Value }
+export type BaseAPIFnProps<T_API extends API<any,any,any,any,any>> =
+  OptionalIfNoRequired<'body', API2Body<T_API>> &
+  OptionalIfNoRequired<'pathParams', API2PathParams<T_API>> &
+  OptionalIfNoRequired<'searchParams', API2SearchParams<T_API>>
 
 
 /** 
  * - The props (arguments) that are sent to an api function
  * - BitKey is optional
 */
-export type APIFnProps<T_API extends API<any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string }
-
+export type APIFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string }
 
 /** 
  * - Receives: API GET path
@@ -170,7 +172,7 @@ export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
  * - Receives: API
  * - Gives: Request params type
 */
-export type API2PathParams<T_API extends API<any, any, any, any>> = T_API extends API<infer T_Params, any, any, any>
+export type API2PathParams<T_API extends API<any,any,any,any,any>> = T_API extends API<infer T_Params, any, any, any, any>
   ? GetPopulated<T_Params>
   : undefined  
 
@@ -179,7 +181,7 @@ export type API2PathParams<T_API extends API<any, any, any, any>> = T_API extend
  * - Receives: API
  * - Gives: Request body type
 */
-export type API2Body<T_API extends API<any, any, any, any>> = T_API extends API<any, any, infer T_Body, any>
+export type API2Body<T_API extends API<any,any,any,any,any>> = T_API extends API<any, any, infer T_Body, any, any>
   ? GetPopulated<T_Body>
   : undefined  
 
@@ -188,7 +190,7 @@ export type API2Body<T_API extends API<any, any, any, any>> = T_API extends API<
  * - Receives: API
  * - Gives: Request search params type
 */
-export type API2SearchParams<T_API extends API<any, any, any, any>> = T_API extends API<any, infer T_Search, any, any>
+export type API2SearchParams<T_API extends API<any,any,any,any,any>> = T_API extends API<any, infer T_Search, any, any, any>
   ? GetPopulated<T_Search>
   : undefined
 
@@ -265,7 +267,7 @@ export type POSTPath2SearchParams<T_Path extends POSTPaths> = API2SearchParams <
  * - Gives: The type for the `load()` response
  * @example
   ```ts
-  const water = load(() => apiCharacter({params: {element: 'water'}}), 'water')
+  const res = load(() => apiCharacter({params: {element: 'water'}}))
 
   function Characters(res: APIName2LoadResponse<'apiCharacter'>) {}
   ```
@@ -295,6 +297,7 @@ export type JsonPrimitive = string | number | boolean | null;
 export type JsonObject = { [key: string]: JsonPrimitive | JsonObject | JsonPrimitive[] | JsonObject[] | (JsonPrimitive | JsonObject)[] }
 export type Json = JsonPrimitive | Json[] | JsonObject
 
+
 /** 
  * - Source: `import type { APIEvent } from '@solidjs/start/server'`
  * - Called @ `onAPIEvent()`
@@ -315,16 +318,51 @@ export type FetchEvent = SolidFetchEvent
  * - The `JWTPayload` is what is stored in the jwt and the `JWTResponse` is created if the `JWTPayload` is valid
  * - We recomend only putting a sessionId in the `JWTPayload`, and also putting the sessionId in the database, so you can always sign someone out by removing the db entry and then putting any goodies ya love in the `JWTResponse` like email, name, isAdmin, etc.
  */
-export type FullJWTPayload = JWTPayload & {iat: number, exp: number}
+export type FullJWTPayload<T_JWTPayload extends BaseJWTPayload = {}> = T_JWTPayload & {iat: number, exp: number}
 
 
 /** 
  * - Anonymous async function (aaf) that runs b4 api and/or route fn
- * - If the aaf's response is truthy, that response is given to client & the  api and/or route fn is not called, else the fn is called
+ * - If the aaf's response is truthy, that response is given to client & the api and/or route fn is not called, else the api and/or route fn is called
+ * - To share data between b4 function and other b4 function and the api fn add data to event.locals
  */
-export type B4 = ({ jwt, pathParams, searchParams }: { jwt: JwtValidateResponse, pathParams: URLPathParams, searchParams: URLSearchParams }) => Promise<any>
+export type B4<T_Locals extends BaseEventLocals = {}> = ({ event, pathParams, searchParams }: B4Props<T_Locals>) => Promise<Response | void>
 
 
+/** Variables that are provided to each b4 async function */
+export type B4Props<T_Locals extends BaseEventLocals = {}> = {
+  event: RequestEvent & { locals: T_Locals }
+  pathParams: URLPathParams
+  searchParams: URLSearchParams
+}
+
+/** The object that is passed between b4 async functions and given to the api */
+export type BaseEventLocals = Record<string, any>
+
+
+/** 
+ * - Receives: B4
+ * - Gives: The type for the event.locals this B4 adds
+*/
+export type B42Locals<T_B4> = T_B4 extends B4<infer T_Locals>
+  ? T_Locals
+  : {}
+
+
+/**
+ * - Merge the event.locals types from an array of B4 functions
+ * - T_B4Head: the first element in T_B4_Array
+ * - T_B4Tail: the remaining elements in T_B4_Array
+ * - Extract locals from the first B4
+ * - Merge with the locals from the rest recursively
+ * - Base case: the array is empty
+ */
+export type MergeLocals<T_B4_Array extends B4<any>[]> = T_B4_Array extends [infer T_B4Head, ...infer T_B4Tail]
+  ? B42Locals<T_B4Head> & MergeLocals<T_B4Tail extends B4<any>[] ? T_B4Tail : []>
+  : {}
+
+
+/** We support validations of params by valibot, zod or custom and we do that by using this base schema */
 export type ValidateSchema<T> = {
   parse(input: any): T
 }
@@ -345,5 +383,23 @@ export type CMSItem = {
   isMarkdown: number
 }
 
-
 export type CMSMap = Map<number, CMSItem>
+
+
+export type JWTValidateSuccess<T_JWTPayload extends BaseJWTPayload = {}> = {
+  isValid: true
+  payload: FullJWTPayload<T_JWTPayload>
+  errorId?: never
+  errorMessage?: never
+}
+
+export type JWTValidateFailure<T_JWTPayload extends BaseJWTPayload = {}>  = {
+  isValid: false
+  payload?: FullJWTPayload<T_JWTPayload>
+  errorId: 'FALSY_JWT' | 'INVALID_PARTS' | 'INVALID_EXP' | 'INVALID_JWT' | 'EXPIRED'
+  errorMessage: string
+}
+
+export type JWTValidateResponse<T_JWTPayload extends BaseJWTPayload = {}> = JWTValidateSuccess<T_JWTPayload> | JWTValidateFailure<T_JWTPayload>
+
+export type BaseJWTPayload = Record<string, unknown>

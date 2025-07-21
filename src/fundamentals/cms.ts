@@ -13,7 +13,7 @@ import type { API2Response, APIResponse, CMSItem, CMSMap } from './types'
 export class CMS {
   #signal = createSignal<CMSMap>(new Map())
 
-  constructor(cmsLoad: AccessorWithLatest<API2Response<API<{}, {}, {}, APIResponse<CMSItem[]>>> | undefined>) {
+  constructor(cmsLoad: AccessorWithLatest<API2Response<API<{}, {}, {}, APIResponse<CMSItem[]>, any>> | undefined>) {
     createEffect(() => {
       const cmsData = cmsLoad()?.data
       if (!cmsData || !Array.isArray(cmsData)) return

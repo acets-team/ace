@@ -113,7 +113,7 @@ export default new Route404()
 
 
   export default new Route('/smooth')
-    .b4(guestB4) // run this async fn b4 this route renders
+    .b4([guestB4]) // run this async fn b4 this route renders
     .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps /smooth
     .component(() => {
       const air = load(() => apiCharacter({pathParams: {element: 'air'}}), 'air')
@@ -213,7 +213,7 @@ import { object, optional, picklist } from 'valibot'
 
 
 export const GET = new API('/api/clothing', 'apiClothing')
-  .b4(guestB4)
+  .b4([guestB4])
   .searchParams(valibotParams(object({ category: optional(picklist(['men', 'women'])) })))
   .resolve(async (be) => {
     switch (be.searchParams.category) { // ❤️ Typesafe Search Params
@@ -303,7 +303,7 @@ import { API } from '@ace/api'
 import { authB4 } from '@src/lib/b4'
 
 export const GET = new API('/api/aloha', 'apiAloha')
-  .b4(authB4) // run the `authB4()` async function before this api boots!
+  .b4([authB4]) // run the `authB4()` async function before this api boots!
   .resolve(async (be) => {
     return be.success({ aloha: true })
   })
@@ -699,6 +699,14 @@ export default new Route('/spark')
     }
   })
   ```
+1. Tailwind [Cheatsheet](https://nerdcave.com/tailwind-cheat-sheet)
+1. Download the tailwind vscode extension
+    1. Click Extensions
+    1. Search: `bradlc.vscode-tailwindcss`
+    1. Install extension
+    1. Reload Vscode
+
+
 
 # 🔐 Create Password Hash
 ### If you would love to deploy to Cloudflare, here's a way to hash on the edge :)

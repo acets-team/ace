@@ -71,12 +71,4 @@ export type PluginsConfig = {
    * - `drizzle-orm`
    */
   turso?: boolean
-
-  /**
-   * Enables **Mongoose** fundamentals (helpful modules @ `./ace`)
-   *
-   * Requires the following npm dev imports:
-   * - `mongoose`
-   */
-  mongoose?: boolean
 }

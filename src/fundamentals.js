@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'mongoose'} pluginName - Name of plugin
+   * @param {'solid' | 'zod' | 'valibot' | 'turso'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -73,6 +73,7 @@ export const fundamentals = new Map([
   ['jwtValidate', new Fundamental('ts', 'solid', 'copy')],
   ['jwtCookieGet', new Fundamental('ts', 'solid', 'copy')],
   ['jwtCookieSet', new Fundamental('ts', 'solid', 'copy')],
+  ['jwtCookie2EventLocals', new Fundamental('ts', 'solid', 'copy')],
   ['jwtCookieClear', new Fundamental('ts', 'solid', 'copy')],
   ['layout', new Fundamental('ts', 'solid', 'copy')],
   ['load', new Fundamental('ts', 'solid', 'copy')],
@@ -83,8 +84,7 @@ export const fundamentals = new Map([
   ['modal.styles', new Fundamental('css', 'solid', 'copy')],
   ['messages', new Fundamental('tsx', 'solid', 'copy')],
   ['messagesCleanup', new Fundamental('tsx', 'solid', 'helper')],
-  ['mongoConnect', new Fundamental('ts', 'mongoose', 'copy')],
-  ['mongoModel', new Fundamental('ts', 'mongoose', 'copy')],
+  ['on404', new Fundamental('ts', 'solid', 'helper')],
   ['onAPIEvent', new Fundamental('ts', 'solid', 'copy')],
   ['onMiddlewareRequest', new Fundamental('ts', 'solid', 'copy')],
   ['parseNumber', new Fundamental('ts', 'solid', 'copy')],

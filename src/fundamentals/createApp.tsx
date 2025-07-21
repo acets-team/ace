@@ -38,8 +38,7 @@ const routeC = new AceRoute('/c:id')
   }))
   .layouts([layout1])
   .component(fe => {
-    const params = fe.getPathParams()
-    return <></>
+    return <>{fe.pathParams}</>
   })
 
 export const routes = {
@@ -50,24 +49,33 @@ export const routes = {
 /** gen2 */
 
 
+const defaultParentComponents: ParentComponentEntry<any>[] = [
+  FEContextProvider,
+  MetaProvider,
+  Suspense,
+]
+
+
 /** 
- * @param parentComponents - The first wrapper is the outermost, default is `[FEContextProvider, MetaProvider, Suspense]`
+ * @param requestedParentComponents - The first component is the outermost, at the end of your list will automatically be added: `[FEContextProvider, MetaProvider, Suspense]` so if you provide `export default createApp([AuthProvider])` the result is `[AuthProvider, FEContextProvider, MetaProvider, Suspense]`
  * @returns A function that when called provided an <App /> component
  * @example
 ```ts
 import './app.css'
 import '@ace/toast.styles.css'
-import { Suspense } from 'solid-js'
+import '@ace/tooltip.styles.css'
+import '@ace/loading.styles.css'
 import { createApp } from '@ace/createApp'
-import { ToastProvider } from '@ace/toast'
-import { FEContextProvider } from '@ace/fe'
-import { MetaProvider } from '@solidjs/meta'
+import { AuthProvider } from '@src/AuthProvider/AuthProvider'
 
 
-export default createApp([ToastProvider, FEContextProvider, MetaProvider, Suspense])
+export default createApp([AuthProvider])
+
 ```
  */
-export function createApp(parentComponents: ParentComponentEntry<any>[] = [FEContextProvider, MetaProvider, Suspense]) {
+export function createApp(requestedParentComponents: ParentComponentEntry<any>[] = []) {
+  const parentComponents = [...requestedParentComponents, ...defaultParentComponents]
+
   const Root: ParentComponent<any> = (props: RouteSectionProps) => {
     let RootAccumulator: ParentComponent<any> = (p) => <>{p.children}</> // will become our Root, starts w/ the children and with each loop adds a Wrapper
 

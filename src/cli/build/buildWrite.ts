@@ -156,7 +156,7 @@ function walkTree(node: TreeNode, indent = 8, accumulator: TreeAccumulator = { i
   for (const r of node.routes) { // for each route in this layout
     accumulator.importsMap.set(r.fsPath, r.moduleName) // set route import
     if (r.routePath !== '*') accumulator.consts += getConstEntry(r.routePath, r.moduleName) // if 404 is in consts then it'd be routes & then it'd be in <A />
-    accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={${renderRouteComponent(r.moduleName)}} ${renderRouteMatchFilters(r)} />\n`) // set routes entry
+    accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={${renderRouteComponent(r.moduleName)}} />\n`) // set routes entry
   }
 
   for (const child of node.layouts.values()) { // recurse into each child layout
@@ -175,5 +175,3 @@ function walkTree(node: TreeNode, indent = 8, accumulator: TreeAccumulator = { i
 const renderLayoutComponent = (moduleName?: string) => `props => layoutComponent(props, ${moduleName})`
 
 const renderRouteComponent = (moduleName?: string) => `() => routeComponent(${moduleName})`
-
-const renderRouteMatchFilters = (route: BuildRoute) => route.routePath === '*' ? '' : `matchFilters={${route.moduleName!}.values.filters}`

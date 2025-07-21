@@ -5,6 +5,7 @@
  */
 
 
+import type { BaseJWTPayload } from './types'
 import { base64UrlEncode } from './base64UrlEncode'
 
 
@@ -14,15 +15,21 @@ import { base64UrlEncode } from './base64UrlEncode'
  * - Adds iat (issued at) & exp (expired at) props to the jwt payload to align w/ `JWT spec (RFC 7519)`
  * @example
   ```ts
+  // ./src/lib/types.d.ts
+  export type JWTPayload = { sessionId: string }
+
+
+  // be code
+  import type { JWTPayload } from '@src/lib/types'
   import { jwtCreate, ttlWeek } from '@ace/jwtCreate'
 
-  const jwt = await jwtCreate({ ttl: ttlWeek, payload: { userId: 42 } })
+  const jwt = await jwtCreate<JWTPayload>({ ttl: ttlWeek, payload: { userId: 42 } })
   ```
  * @param props.payload - The JSON-serializable payload for the jwt token
  * @param props.ttl - Time-to-live in milliseconds
  * @returns A signed JWT string using HS512
  */
-export async function jwtCreate({ payload, ttl }: JwtCreateProps): Promise<string> {
+export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payload, ttl }: JwtCreateProps<T_JWTPayload>): Promise<string> {
   if (!process.env.JWT_SECRET) throw new Error('!process.env.JWT_SECRET')
 
   if (ttl <= 0)  throw new Error('Please include a TTL > 0')
@@ -60,9 +67,9 @@ export const ttlWeek = 7 * ttlDay
 
 
 
-export type JwtCreateProps = {
+export type JwtCreateProps<T_JWTPayload extends BaseJWTPayload = {}> = {
   /** The JSON-serializable payload for the jwt token */
-  payload: Record<string, unknown>
+  payload: T_JWTPayload
   /** Time-to-live in milliseconds */
   ttl: number
 }

@@ -8,7 +8,7 @@
 import type { JSX } from 'solid-js'
 import { buildURL } from './buildURL'
 import { A as SolidA } from '@solidjs/router'
-import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
+import type { Routes, RoutePath2PathParams, RoutePath2SearchParams, OptionalIfNoRequired } from './types'
 
 
 /**
@@ -32,10 +32,8 @@ export function A<T extends Routes>({ path, pathParams, searchParams, children, 
 export type AProps<T extends Routes> = {
   path: T
   children: JSX.Element
-  pathParams?: RoutePath2PathParams<T>
-  searchParams?: RoutePath2SearchParams<T>
   solidAProps?: SolidAProps
-}
+} & OptionalIfNoRequired<'pathParams', RoutePath2PathParams<T>> & OptionalIfNoRequired<'searchParams', RoutePath2SearchParams<T>>
 
 
 /**

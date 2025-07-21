@@ -6,7 +6,7 @@
 
 
 import { isServer, render } from 'solid-js/web'
-import { createSignal,onMount, createEffect, For, Show, type Component, type JSX } from 'solid-js'
+import { createSignal, onMount, createEffect, For, Show, type Component, type JSX } from 'solid-js'
 
 
 
@@ -17,16 +17,18 @@ if (!isServer) {
   const ToastWrapper: Component = () => {
     return <>
       <div id="ace-toast-wrapper" aria-live="polite" aria-atomic="false">
-        <For each={toasts()}>
-          {toast => <ToastItemComponent toast={toast} onRemove={removeToastFromSignal} />}
-        </For>
+        <For each={toasts()}>{
+          (toast) => <ToastItemComponent toast={toast} onRemove={removeToastFromSignal} />
+        }</For>
       </div>
     </>
   }
 
-  const container = document.createElement('div')
-  document.body.appendChild(container)
-  render(() => <ToastWrapper />, container)
+  onMount(() => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    render(() => <ToastWrapper />, container)
+  })
 }
 
 
@@ -103,42 +105,44 @@ if (!isServer) {
  * @param props.toastProps - Additonal props you'd love to place on the html div toast like `style` or `class`
  */
 export const showToast: ShowToast = ({ type, value, ms = 9000, icon, toastProps, animationSpeed = 600 }) => {
-  animationSpeed += 30 // padding
+  let innerRemove = () => {}
 
   const id = typeof toastProps?.id === 'string' ? toastProps.id : 'toast-' + crypto.randomUUID()
 
-  const toast: ToastItem = { // create toast
-    id,
-    ms,
-    type,
-    icon: icon ?? defaultIconForType(type),
-    list: Array.isArray(value) ? value : [value],
-    toastProps: {
-      ...toastProps,
-      style: {
-        ...defaultStyleForType(type),
-        ...(toastProps?.style && typeof toastProps.style === 'object' ? toastProps.style : {}),
+  onMount(() => {
+    animationSpeed += 30 // padding
+
+    const toast: ToastItem = { // create toast
+      ms,
+      type,
+      icon: icon ?? defaultIconForType(type),
+      list: Array.isArray(value) ? value : [value],
+      id: typeof toastProps?.id === 'string' ? toastProps.id : 'toast-' + crypto.randomUUID(),
+      toastProps: {
+        ...toastProps,
+        style: {
+          ...defaultStyleForType(type),
+          ...(toastProps?.style && typeof toastProps.style === 'object' ? toastProps.style : {}),
+        }
       }
     }
-  }
 
-  setToasts(prev => [...prev, toast]) // add toast to toasts signal
+    setToasts(prev => [...prev, toast]) // add toast to toasts signal
 
-  const timeoutSmooth = setTimeout( () => smoothHide(document.getElementById(toast.id)), ms) // 
+    const timeoutSmooth = setTimeout( () => smoothHide(document.getElementById(toast.id)), ms) // 
 
-  const timeoutSignal = setTimeout( () => removeToastFromSignal(toast.id), ms + animationSpeed )
+    const timeoutSignal = setTimeout( () => removeToastFromSignal(toast.id), ms + animationSpeed )
 
-  return {
-    id: toast.id,
-    remove() {
+    innerRemove = () => {
       clearTimeout(timeoutSmooth)
       clearTimeout(timeoutSignal)
       smoothHide(document.getElementById(toast.id))
       setTimeout(() => removeToastFromSignal(toast.id), animationSpeed)
     }
-  }
-}
+  })
 
+  return { id, remove: () => innerRemove() }
+}
 
 function removeToastFromSignal (id: string) {
   setToasts(list => {

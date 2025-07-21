@@ -4,7 +4,7 @@ import { GoResponse } from './fundamentals/goResponse'
 import type { API2Response } from './fundamentals/types'
 
 
-export async function callAPIResolve<T_API extends API<any, any, any, any>>(api: T_API, be: BE): Promise<Response | undefined> {
+export async function callAPIResolve<T_API extends API<any,any,any,any, any>>(api: T_API, be: BE): Promise<Response | undefined> {
   if (typeof api.values.resolve === 'function') {
     const originalResponse = await api.values.resolve(be)
 

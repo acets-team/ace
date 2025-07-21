@@ -1,19 +1,26 @@
 /**
  * 🧚‍♀️ How to access:
  *     - import { jwtValidate } from '@ace/jwtValidate'
- *     - import type { JwtValidateProps, JwtValidateSuccess, JwtValidateFailure, JwtValidateResponse } from '@ace/jwtValidate'
  */
 
 
-import type { FullJWTPayload } from './types'
 import { base64UrlDecodeToBinary, base64UrlDecodeToString } from './base64UrlDecode'
+import type { FullJWTPayload, JWTValidateResponse, JWTValidateFailure, JWTValidateSuccess, BaseJWTPayload } from './types'
 
 
 /**
  * ### Validate a JWT in node or on the Edge (Cloudflare Workers)
  * @example
   ```ts
-    const jwtResponse = await jwtValidate(jwt)
+    // ./src/lib/types.d.ts
+    export type JWTPayload = { sessionId: string }
+
+
+    // be code
+    import { jwtValidate } from '@ace/jwtValidate'
+    import type { JWTPayload } from '@src/lib/types'
+
+    const { isValid, payload, errorId, errorMessage } = await jwtValidate<JWTPayload>(jwt)
   ```
  * @param jwt - The jwt token to verify
  * @returns 
@@ -21,7 +28,7 @@ import { base64UrlDecodeToBinary, base64UrlDecodeToString } from './base64UrlDec
  *     - `{ isValid: true; payload }` on success, payload automatically includes `iat` (issued time in seconds) & `exp` (expiration in seconds)
  *     - `{ isValid: falsem errorId, errorMessage }` on failure  
  */
-export async function jwtValidate(jwt: string): Promise<JwtValidateResponse> {
+export async function jwtValidate<T_JWTPayload extends BaseJWTPayload = {}>(jwt: string): Promise<JWTValidateResponse<T_JWTPayload>> {
   if (!process.env.JWT_SECRET) throw new Error('!process.env.JWT_SECRET')
 
   if (!jwt) return error('FALSY_JWT', 'JWT not provided')
@@ -42,7 +49,7 @@ export async function jwtValidate(jwt: string): Promise<JwtValidateResponse> {
 
   const isValid = await crypto.subtle.verify('HMAC', cryptoKey, sigBinary, headerBodyBinary)
 
-  const payload = JSON.parse(base64UrlDecodeToString(bodyB64)) as FullJWTPayload
+  const payload = JSON.parse(base64UrlDecodeToString(bodyB64)) as FullJWTPayload<T_JWTPayload>
 
   if (!isValid) return error('INVALID_JWT', 'JWT is invalid', payload)
 
@@ -52,28 +59,12 @@ export async function jwtValidate(jwt: string): Promise<JwtValidateResponse> {
 
   if (payload.exp < now) return error('EXPIRED', 'Token is expired', payload)
 
-  const jwtResponse: JwtValidateSuccess = {isValid: true, payload}
+  const jwtResponse: JWTValidateSuccess<T_JWTPayload> = {isValid: true, payload}
 
   return jwtResponse
 }
 
 
-export type JwtValidateSuccess = {
-  isValid: true
-  payload: FullJWTPayload
-  errorId?: never
-  errorMessage?: never
+function error<T_JWTPayload extends BaseJWTPayload = {}>(errorId: JWTValidateFailure['errorId'], errorMessage: string, payload?: FullJWTPayload<T_JWTPayload>): JWTValidateFailure<T_JWTPayload> {
+  return {isValid: false, errorId, errorMessage, payload }
 }
-
-export type JwtValidateFailure = {
-  isValid: false
-  errorId: 'FALSY_JWT' | 'INVALID_PARTS' | 'INVALID_EXP' | 'INVALID_JWT' | 'EXPIRED'
-  errorMessage: string
-  payload?: FullJWTPayload
-}
-
-
-export type JwtValidateResponse = JwtValidateSuccess | JwtValidateFailure
-
-
-const error = (errorId: JwtValidateFailure['errorId'], errorMessage: string, payload?: FullJWTPayload): JwtValidateFailure => ({isValid: false, errorId, errorMessage, payload })

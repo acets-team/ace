@@ -6,22 +6,27 @@
 
 import { getCookie } from 'h3'
 import { jwtCookieKey } from './vars'
+import { jwtValidate } from './jwtValidate'
 import { getRequestEvent } from './getRequestEvent'
-import { jwtValidate, type JwtValidateResponse } from './jwtValidate'
+import type { BaseJWTPayload, JWTValidateResponse } from './types'
 
 
 /**
  * ### Get JWT stored in cookie
- * @param nativeEvent - We use `h3` to set/get/clear cookies. A `nativeEvent` is an `h3` event. @ an api the default `getRequestEvent().nativeEvent` will work, in middleware use `fetchEvent.nativeEvent`
  * @example
   ```ts
-  const jwt = await jwtCookieGet()
+  // ./src/lib/types.d.ts
+  export type JWTPayload = { sessionId: string }
 
-  if (jwt.errorId === 'EXPIRED' && jwt.payload?.sessionId) { // delete expired in db
-    await db().delete(sessions).where(eq(sessions.id, jwt.payload.sessionId))
-  }
+
+  // be code
+  import { jwtCookieGet } from '@ace/jwtCookieGet'
+  import type { JWTPayload } from '@src/lib/types'
+
+  const {isValid, payload, errorId, errorMessage} = await jwtCookieGet<JWTPayload>()
   ```
+ * @param nativeEvent - 🚨 We use `h3` to set/get/clear cookies. A `nativeEvent` is an `h3` event. When calling from an api there is no need to pass a `nativeEvent`. When calling from a `b4()` function it's necessary to pass `event.nativeEvent`, example: `jwtCookieGet(event.nativeEvent)`
  */
-export async function jwtCookieGet(nativeEvent = getRequestEvent().nativeEvent): Promise<JwtValidateResponse> {
-  return await jwtValidate(getCookie(nativeEvent, jwtCookieKey()) ?? '')
+export async function jwtCookieGet<T_JWTPayload extends BaseJWTPayload = {}>(nativeEvent = getRequestEvent().nativeEvent): Promise<JWTValidateResponse<T_JWTPayload>> {
+  return await jwtValidate<T_JWTPayload>(getCookie(nativeEvent, jwtCookieKey()) ?? '')
 }

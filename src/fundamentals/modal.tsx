@@ -61,9 +61,9 @@ export const Modal = feComponent(({id, children, hideOnBackdropClick = true, div
   return <>
     <Show when={isOpen()}>
       <Portal>
-        <div id={`ace-modal--` + id} class="ace-modal" onClick={() => close()} aria-hidden={isOpen() ? 'false' : 'true'} {...divProps}>
-          <div class="content" onClick={() => close()}>
-            <div class="modal" role="dialog" aria-modal="true" aria-labelledby={`${id}-label`} tabIndex={-1}>{children}</div>
+        <div id={`ace-modal--` + id} class="ace-modal" onClick={close} aria-hidden={isOpen() ? 'false' : 'true'} {...divProps}>
+          <div class="content" onClick={close}>
+            <div class="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby={`${id}-label`} tabIndex={-1}>{children}</div>
           </div>
         </div>
       </Portal>

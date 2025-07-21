@@ -1,6 +1,7 @@
 /**
  * 🧚‍♀️ How to access:
  *     - import { Messages } from '@ace/messages'
+ *     - import type { MessagesProps } from '@ace/messages'
  */
 
 
@@ -12,19 +13,19 @@ import { For, Show, type JSX } from 'solid-js'
 
 
 /**
- * Messages are arrays of strings: string[]
+ * Messages are `string[]` so arrays of strings
  * Messages are grouped by name: Record<string, string[]>
  * On the fe each group of messages is a Signal: Signal<string[]>
  * This component will show the messages for one group
- * options.css - To give a class name to the wrapper
- * options.name - Messages are grouped by name
+ * @param options.name -  Messages are grouped by name
+ * @param options.divProps -  Props to put on the wrapper div that already has the class `ace-messages`
  */
-export const Messages = feComponent(({ name = defaultMessageName, ...props }: { name?: string } & JSX.HTMLAttributes<HTMLDivElement>) => {
+export const Messages = feComponent(({ name = defaultMessageName, divProps }: MessagesProps) => {
   const [messages] = fe.messages.get(name)
 
   return <>
     <Show when={ messages()?.length }>
-      <div class="ace-messages" {...props}>
+      <div class="ace-messages" {...divProps}>
         <Show when={ messages().length > 1 } fallback={messages()[0]}>
           <ul>
             <For each={messages()}>{ (msg) => <li>{msg}</li> }</For>
@@ -35,3 +36,11 @@ export const Messages = feComponent(({ name = defaultMessageName, ...props }: { 
     </Show>
   </>
 })
+
+
+export type MessagesProps = {
+  /** Messages are grouped by name */
+  name?: string
+  /** Props to put on the wrapper div that already has the class `ace-messages` */
+  divProps?: JSX.HTMLAttributes<HTMLDivElement>
+}

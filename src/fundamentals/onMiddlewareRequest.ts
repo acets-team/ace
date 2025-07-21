@@ -7,29 +7,33 @@
 
 import { API } from './api'
 import { Route } from './route'
+import { on404 } from '../on404'
 import { callB4 } from '../callB4'
 import { routes } from './createApp'
-import { gets, posts } from './apis'
 import { AceError } from './aceError'
+import { gets, posts } from '../apis.be'
 import type { FetchEvent } from './types'
 import { GoResponse } from './goResponse'
-import { redirect } from '@solidjs/router'
-import { jwtCookieGet } from './jwtCookieGet'
+import { json, redirect } from '@solidjs/router'
 import { validateParams } from '../validateParams'
 import { eventToPathname } from '../eventToPathname'
-import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
 import { getSearchParams } from '../getSearchParams'
+import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
 
 
 /**
  * - Typically called by `getMiddleware()`
- * - Adds session data to `event.locals.sessionData`
- * - Matches a `FetchEvent` w/ the proper route or api
- * - If match has a `b4()`, calls it & returns its response
- * - If you would love to call this function, please see `getMiddleware()` for guidance, but it'd looks something like this:
+ * - Matches a request to an api / route
+ * - 🚨 To speed this function up there is an assumption made, that your Route does not start w/ a pathname of /api please
+ * - On pathname to api / route match validates the search / path params, calls the b4() functions for the api / route and then the resolve() / component()
+ * - On no match a json not found response is given w/ a 404 status
+ * @example
   ```tsx
   export function getMiddleware() {
     return createMiddleware({
+      async onBeforeResponse (e) {
+        // custom logic here
+      },
       async onRequest (e) {
         const res = await onMiddlewareRequest(e)
         // custom logic here
@@ -41,25 +45,34 @@ import { getSearchParams } from '../getSearchParams'
  */
 export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
   try {
-    event.locals.jwtResponse = await jwtCookieGet(event.nativeEvent)
-
     const pathname = eventToPathname(event)
 
     switch(event.request.method) {
-      case 'POST': return await onAPIMatched(event, pathname, posts)
+      case 'POST': return await onAPIRequest(event, pathname, posts)
       case 'GET':
-        const routeMatch = pathnameToMatch(pathname, routes)
- 
-        if (routeMatch?.handler instanceof Route) return await onRouteMatched(event, routeMatch)
-        else return await onAPIMatched(event, pathname, gets)
+        if (pathname.startsWith('/api')) return await onAPIRequest(event, pathname, gets)
+        else {
+          const routeMatch = pathnameToMatch(pathname, routes)
+
+          if (routeMatch?.handler instanceof Route) return await onRequest(event, routeMatch)
+          else return await onAPIRequest(event, pathname, gets)
+        }
     }
   } catch (error) {
-    return new Response(JSON.stringify(AceError.catch({ error }), null, 2), { status: 401 }) // Only Response objects can be returned from middleware functions. Returning any other value will result in an error. source: https://docs.solidjs.com/solid-start/advanced/middleware#middleware
+    return json(AceError.catch({ error }), { status: 400 })
   }
+}
+
+
+async function onAPIRequest(event: FetchEvent, pathname: string, apis: Record<string, API<any,any,any,any,any>>) {
+  const match = pathnameToMatch(pathname, apis)
+
+  if (match?.handler instanceof API) return await onRequest(event, match)
+  else return on404()
 }
  
 
-async function onRouteMatched<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
+async function onRequest<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
   try {
     const { pathParams, searchParams } = validateParams({
       rawParams: routeMatch.params,
@@ -69,20 +82,11 @@ async function onRouteMatched<T extends API | Route>(event: FetchEvent, routeMat
     })
 
     if (routeMatch.handler.values.b4) {
-      const b4Response = await callB4(routeMatch.handler, event.locals.jwtResponse, { pathParams, searchParams })
+      const b4Response = await callB4(routeMatch.handler, { pathParams, searchParams }, event)
       if (b4Response) return b4Response
     }
   } catch (error) {
     if (error instanceof GoResponse) return redirect(error.url)
     else throw error
-  }
-}
-
-
-async function onAPIMatched(event: FetchEvent, pathname: string, apis: Record<string, API<any>>) {
-  const match = pathnameToMatch(pathname, apis)
-
-  if (match?.handler instanceof API) {
-    return await onRouteMatched(event, match)
   }
 }
