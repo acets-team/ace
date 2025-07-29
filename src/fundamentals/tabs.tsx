@@ -5,12 +5,12 @@
  */
 
 
-import { routes } from './createApp'
 import { buildURL } from './buildURL'
+import { regexRoutes } from './regexRoutes'
 import { useLocation } from '@solidjs/router'
 import { pathnameToMatch } from '../pathnameToMatch'
-import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
 import { createSignal, createEffect, onMount, For, Show, type JSX } from 'solid-js'
+import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
 
 
 /**
@@ -94,9 +94,9 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   const [active, setActive] = createSignal<number | undefined>(initialIndex) // must be after tabs foreach 
   const [firstRender, setFirstRender] = createSignal(true)
 
-  createEffect(() => {
+  createEffect(async () => {
     if (mode !== 'route') return
-    const match = pathnameToMatch(location.pathname, routes)
+    const match = await pathnameToMatch(location.pathname, regexRoutes)
 
     if (!match) return
     const tabIndex = pathToTabIndex.get(match.handler.values.path as Routes)

@@ -5,7 +5,7 @@
  */
 
 
-import { fe } from './fe'
+import { scope } from './scopeComponent'
 import { Show, type JSX } from 'solid-js'
 import { Loading, type LoadingProps } from './loading'
 
@@ -22,7 +22,7 @@ import { Loading, type LoadingProps } from './loading'
     ```
  */
 export const Submit = ({ label, bitKey, buttonProps, loadingProps }: SubmitProps) => {
-  const isLoading = () => fe.bits.isOn(bitKey)
+  const isLoading = () => scope.bits.isOn(bitKey)
 
   return <>
     <button type="submit" disabled={isLoading()} aria-busy={isLoading()} {...buttonProps} >

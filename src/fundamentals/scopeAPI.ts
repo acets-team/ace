@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { BE } from '@ace/be'
+ *     - import { ScopeAPI } from '@ace/scopeAPI'
  */
 
 
@@ -19,28 +19,28 @@ import type { APIBody, URLSearchParams, URLPathParams, AceResponse, Routes, Rout
  *     - Get current request event, body and/or params
  *     - Respond w/ a consistent shape
  */
-export class BE<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}> {
-  #body?: T_Body
+export class ScopeAPI<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}> {
+  readonly body: T_Body
   readonly event: RequestEvent
   readonly pathParams: T_Params
   readonly searchParams: T_Search
 
 
-  private constructor(event: RequestEvent, params: T_Params, search: T_Search, body?: T_Body) {
-    this.#body = body
+  private constructor(event: RequestEvent, params: T_Params, search: T_Search, body: T_Body) {
+    this.body = body
     this.event = event
     this.pathParams = params
     this.searchParams = search
   }
 
 
-  static CreateFromHttp<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}>(event: APIEvent, params: T_Params, search: T_Search) {
-    return new BE(event, params, search)
+  static CreateFromHttp<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: APIEvent, params: T_Params, search: T_Search, body: T_Body) {
+    return new ScopeAPI(event, params, search, body)
   }
 
 
-  static CreateFromFn<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: RequestEvent, params: T_Params, search: T_Search, body?: T_Body) {
-    return new BE(event, params, search, body)
+  static CreateFromFn<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: RequestEvent, params: T_Params, search: T_Search, body: T_Body) {
+    return new ScopeAPI(event, params, search, body)
   }
 
 
@@ -111,16 +111,5 @@ export class BE<T_Params extends URLPathParams = {}, T_Search extends URLSearchP
    */
   Go<T_Path extends Routes>({ path, pathParams, searchParams, status = 301, headers }: { path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit}): AceResponse<null> {
     return Go({path, pathParams, searchParams, status, headers})
-  }
-
-
-  /** @returns Current request body via `await event.request.json()`  */
-  async getBody(): Promise<T_Body> {
-    if (this.#body) return this.#body as T_Body
-    else if (!this.event) throw new Error('!this.event')
-    else {
-      this.#body = await this.event.request.json() as T_Body
-      return this.#body
-    }
   }
 }

@@ -42,7 +42,7 @@ import { onMount, type JSX } from 'solid-js'
 
 
     export default new Route('/fortunes')
-      .component((fe) => {  
+      .component((scope) => {  
         const forAnimator = new ForAnimator()
         const [fortunes, setFortunes] = createKey<APIName2Data<'apiFortune'>>()
 
@@ -59,7 +59,7 @@ import { onMount, type JSX } from 'solid-js'
 
         return <>
           <button onClick={onClick}>
-            <Show when={fe.bits.isOn('example')} fallback="Click for Side In!">
+            <Show when={scope.bits.isOn('example')} fallback="Click for Side In!">
               <Loading />
             </Show>
           </button>

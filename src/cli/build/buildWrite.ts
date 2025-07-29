@@ -1,7 +1,7 @@
 import { join, resolve } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { mkdir, copyFile, writeFile } from 'node:fs/promises'
-import { getConstEntry, getSrcImportEnry, type Build, type TreeAccumulator, type TreeNode, type BuildRoute } from './build.js'
+import { getImportFsPath, type Build, type TreeNode} from './build.js'
 
 
 
@@ -34,9 +34,14 @@ function getPromises(build: Build) {
     promises.push(
       fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsSolidTypes || '', fileName: 'types.d.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' }),
-      fsWrite({ build, dir: build.dirWriteRoot, content: renderApisBE(build), fileName: 'apis.be.ts' }),
-      fsWrite({ build, dir: build.dirWriteRoot, content: renderApisFE(build), fileName: 'apis.fe.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApis(build), fileName: 'apis.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderCreateApp(build), fileName: 'createApp.tsx' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexRoute(build), fileName: 'regexRoutes.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiGets(build), fileName: 'regexApiGets.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiPosts(build), fileName: 'regexApiPosts.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiPuts(build), fileName: 'regexApiPuts.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiDeletes(build), fileName: 'regexApiDeletes.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiNames(build), fileName: 'regexApiNames.ts' }),
     )
   }
 
@@ -71,107 +76,94 @@ export const env: string = '${build.env}'
 
 
 
-function renderApisBE(build: Build) {
-  return `import { createAPIFunction } from './createAPIFunction' 
+function renderApis(build: Build) {
+  return `import { createAPIFunction } from '../createAPIFunction' 
 
-${build.writes.importsAPIBE}${build.space}
-export const gets = {
-${build.writes.constGET.slice(0,-1)}
-}
-${build.space}
-export const posts = {
-${build.writes.constPOST.slice(0,-1)}
-}
-
-export const apiNames = {
-${build.writes.apiNames.slice(0, -1)}
-}
-
-${build.writes.apiFunctionsBE}
-`
+${build.writes.apiFunctions}`
 }
 
 
 
+function renderRegexRoute(build: Build) {
+  return `export const regexRoutes = {
+${build.writes.constRoutes ? build.writes.constRoutes.slice(0, -1) : ''}
+} as const\n`
+}
 
-function renderApisFE(build: Build) {
-  return `import { fe } from './fundamentals/fe'
-import type { API2FEFunction } from './fundamentals/types' 
 
-${build.writes.importsAPIFE}
 
-export const gets = {} as const
-export const posts = {} as const
+function renderRegexApiGets(build: Build) {
+  return `export const regexApiGets = {
+${build.writes.constGET ? build.writes.constGET.slice(0, -1) : ''}
+} as const\n`
+}
 
-${build.writes.apiFunctionsFE}`
+
+
+function renderRegexApiPosts(build: Build) {
+  return `export const regexApiPosts = {
+${build.writes.constPOST ? build.writes.constPOST.slice(0, -1) : ''}
+} as const\n`
+}
+
+
+
+function renderRegexApiPuts(build: Build) {
+  return `export const regexApiPuts = {
+${build.writes.constPUT ? build.writes.constPUT.slice(0, -1) : ''}
+} as const\n`
+}
+
+
+
+function renderRegexApiDeletes(build: Build) {
+  return `export const regexApiDeletes = {
+${build.writes.constDELETE ? build.writes.constDELETE.slice(0, -1) : ''}
+} as const\n`
+}
+
+
+
+function renderRegexApiNames(build: Build) {
+  return `export const regexApiNames = {
+${build.writes.constApiName ? build.writes.constApiName.slice(0, -1) : ''}
+} as const\n`
 }
 
 
 function renderCreateApp(build: Build) {
-  let imports = ''
-  let { routes, importsMap, consts } = walkTree(build.tree)
-
-  importsMap.forEach((moduleName, fsPath) => {
-    imports += getSrcImportEnry({moduleName, fsPath})
-  })
-
-  const gen1 = '/** gen1 */'
-  const gen2 = '/** gen2 */'
-
   if (!build.fsApp) throw new Error('!build.fsApp')
- 
-  const startGen1 = build.fsApp.indexOf(gen1)
-  const endGen2 = build.fsApp.indexOf(gen2) + gen2.length
 
-  const beforeGen1 = build.fsApp.slice(0, startGen1)
-  const afterGen2 = build.fsApp.slice(endGen2)
-
-  const dynamicBlock = `${imports}\n\nexport const routes = {\n${consts.slice(0, -2)}\n}\n`
-
-  let replaced = beforeGen1 + dynamicBlock + afterGen2
-
-  const gen3 = '{/* gen3 */}'
-  const jsxRoutes = routes.trimEnd()
-  replaced = replaced.replace(gen3, jsxRoutes)
-
-  return replaced
+  return build.fsApp.replace('{/* gen */}', walkTree(build.tree).trimEnd())
 }
 
 
 
 /**
- * - Walk the entire tree, once, building the accumulator
- * - Accumulator: Mutable object that we pass along in a recursive function to collect or `accumulate` results as we go
- *   - `importsMap`: Map<fsPath, moduleName>
- *   - `consts`:    string[] of getConstEntry(...) lines
+ * Walk the entire tree, once, building the accumulator (routes string)
+ * @param node - The current route we're printing
+ * @param indent - Where the indent starts
+ * @param accumulator - Routes string
+ * @returns 
  */
-function walkTree(node: TreeNode, indent = 8, accumulator: TreeAccumulator = { importsMap: new Map(), consts: '', routes: '' }) {
-  if (node.fsPath) accumulator.importsMap.set(node.fsPath, node.moduleName) // layout import
-
-  if (node.moduleName !== 'root') { // open <Route>, for layout, unless virtual root
-    accumulator.routes += (' '.repeat(indent) + `<Route component={${renderLayoutComponent(node.moduleName)}}>\n`)
+function walkTree(node: TreeNode, indent = 8, accumulator = {routes: ''}) {
+  if (!node.root && node.fsPath) { // open <Route>, for layout, unless virtual root
+    accumulator.routes += (' '.repeat(indent) + `<Route component={props => lazyLayout(props, () => import(${getImportFsPath(node.fsPath)}))}>\n`)
     indent += 2
   }
 
-  for (const r of node.routes) { // for each route in this layout
-    accumulator.importsMap.set(r.fsPath, r.moduleName) // set route import
-    if (r.routePath !== '*') accumulator.consts += getConstEntry(r.routePath, r.moduleName) // if 404 is in consts then it'd be routes & then it'd be in <A />
-    accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={${renderRouteComponent(r.moduleName)}} />\n`) // set routes entry
+  for (const r of node.routes) { //TreeNode for each route in this layout
+    accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={lazyRoute(() => import(${getImportFsPath(r.fsPath)}))} />\n`) // set routes entry
   }
 
   for (const child of node.layouts.values()) { // recurse into each child layout
     walkTree(child, indent, accumulator)
   }
 
-  if (node.moduleName !== 'root') { // if not root => close wrapper 
+  if (!node.root) { // if not root => close wrapper 
     indent -= 2
     accumulator.routes += (' '.repeat(indent) + `</Route>\n`)
   }
 
-  return accumulator
+  return accumulator.routes
 }
-
-
-const renderLayoutComponent = (moduleName?: string) => `props => layoutComponent(props, ${moduleName})`
-
-const renderRouteComponent = (moduleName?: string) => `() => routeComponent(${moduleName})`

@@ -5,7 +5,7 @@
  */
 
 
-import { fe } from './fe'
+import { scope } from './scopeComponent'
 
 
 /**
@@ -43,7 +43,7 @@ export function createOnSubmit(callback: OnSubmitCallback) {
   return async function (event: SubmitEvent) {
     try {
       event.preventDefault()
-      fe.messages.clearAll()
+      scope.messages.clearAll()
 
       if (!(event.currentTarget instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
 
@@ -52,7 +52,7 @@ export function createOnSubmit(callback: OnSubmitCallback) {
 
       await callback(fd, { ...event, currentTarget: event.currentTarget })
     } catch (e) {
-      fe.messages.align(e)
+      scope.messages.align(e)
     }
   }
 }

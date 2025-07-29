@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { load, beGET, bePOST } from '@ace/load'
+ *     - import { load } from '@ace/load'
  */
 
 

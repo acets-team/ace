@@ -1,5 +1,5 @@
 import { onCleanup } from 'solid-js'
-import { fe } from './fundamentals/fe'
+import { scope } from './fundamentals/scopeComponent'
 import { feComponent } from './fundamentals/feComponent'
 
 
@@ -8,7 +8,7 @@ import { feComponent } from './fundamentals/feComponent'
  */
 export const MessagesCleanup = feComponent(() => {
   onCleanup(() => {
-    fe.messages.clearAll()
+    scope.messages.clearAll()
   })
 
   return <></>

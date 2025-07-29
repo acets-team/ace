@@ -7,53 +7,15 @@
 
 import { Layout } from './layout'
 import { Route404 } from './route404'
-import { aceParams } from './aceParams'
 import { Route as AceRoute } from './route'
-import { fe, FEContextProvider } from './fe'
 import { MetaProvider } from '@solidjs/meta'
-import { setFEChildren } from '../feChildren'
 import { FileRoutes } from '@solidjs/start/router'
 import { MessagesCleanup } from '../messagesCleanup'
-import { Suspense, type JSX, type ParentComponent } from 'solid-js'
-import { Route, Router, type RouteSectionProps } from '@solidjs/router'
+import { setScopeComponentChildren } from '../scopeComponentChildren'
+import { scope, ScopeComponentContextProvider } from './scopeComponent'
+import { Route, Router, useLocation, useParams, type RouteSectionProps } from '@solidjs/router'
+import { createEffect, createMemo, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
 
-
-
-/** gen1 */
-const layout1 = new Layout()
-  .component(() => <></>)
-
-const routeA = new AceRoute('/a')
-  .component(() => <></>)
-  .layouts([layout1])
-
-const routeB = new AceRoute('/b')
-  .component(() => <></>)
-  .layouts([layout1])
-
-const routeC = new AceRoute('/c:id')
-  .pathParams(aceParams(({ id }) => {
-    if (typeof id !== 'number') throw new Error('id must be a number')
-    return { id }
-  }))
-  .layouts([layout1])
-  .component(fe => {
-    return <>{fe.pathParams}</>
-  })
-
-export const routes = {
-  '/a': routeA,
-  '/b': routeB,
-  '/c:id': routeC
-}
-/** gen2 */
-
-
-const defaultParentComponents: ParentComponentEntry<any>[] = [
-  FEContextProvider,
-  MetaProvider,
-  Suspense,
-]
 
 
 /** 
@@ -102,11 +64,95 @@ export function createApp(requestedParentComponents: ParentComponentEntry<any>[]
     return <>
       <Router root={Root}>
         <FileRoutes />
-{/* gen3 */}
+{/* gen */}
       </Router>
     </>
   }
 }
+
+
+
+const defaultParentComponents: ParentComponentEntry<any>[] = [
+  ScopeComponentContextProvider,
+  MetaProvider,
+  Suspense,
+]
+
+
+
+function lazyRoute(loader:() => Promise<any>) {
+  return lazy(async () => {
+    const mod = await loader()
+
+    return {
+      default: () => {
+        const route = mod?.default
+        if (!(route instanceof AceRoute) && !(route instanceof Route404)) throw new Error('invalid route module')
+
+        const component = route.values.component
+        if (!component) throw new Error('!component')
+
+        if (route instanceof AceRoute) {
+          scope.pathParams = { ...(route.values.pathParamsParser ? route.values.pathParamsParser({...(useParams())}) : useParams()) }
+
+          scope.PathParams = createMemo(() => {
+            return { ...(route.values.pathParamsParser ? route.values.pathParamsParser({...(useParams())}) : useParams()) }
+          })
+
+          scope.searchParams = route.values.searchParamsParser
+            ? route.values.searchParamsParser(Object.fromEntries(new URLSearchParams(useLocation().search).entries()))
+            : Object.fromEntries(new URLSearchParams(useLocation().search).entries())
+
+          scope.SearchParams = createMemo(() => {
+            const params =  Object.fromEntries(new URLSearchParams(useLocation().search).entries())
+            return { ...(route.values.searchParamsParser ? route.values.searchParamsParser(params) : params) }
+          })
+        } else {
+          scope.pathParams = { ...(useParams()) }
+
+          scope.PathParams = createMemo(() => {
+            return { ...(useParams()) }
+          })
+
+          scope.searchParams = Object.fromEntries(new URLSearchParams(useLocation().search).entries())
+
+          scope.SearchParams = createMemo(() => {
+            return Object.fromEntries(new URLSearchParams(useLocation().search).entries())
+          })
+        }
+
+        const jsx = component(scope)
+
+        return !jsx ? undefined : <>
+          {jsx}
+          <MessagesCleanup />
+        </>
+      }
+    }
+  })
+}
+
+
+
+function lazyLayout(props: RouteSectionProps<unknown>, loader:() => Promise<any>) {
+  const LazyRootLayout = lazy(async () => {
+    const mod = await loader()
+
+    const layout = mod.default
+    if (!(layout instanceof Layout)) throw new Error('invalid layout module')
+        
+    return {
+      default (props: RouteSectionProps<unknown>) {
+        if (!layout.values.component) throw new Error('!layout.values.component')
+        setScopeComponentChildren(scope, props.children)
+        return layout.values.component(scope)
+      }
+    }
+  })
+
+  return <LazyRootLayout {...props} />
+}
+
 
 
 function normalizeParentComponent<T_Props extends Record<string, any> = {}>(entry: ParentComponentEntry<T_Props>): ParentComponentEntryWithProps<T_Props> {
@@ -116,25 +162,9 @@ function normalizeParentComponent<T_Props extends Record<string, any> = {}>(entr
 
 
 
-function routeComponent(route: AceRoute | Route404): JSX.Element | undefined {
-  const res = route.values.component?.(fe)
-
-  return !res ? undefined : <>
-    {res}
-    <MessagesCleanup />
-  </>
-}
-
-
-
-function layoutComponent(props: RouteSectionProps, layout: Layout): JSX.Element {
-  setFEChildren(fe, props.children)
-  return layout.values.component?.(fe)
-}
-
-
-
 export type ParentComponentEntry<T_Props extends Record<string, any> = {}> = ParentComponent<T_Props> | ParentComponentEntryWithProps<T_Props>
+
+
 
 export type ParentComponentEntryWithProps<T_Props extends Record<string, any> = {}> = {
   parentComponent: ParentComponent<T_Props>

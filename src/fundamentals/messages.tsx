@@ -5,7 +5,7 @@
  */
 
 
-import { fe } from './fe'
+import { scope } from './scopeComponent'
 import { feComponent } from './feComponent'
 import { defaultMessageName } from './vars'
 import { For, Show, type JSX } from 'solid-js'
@@ -21,7 +21,7 @@ import { For, Show, type JSX } from 'solid-js'
  * @param options.divProps -  Props to put on the wrapper div that already has the class `ace-messages`
  */
 export const Messages = feComponent(({ name = defaultMessageName, divProps }: MessagesProps) => {
-  const [messages] = fe.messages.get(name)
+  const [messages] = scope.messages.get(name)
 
   return <>
     <Show when={ messages()?.length }>
@@ -31,7 +31,7 @@ export const Messages = feComponent(({ name = defaultMessageName, divProps }: Me
             <For each={messages()}>{ (msg) => <li>{msg}</li> }</For>
           </ul>
         </Show>
-        <button class="close" type="button" onClick={() => fe.messages.clear(name)}>x</button>
+        <button class="close" type="button" onClick={() => scope.messages.clear(name)}>x</button>
       </div>
     </Show>
   </>

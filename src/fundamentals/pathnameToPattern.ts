@@ -8,6 +8,7 @@
  * - Replaces route parameters (:param and :param?) in a pathname w/ regex patterns
  * - Regex helps match a server request url w/ a route or api
  * - Regex also helps us know what param values are in a url 🙌
+ * @param pathname - As defined @ `new Route()`, `new Route404()` or `new API()`
  */
 export function pathnameToPattern(pathname: string): RegExp {
   /**
@@ -17,7 +18,7 @@ export function pathnameToPattern(pathname: string): RegExp {
    */
   const segments = pathname.split('/').filter(Boolean)
 
-  const regexBody = segments // 2. build regex w/ named capture groups for every :param
+  const regexBody = segments // build regex w/ named capture groups for every :param
     .map(s => {
       if (!s.startsWith(':')) return `/${s}` // literal
 

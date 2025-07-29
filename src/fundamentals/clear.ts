@@ -4,7 +4,7 @@
  */
 
 
-import { fe } from './fe'
+import { scope } from './scopeComponent'
 import { onCleanup } from 'solid-js'
 
 
@@ -23,7 +23,7 @@ export function clear(el: HTMLInputElement) {
   function onInput () {
     if (readyToClear) {
       readyToClear = false
-      fe.messages.set({ name: el.name, value: [] })
+      scope.messages.set({ name: el.name, value: [] })
     }
   }
 

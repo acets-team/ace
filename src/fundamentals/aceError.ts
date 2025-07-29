@@ -50,7 +50,7 @@ export class AceError {
     if (!res) res = AceError.simple(defaultError)
 
     if (config.logCaughtErrors) {
-      console.error(JSON.stringify(options, null, 2))
+      console.error(JSON.stringify(res, null, 2))
       console.trace()
     }
 

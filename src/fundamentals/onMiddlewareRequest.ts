@@ -9,15 +9,19 @@ import { API } from './api'
 import { Route } from './route'
 import { on404 } from '../on404'
 import { callB4 } from '../callB4'
-import { routes } from './createApp'
 import { AceError } from './aceError'
-import { gets, posts } from '../apis.be'
-import type { FetchEvent } from './types'
 import { GoResponse } from './goResponse'
+import type { FetchEvent } from './types'
+import { regexRoutes } from './regexRoutes'
+import { regexApiPuts } from './regexApiPuts'
+import { regexApiGets } from './regexApiGets'
+import { validateBody } from '../validateBody'
+import { regexApiPosts } from './regexApiPosts'
 import { json, redirect } from '@solidjs/router'
 import { validateParams } from '../validateParams'
-import { eventToPathname } from '../eventToPathname'
+import { regexApiDeletes } from './regexApiDeletes'
 import { getSearchParams } from '../getSearchParams'
+import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
 
 
@@ -45,48 +49,103 @@ import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
  */
 export async function onMiddlewareRequest(event: FetchEvent): Promise<any> {
   try {
-    const pathname = eventToPathname(event)
+    const context = new MiddlewareContext(event)
+    const response = await context.getResponse()
 
-    switch(event.request.method) {
-      case 'POST': return await onAPIRequest(event, pathname, posts)
-      case 'GET':
-        if (pathname.startsWith('/api')) return await onAPIRequest(event, pathname, gets)
-        else {
-          const routeMatch = pathnameToMatch(pathname, routes)
-
-          if (routeMatch?.handler instanceof Route) return await onRequest(event, routeMatch)
-          else return await onAPIRequest(event, pathname, gets)
-        }
-    }
+    if (response) return response
   } catch (error) {
     return json(AceError.catch({ error }), { status: 400 })
   }
 }
 
 
-async function onAPIRequest(event: FetchEvent, pathname: string, apis: Record<string, API<any,any,any,any,any>>) {
-  const match = pathnameToMatch(pathname, apis)
+export class MiddlewareContext {
+  #response: any
+  #pathname: string
+  #event: FetchEvent
+  #matchFound = false
 
-  if (match?.handler instanceof API) return await onRequest(event, match)
-  else return on404()
-}
- 
+  constructor(event: FetchEvent) {
+    this.#event = event
+    this.#pathname = eventToPathname(event)
+  }
 
-async function onRequest<T extends API | Route>(event: FetchEvent, routeMatch: RouteMatch<T>) {
-  try {
-    const { pathParams, searchParams } = validateParams({
-      rawParams: routeMatch.params,
-      rawSearch: getSearchParams(event),
-      pathParamsSchema: routeMatch.handler.values.pathParamsSchema,
-      searchParamsSchema: routeMatch.handler.values.searchParamsSchema
-    })
 
-    if (routeMatch.handler.values.b4) {
-      const b4Response = await callB4(routeMatch.handler, { pathParams, searchParams }, event)
-      if (b4Response) return b4Response
+  /**
+   * - First checks if this is an api request 
+   * - Then checks if this is a route request
+   * - If a match is found 
+   *    - Validate parqms
+   *    - Run b4 functions 
+   * - Else (match not found)
+   *    - If pathname starts with /api => provide a 404 json
+   *    - Else => provide a 404 html
+   */
+  async getResponse() {
+    await this.#onAPIRequest(this.#event.request.method)
+
+    if (!this.#matchFound && this.#event.request.method === 'GET') {
+      const routeMatch = await pathnameToMatch(this.#pathname, regexRoutes)
+
+      if (routeMatch?.handler instanceof Route) await this.#onRequest(routeMatch)
     }
-  } catch (error) {
-    if (error instanceof GoResponse) return redirect(error.url)
-    else throw error
+  
+    if (!this.#matchFound && this.#pathname.startsWith('/api')) return on404()
+
+    if (this.#response) return this.#response
+
+    // if nothing has been returned at this point then route matching happens via <Route /> components in createApp.tsx
+  }
+
+
+  async #onAPIRequest(method: string) {
+    let apis
+
+    switch (method) {
+      case 'GET': 
+        apis = regexApiGets
+        break
+      case 'POST': 
+        apis = regexApiPosts
+        break
+      case 'PUT': 
+        apis = regexApiPuts
+        break
+      case 'DELETE': 
+        apis = regexApiDeletes
+        break
+      default:
+        throw new Error(`Invalid method @ #onApiRequest b/c "${method}" is not a valid method`)
+    }
+
+    const match = await pathnameToMatch(this.#pathname, apis)
+
+    if (match?.handler instanceof API) {
+      this.#matchFound = true
+      this.#response = await this.#onRequest(match)
+    }
+  }
+
+  async #onRequest<T extends API | Route>(routeMatch: RouteMatch<T>) {
+    try {
+      const { pathParams, searchParams } = validateParams({
+        rawParams: routeMatch.params,
+        rawSearch: getSearchParams(this.#event),
+        pathParamsParser: routeMatch.handler.values.pathParamsParser,
+        searchParamsParser: routeMatch.handler.values.searchParamsParser
+      })
+            
+      const body = (routeMatch.handler instanceof API && routeMatch.handler.values.bodyParser)
+        ? await validateBody({api: routeMatch.handler, event: this.#event})
+        : undefined
+
+      if (routeMatch.handler.values.b4) {
+        const b4Response = await callB4(routeMatch.handler, { body, pathParams, searchParams }, this.#event)
+        if (b4Response) return b4Response
+      }
+    } catch (error) {
+      if (error instanceof GoResponse) return redirect(error.url)
+      else throw error
+    }
   }
 }

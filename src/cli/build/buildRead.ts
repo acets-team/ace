@@ -1,7 +1,8 @@
 import { parse } from 'tsconfck'
 import path, { join, resolve } from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
-import { getConstEntry, getSrcImportEnry, BuildRoute, type Build } from './build.js'
+import { getConstEntry, getImportFsPath, BuildRoute, Build, type Writes, type ApiMethods } from './build.js'
+
 
 
 export async function buildRead(build: Build) {
@@ -66,43 +67,28 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
    *     - [3] → path
    *     - [5] → optional function name
    */
-  const regex = /export\s+const\s+(GET|POST)\s*=\s*new\s+API\(\s*(['"])(.+?)\2(?:\s*,\s*(['"])([A-Za-z_]\w*)\4)?\s*\)/g
+  const regex = /export\s+const\s+(GET|POST|PUT|DELETE)\s*=\s*new\s+API\(\s*(['"])(.+?)\2(?:\s*,\s*(['"])([A-Za-z_]\w*)\4)?\s*\)/g
 
   for (const matches of content.matchAll(regex)) {
     const apiMethod = matches[1]
     const apiPath = matches[3]
     const fnName = matches[5]  
 
-    if ((apiMethod === 'GET' || apiMethod === 'POST') && apiPath) {
-      build.counts[apiMethod]++
+    if (apiPath && Build.apiMethods.has(apiMethod)) {
+      build.writes[getWriteKey(apiMethod)] += getConstEntry(apiPath, fsPath, apiMethod)
 
       if (fnName) {
-        const apiName = `${apiMethod}${build.counts[apiMethod]}.${apiMethod}`
+        build.writes.constApiName += getConstEntry(apiPath, fsPath, apiMethod, fnName)
 
-        build.writes.apiFunctionsBE += `export const ${fnName} = createAPIFunction(${apiName})\n`
-
-        build.writes.apiFunctionsFE += `\nexport const ${fnName}: API2FEFunction<typeof ${apiName}> = async (o) => {
-  return fe.${apiMethod}('${apiPath}', o)
-}\n`
-
-        // only add an import to the fe if a fnAlias was requested
-        build.writes.importsAPIFE += getSrcImportEnry({ moduleName: apiMethod + build.counts[apiMethod], fsPath, star: true, addType: true })
-
-        build.writes.apiNames += `  '${fnName}': ${apiName},\n`
-      }
-
-      switch (apiMethod) {
-        case 'GET':
-          build.writes.importsAPIBE += getSrcImportEnry({ moduleName: 'GET' + build.counts.GET, fsPath, star: true })
-          build.writes.constGET += getConstEntry(apiPath, 'GET' + build.counts.GET, 'GET')
-          break
-        case 'POST':
-          build.writes.importsAPIBE += getSrcImportEnry({ moduleName: 'POST' + build.counts.POST, fsPath, star: true })
-          build.writes.constPOST += getConstEntry(apiPath, 'POST' + build.counts.POST, 'POST')
-          break
+        build.writes.apiFunctions += `export const ${fnName} = createAPIFunction('${apiPath}', '${apiMethod}', () => import(${getImportFsPath(fsPath)}).then((m) => m.${apiMethod}))\n`
       }
     }
   }
+}
+
+
+function getWriteKey(method: ApiMethods): keyof Writes {
+  return `const${method}` as keyof Writes
 }
 
 
@@ -115,9 +101,9 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
     if (entry.isDirectory()) await readAppDirectory(fsPath, build)
     else if (entry.isFile() && fsPath.endsWith('.tsx')) {
       const src = removeComments(await readFile(fsPath,'utf-8'))
-      let { routePath, fsLayouts } = doRouteRegex(dir, src, build)
+      let { routePath, fsLayouts } = doRouteRegex(dir, src, build) // check to see if new Route() is present
 
-      if (!routePath && !build.found404) {
+      if (!routePath && !build.found404) { // no new Route() AND no 404 route found yet => check to see if new Route404()
         const res404 = doRoute404Regex(dir, src, build)
 
         if (res404.routePath) {
@@ -129,28 +115,17 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
   
       if (!routePath) continue // this tsx file has no propertly formatted export default new Route or new Route404
   
-      build.counts.routes++
-      const routeModuleName = 'route' + build.counts.routes
+      build.writes.constRoutes += getConstEntry(routePath, fsPath, 'default')
 
-      const route: BuildRoute = { fsPath, routePath, moduleName: routeModuleName }
+      const route: BuildRoute = { fsPath, routePath }
 
       let node = build.tree
 
       if (fsLayouts.length === 0) node.routes.push(route) // if no layouts, it lives under root
       else {
         for (const fsLayoutPath of fsLayouts) {
-          let layoutModuleName
-
-          if (!build.layoutModuleNames.has(fsLayoutPath)) {
-            build.counts.layouts++
-            build.layoutModuleNames.set(fsLayoutPath, 'layout' + build.counts.layouts)
-          }
-
-          layoutModuleName = build.layoutModuleNames.get(fsLayoutPath)
-
-          if (layoutModuleName && !node.layouts.has(fsLayoutPath)) { // create that child node if it doesn't exist
-            build.counts.layouts++
-            node.layouts.set(fsLayoutPath, { moduleName: layoutModuleName, fsPath: fsLayoutPath, routes: [], layouts: new Map() })
+          if (!node.layouts.has(fsLayoutPath)) { // create that child node if it doesn't exist
+            node.layouts.set(fsLayoutPath, { root: false, fsPath: fsLayoutPath, routes: [], layouts: new Map() })
           }
 
           node = node.layouts.get(fsLayoutPath)! // descend into it

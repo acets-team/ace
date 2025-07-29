@@ -7,7 +7,7 @@
 
 import type { Layout } from './layout'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { B4, RouteComponent, URLPathParams, URLSearchParams, ValidateSchema } from './types'
+import type { B4, RouteComponent, URLPathParams, URLSearchParams, Parser } from './types'
 
 
 
@@ -51,6 +51,7 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
     return this
   }
 
+
   /** 
    * ### Set async functions to run before route/api boots
    * - IF `b4()` return is truthy => returned value is sent to the client & route handler is not processed
@@ -82,11 +83,6 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
     export default new Route('/smooth')
       .b4([guestB4, eventB4])
     ```
-   * @example
-    ```ts
-    export const GET = new API('/api/character/:element', 'apiCharacter')
-      .b4([authB4, eventB4])
-    ```
   */
   b4(b4: B4<any>[]): this {
     this.#storage.b4 = b4
@@ -106,32 +102,32 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
 
   /**
    * ### Set search params for this route
-   * - @ `.component()` use `fe.PathParams()` if you'd like reactive path params that can work in `createEffect()`
-   * - @ `.component()` use `fe.pathParams` if you don't need a reactive path params
+   * - @ `.component()` use `scope.PathParams()` if you'd like reactive path params that can work in `createEffect()`
+   * - @ `.component()` use `scope.pathParams` if you don't need a reactive path params
    * @example
     ```ts
     export default new Route('/fortune/:id')
-      .pathParams(valibotParams(object({ id: valibotString2Number() })))
+      .pathParams(vParser(object({ id: vNum() })))
     ```
    */
-  pathParams<NewParams extends URLPathParams>(schema: ValidateSchema<NewParams>): Route<NewParams, T_Search> {
-    this.#storage.pathParamsSchema = schema
+  pathParams<NewParams extends URLPathParams>(schema: Parser<NewParams>): Route<NewParams, T_Search> {
+    this.#storage.pathParamsParser = schema
     return this as any
   }
 
 
   /**
    * ### Set search params for this route
-   * - @ `.component()` use `fe.SearchParams()` if you'd like reactive search params that can work in `createEffect()`
-   * - @ `.component()` use `fe.searchParams` if you don't need a reactive search params
+   * - @ `.component()` use `scope.SearchParams()` if you'd like reactive search params that can work in `createEffect()`
+   * - @ `.component()` use `scope.searchParams` if you don't need a reactive search params
    * @example
     ```ts
     export default new Route('/spark')
-      .searchParams(valibotParams(object({ modal: optional(valibotString2Boolean()) })))
+      .searchParams(vParser(object({ modal: optional(vBool()) })))
     ```
    */
-  searchParams<NewSearch extends URLSearchParams>(schema: ValidateSchema<NewSearch>): Route<T_Params, NewSearch> {
-    this.#storage.searchParamsSchema = schema
+  searchParams<NewSearch extends URLSearchParams>(schema: Parser<NewSearch>): Route<T_Params, NewSearch> {
+    this.#storage.searchParamsParser = schema
     return this as any
   }
 }
@@ -143,8 +139,8 @@ export type RouteValues<T_Params extends URLPathParams, T_Search extends URLSear
   b4?: B4<any>[]
   layouts?: Layout[]
   component?: RouteComponent<T_Params, T_Search>
-  pathParamsSchema?: ValidateSchema<T_Params>
-  searchParamsSchema?: ValidateSchema<T_Search>
+  pathParamsParser?: Parser<T_Params>
+  searchParamsParser?: Parser<T_Search>
 }
 
 
@@ -154,6 +150,6 @@ export type RouteStorage = {
   b4?: B4<any>[]
   layouts?: Layout[]
   component?: RouteComponent<any, any>
-  pathParamsSchema?: ValidateSchema<any>
-  searchParamsSchema?: ValidateSchema<any>
+  pathParamsParser?: Parser<any>
+  searchParamsParser?: Parser<any>
 }

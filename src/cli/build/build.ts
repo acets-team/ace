@@ -5,8 +5,8 @@ import { buildWrite } from './buildWrite.js'
 import { join, resolve, dirname } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
-import { SupportedApiMethods } from '../../fundamentals/vars.js'
-
+import { Enums, type InferEnums } from '../../fundamentals/enums.js'
+import { pathnameToPattern } from '../../fundamentals/pathnameToPattern.js'
 
 
 /**
@@ -33,14 +33,13 @@ export class Build {
   config: AceConfig
   dirWriteRoot: string
   fsSolidTypes?: string
+  static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but if we call vars from build.js things get fishy b/c vars imports ace.config and build does not have access to tsconfig aliases
   
   dirWriteFundamentals: string
   whiteList = new FundamentalWhiteList()
-  layoutModuleNames = new Map<string, string>()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
-  writes: Writes = { types: '', importsAPIFE: '', importsAPIBE: '', constGET: '', constPOST: '', apiFunctionsFE: '', apiFunctionsBE: '', apiNames: '' }
-  counts: { GET: number, POST: number, routes: number, layouts: number } = { GET: 0, POST: 0, routes: 0, layouts: 0 }
+  writes: Writes = { types: '', constGET: '', constPOST: '', constPUT: '', constDELETE: '', constRoutes: '', apiFunctions: '', constApiName: '' }
 
   /**
    * - We start off with a single root node
@@ -48,7 +47,7 @@ export class Build {
    * - Each time we discover a Route @ `bindAppData()` we insert it into this tree
    * - If the route has no layouts => it goes into root.routes
    */
-  tree: TreeNode = { moduleName: 'root', routes: [], layouts: new Map() }
+  tree: TreeNode = { root: true, routes: [], layouts: new Map() }
 
 
   /**
@@ -157,8 +156,6 @@ export type BuildRoute = {
   fsPath: string,
   /** Path defined @ new Route() */
   routePath: string,
-  /** Name that will be used as import default name in generated file */
-  moduleName: string,
 }
 
 
@@ -168,58 +165,61 @@ export type BuildRoute = {
  * - This way we can print the routes like a tree
  */
 export type TreeNode = {
-  moduleName: string,
+  root: boolean,
   fsPath?: string,
   routes: BuildRoute[],
   layouts: Map<string,TreeNode>
 }
 
 
-type Writes = {
+export type Writes = {
   types: string,
   constGET: string,
-  apiNames: string,
   constPOST: string,
-  importsAPIFE: string,
-  importsAPIBE: string,
-  apiFunctionsFE: string,
-  apiFunctionsBE: string,
+  constPUT: string,
+  constDELETE: string,
+  constRoutes: string,
+  constApiName: string,
+  apiFunctions: string,
 }
-
-
-/**
- * `Map<fsPath, moduleName>`
- */
-export type ImportsMap = Map<string,string>
-
-
-export type TreeAccumulator = { importsMap: ImportsMap, consts: string, routes: '' }
 
 
 /**
  * 
  * @example
- * ```ts
- * export const routes = {
- *   '/': route_1,
- *   '/about': route_2,
- *   '/smooth': route_3,
- * }
- * ```
+  ```ts
+  export const regexRoutes = {
+    '/a': {
+      pattern: /^\/a\/?$/,
+      path: '/Users/chriscarrington/ace/src/app/a.tsx'
+    },
+    '/b': {
+      pattern: /^\/b\/?$/,
+      path: '/Users/chriscarrington/ace/src/app/c.tsx'
+    },
+    '/c:id': {
+      pattern: /^\/c:id\/?$/,
+      path: '/Users/chriscarrington/ace/src/app/b.tsx'
+    },
+  }
+  ```
 */
-export const getConstEntry = (urlPath: string, moduleName: string, apiModuleName?: SupportedApiMethods) => `  '${urlPath}': ${moduleName}${apiModuleName ? '.' + apiModuleName : ''},\n`
+export const getConstEntry = (urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
+  return `  '${fnName || urlPath}': {
+    pattern: ${pathnameToPattern(urlPath)},
+    loader: () => import(${getImportFsPath(fsPath)}).then((m) => m.${moduleName})
+  },
+`
+}
 
 
-export function getSrcImportEnry({star, moduleName, fsPath, addType }: {star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
-  const [, fsFromSrc] = fsPath.split('/src/')
+export function getImportEnry({star, moduleName, fsPath, addType }: {star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
+  return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from ${getImportFsPath(fsPath)}\n`
+}
 
-  if (!fsFromSrc) throw new Error('Please ensure your file path is w/in the src directory, we just tried to do a split on the fsPath: ${fsPath} on /src/ and that did not work')
 
-  const from = fsFromSrc
-    .replace('.tsx', '')
-    .replace('.ts', '')
-
-  return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from '@src/${from}'\n`
+export function getImportFsPath(fsPath: string) {
+  return `'${fsPath.replace('.tsx', '').replace('.ts', '')}'`
 }
 
 
@@ -228,3 +228,6 @@ const errors = {
   noGenTypesTxt: '❌ Please re download ace b/c "/** gen */" was not found in your "dist/types.d.txt" and that is odd',
   falsyEnv: `❌ Please ensure an env is specified when you call ace build, example: "ace build local" or "ace build prod"`
 } as const
+
+
+export type ApiMethods = InferEnums<typeof Build.apiMethods>

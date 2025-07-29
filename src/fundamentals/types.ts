@@ -4,41 +4,93 @@
  */
 
 
-import type { FE } from './fe'
+import type { ScopeComponent } from './scopeComponent'
 import type { API } from './api'
 import type { JSX } from 'solid-js'
 import type { Route } from './route'
-import type { routes } from './createApp'
-import type * as apisFE from '../apis.fe'
-import type * as apisBE from '../apis.be'
+import type { apiMethods } from './vars'
+import type { InferEnums } from './enums'
+import type { Route404 } from './route404'
 import type { AceErrorProps } from './aceError'
 import type { RequestEvent } from 'solid-js/web'
+import type { regexRoutes } from './regexRoutes'
+import type { regexApiPuts } from './regexApiPuts'
+import type { regexApiGets } from './regexApiGets'
+import type { regexApiNames } from './regexApiNames'
+import type { regexApiPosts } from './regexApiPosts'
+import type { regexApiDeletes } from './regexApiDeletes'
 import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
 
-/** { [api function name]: new Api() } */
-export type APINames = keyof typeof apisBE.apiNames
+/** { 'apiPostA' | 'apiGetA' | 'apiPostB' } */
+export type APINames = keyof typeof regexApiNames
 
 
-/** { [api GET path]: new Api() } */
-export type GETPaths = keyof typeof apisBE.gets
+/** '/api/a' | '/api/b/:id' */
+export type GETPaths = keyof typeof regexApiGets
 
 
-/** { [api POST path]: new Api() } */
-export type POSTPaths = keyof typeof apisBE.posts
+/** '/api/a' | '/api/b/:id' */
+export type POSTPaths = keyof typeof regexApiPosts
 
 
-/** { [route path]: new Route() } */
-export type Routes = keyof typeof routes
+/** '/api/a' | '/api/b/:id' */
+export type DELETEPaths = keyof typeof regexApiDeletes
+
+
+/** '/api/a' | '/api/b/:id' */
+export type PUTPaths = keyof typeof regexApiPuts
+
+
+/** '/a' | '/b/:id' */
+export type Routes = keyof typeof regexRoutes
+
+
+/** In the RegexMap it can point to a new Route() or a new Route404() */
+export type AnyRoute = Route<any, any> | Route404
+
+
+/** When we need to determine a route / api we look at a map that's in this structure, the key is the path as defined @ new Route() or new API() */
+export type RegexMap<Kind extends 'route' | 'api'> = Kind extends 'route'
+  ? Record<string, RegexMapEntry<AnyRoute>>
+  : Record<string, RegexMapEntry<API<any, any, any, any, any>>>
+
+
+/** loader() gives back the new API() or new Route() */
+export type RegexMapEntry<T_Module> = { pattern: RegExp, loader: () => Promise<T_Module> }
+
+
+/** 
+ * - Receives: Regex Map & Path
+ * - Gives: Type of new API()
+*/
+export type RegexApiMapAndPath2API<T_Map extends RegexMap<'api'>, T_Path extends keyof T_Map> = T_Map[T_Path] extends { loader: () => Promise<infer T_API> } // infer whatever the loader() promised
+  ? T_API extends API<any, any, any, any, any> // only keep it if it’s actually a new API()
+    ? T_API
+    : never
+  : never;
+
+
+/** 
+ * - Receives: Regex Map & Path
+ * - Gives: Type of new Route()
+*/
+export type RegexRouteMapAndPath2Route<T_Map extends RegexMap<'route'>, T_Path extends keyof T_Map> = T_Map[T_Path] extends { loader: () => Promise<infer T_Route> } //  infer the Raw loader return
+  ? T_Route extends AnyRoute // only keep it if it’s actually a new Route()
+    ? T_Route
+    : never
+  : never
 
 
 /** 
  * - Receives: API Function Name
  * - Gives: API Response
 */
-export type APIName2Response<T extends APINames> = typeof apisBE.apiNames[T] extends API<any, any, any, infer T_Response, any>
-  ? T_Response
+export type APIName2Response<T_Name extends APINames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+  ? T_API extends API<any, any, any, infer T_Response, any>
+    ? T_Response
+    : never
   : never
 
 
@@ -55,8 +107,10 @@ export type APIName2Data<T_Name extends APINames> = APIName2Response<T_Name> ext
  * - Receives: API Function Name
  * - Gives: API Request Props
 */
-export type APIName2Props<Name extends APINames> = typeof apisBE.apiNames[Name] extends API<infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals>
-  ? BaseAPIFnProps<API<T_PathParams, T_SearchParams, T_Body, T_Response, T_Locals>> & { bitKey?: string }
+export type APIName2Props<T_Name extends APINames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API> // Get module type T_API from the RegexMapEntry
+  ? T_API extends API< infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals > // ensure T_API is indeed an API<…>
+    ? BaseAPIFnProps<API<T_PathParams,T_SearchParams,T_Body,T_Response,T_Locals>> & { bitKey?: string } // build props type
+    : never
   : never;
 
 
@@ -110,10 +164,10 @@ export type API2Data<T_API extends API<any, any, any, any, any>> = T_API extends
 
 /** 
  * - Receives: API
- * - Gives: Type for the FE Function that calls this API
+ * - Gives: Type for the Function that calls this API
  * - How: No required API params => allow missing options altogether, otherwise options object must be passed
 */
-export type API2FEFunction<T_API extends API<any, any, any, any, any>> = RequiredKeys<APIFnProps<T_API>> extends never
+export type API2Function<T_API extends API<any, any, any, any, any>> = RequiredKeys<APIFnProps<T_API>> extends never
   ? (options?: APIFnProps<T_API>) => Promise<API2Response<T_API>>
   : (options: APIFnProps<T_API>) => Promise<API2Response<T_API>>
 
@@ -154,14 +208,28 @@ export type APIFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
  * - Receives: API GET path
  * - Gives: Response data type
 */
-export type GETPath2Data<Path extends GETPaths> = API2Response<(typeof apisBE.gets)[Path]>
+export type GETPath2Data<T_Path extends GETPaths> = API2Response<RegexApiMapAndPath2API<typeof regexApiGets, T_Path>>
+
+
+/** 
+ * - Receives: API PUT path
+ * - Gives: Response data type
+*/
+export type PUTPath2Data<T_Path extends PUTPaths> = API2Response<RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
+
+
+/** 
+ * - Receives: API DELETE path
+ * - Gives: Response data type
+*/
+export type DELETEPath2Data<T_Path extends DELETEPaths> = API2Response<RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: Response data type
 */
-export type POSTPath2Data<T_Path extends POSTPaths> = API2Response<typeof apisBE.posts[T_Path]>
+export type POSTPath2Data<T_Path extends POSTPaths> = API2Response<RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
 
 
 /** If object has keys return object, else return undefined */
@@ -217,49 +285,91 @@ export type Route2SearchParams<T_Route extends Route<any, any>> = T_Route extend
  * - Receives: API GET path
  * - Gives: The type for that api's params
 */
-export type GETPath2PathParams<T_Path extends GETPaths> = API2PathParams<typeof apisBE.gets[T_Path]>
+export type GETPath2PathParams<T_Path extends GETPaths> = API2PathParams<RegexApiMapAndPath2API<typeof regexApiGets, T_Path>>
+
+
+/** 
+ * - Receives: API PUT path
+ * - Gives: The type for that api's params
+*/
+export type PUTPath2PathParams<T_Path extends PUTPaths> = API2PathParams<RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
+
+
+/** 
+ * - Receives: API DELETE path
+ * - Gives: The type for that api's params
+*/
+export type DELETEPath2PathParams<T_Path extends DELETEPaths> = API2PathParams<RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's params
 */
-export type POSTPath2PathParams<T_Path extends POSTPaths> = API2PathParams<typeof apisBE.posts[T_Path]>
+export type POSTPath2PathParams<T_Path extends POSTPaths> = API2PathParams<RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
 
 
 /** 
  * - Receives: Route path
  * - Gives: The type for that route's path params
 */
-export type RoutePath2PathParams<T_Path extends Routes> = Route2PathParams<(typeof routes)[T_Path]>
+export type RoutePath2PathParams<T_Path extends Routes> = Route2PathParams<RegexRouteMapAndPath2Route<typeof regexRoutes, T_Path>>
 
 
 /** 
  * - Receives: Route path
  * - Gives: The type for that route's search params
 */
-export type RoutePath2SearchParams<T_Path extends Routes> = Route2SearchParams<(typeof routes)[T_Path]>
+export type RoutePath2SearchParams<T_Path extends Routes> = Route2SearchParams<RegexRouteMapAndPath2Route<typeof regexRoutes, T_Path>>
 
 
 /** 
  * - Receives: API GET path
  * - Gives: The type for that api's search params
 */
-export type GETPath2SearchParams<T_Path extends GETPaths> = API2SearchParams<typeof apisBE.gets[T_Path]>
+export type GETPath2SearchParams<T_Path extends GETPaths> = API2SearchParams<RegexApiMapAndPath2API<typeof regexApiGets, T_Path>>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's body
 */
-export type POSTPath2Body<T_Path extends POSTPaths> = API2Body<typeof apisBE.posts[T_Path]>
+export type POSTPath2Body<T_Path extends POSTPaths> = API2Body<RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
+
+
+/** 
+ * - Receives: API PUT path
+ * - Gives: The type for that api's body
+*/
+export type PUTPath2Body<T_Path extends PUTPaths> = API2Body<RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
+
+
+/** 
+ * - Receives: API DELETE path
+ * - Gives: The type for that api's body
+*/
+export type DELETEPath2Body<T_Path extends DELETEPaths> = API2Body<RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
+
+
+/** 
+ * - Receives: API PUT path
+ * - Gives: The type for that api's search params
+*/
+export type PUTPath2SearchParams<T_Path extends PUTPaths> = API2SearchParams <RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
+
+
+/** 
+ * - Receives: API DELETE path
+ * - Gives: The type for that api's search params
+*/
+export type DELETEPath2SearchParams<T_Path extends DELETEPaths> = API2SearchParams <RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
 
 
 /** 
  * - Receives: API POST path
  * - Gives: The type for that api's search params
 */
-export type POSTPath2SearchParams<T_Path extends POSTPaths> = API2SearchParams <typeof apisBE.posts[T_Path]>
+export type POSTPath2SearchParams<T_Path extends POSTPaths> = API2SearchParams <RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
 
 
 /**
@@ -272,16 +382,15 @@ export type POSTPath2SearchParams<T_Path extends POSTPaths> = API2SearchParams <
   function Characters(res: APIName2LoadResponse<'apiCharacter'>) {}
   ```
  */
-export type APIName2LoadResponse<T_Name extends APINames & keyof typeof apisFE> = AccessorWithLatest<undefined | Awaited<ReturnType<(typeof apisFE)[T_Name]>>>
+export type APIName2LoadResponse<T_Name extends APINames> = AccessorWithLatest<undefined | APIName2Response<T_Name>>
 
  
-
 /** The component to render for a route */
-export type RouteComponent<T_Params extends URLPathParams, T_Search extends URLSearchParams> = (fe: FE<T_Params, T_Search>) => JSX.Element
+export type RouteComponent<T_Params extends URLPathParams, T_Search extends URLSearchParams> = (scope: ScopeComponent<T_Params, T_Search>) => JSX.Element
 
 
 /** The component to render for a layout */
-export type LayoutComponent = (fe: FE) => JSX.Element
+export type LayoutComponent = (scope: ScopeComponent) => JSX.Element
 
 
 /** This is how `Valibot` flattens their errors */
@@ -326,7 +435,7 @@ export type FullJWTPayload<T_JWTPayload extends BaseJWTPayload = {}> = T_JWTPayl
  * - If the aaf's response is truthy, that response is given to client & the api and/or route fn is not called, else the api and/or route fn is called
  * - To share data between b4 function and other b4 function and the api fn add data to event.locals
  */
-export type B4<T_Locals extends BaseEventLocals = {}> = ({ event, pathParams, searchParams }: B4Props<T_Locals>) => Promise<Response | void>
+export type B4<T_Locals extends BaseEventLocals = {}> = ({ event, pathParams, searchParams, body }: B4Props<T_Locals>) => Promise<Response | void>
 
 
 /** Variables that are provided to each b4 async function */
@@ -334,6 +443,7 @@ export type B4Props<T_Locals extends BaseEventLocals = {}> = {
   event: RequestEvent & { locals: T_Locals }
   pathParams: URLPathParams
   searchParams: URLSearchParams
+  body?: APIBody
 }
 
 /** The object that is passed between b4 async functions and given to the api */
@@ -360,12 +470,6 @@ export type B42Locals<T_B4> = T_B4 extends B4<infer T_Locals>
 export type MergeLocals<T_B4_Array extends B4<any>[]> = T_B4_Array extends [infer T_B4Head, ...infer T_B4Tail]
   ? B42Locals<T_B4Head> & MergeLocals<T_B4Tail extends B4<any>[] ? T_B4Tail : []>
   : {}
-
-
-/** We support validations of params by valibot, zod or custom and we do that by using this base schema */
-export type ValidateSchema<T> = {
-  parse(input: any): T
-}
 
 
 export type CMSItem = {
@@ -403,3 +507,53 @@ export type JWTValidateFailure<T_JWTPayload extends BaseJWTPayload = {}>  = {
 export type JWTValidateResponse<T_JWTPayload extends BaseJWTPayload = {}> = JWTValidateSuccess<T_JWTPayload> | JWTValidateFailure<T_JWTPayload>
 
 export type BaseJWTPayload = Record<string, unknown>
+
+
+/**
+ * Goal w/ 3 types below: Enforce the exact shape of keys from InferOutput<T> @ `parse()`
+ * Allow more flexible values (e.g., string | null instead of just string) b/c `fd()` has no guarantee's on response but valibot will guarantee that but atleast the object shape going into parse can be enforced, let valibot do the actual value enforcing
+ * Disallow extra keys not in the inferred shape.
+ * If the input is type any, like when await res.json() that will be allowed, but if any keys are known they must match the schema and the parser will do a thorough check of values
+ */
+
+
+/**
+ * - What:
+ *     - Loop through each key in T
+ *     - Assign the type `unknown` to each key
+ * - Why:
+ *     - Remember the goal above, correct keys, any (unknown) value
+ * - So:
+ *     - IF T is { aloha: boolean } THEN AllowAnyValue<T> is { aloha: unknown }
+ */
+type AllowAnyValue<T> = { [K in keyof T]: unknown }
+
+
+/**
+ * - Exclude<keyof U, keyof T>
+ *     - Ensures U has no extra keys in it
+ *     - Puts U keys into array and then removes keys also in T
+ *     - So if U has any extra keys we don't match exact keys amongst objects
+ * - If `Exclude<keyof T, keyof U>` is truthy we don't have exact keys which will throw a ts errow with the extends `never` and if we do we'll return U aka the object keys
+ */
+type ExactKeys<T, U> = Exclude<keyof U, keyof T> extends never
+  ? Exclude<keyof T, keyof U> extends never
+    ? U
+    : never
+  : never;
+
+
+/**
+ * - From the shape T
+ * - Replace its values w/ unknown
+ * - Enforce that the keys are exactly that of T
+ */
+export type AnyValue<T> = ExactKeys<T, AllowAnyValue<T>>
+
+
+/** We support parsing / validations of path params, search params and api bodies by valibot, zod or custom (and anyone else) and we do that by using this base parser */
+export type Parser<T> = (input: unknown) => T
+
+
+/** The api methods we support */
+export type ApiMethods = InferEnums<typeof apiMethods>

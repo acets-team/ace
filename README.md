@@ -1,4 +1,4 @@
-![Ace, the typesafetiest framework!](https://i.imgur.com/ieagrbr.jpeg)
+![Ace, the typesafetiest framework!](https://i.imgur.com/y6YtR9d.jpeg)
 
 
 
@@ -57,11 +57,11 @@ import Nav from './Nav'
 import { Layout } from '@ace/layout'
 
 export default new Layout()
-  .component((fe) => {
+  .component(({children}) => {
     return <>
       <div class="guest-layout">
         <Nav />
-        {fe.getChildren()}
+        {children}
       </div>
     </>
   })
@@ -80,14 +80,14 @@ import RootLayout from '@src/app/RootLayout'
 
 export default new Route404()
   .layouts([RootLayout]) // zero to many layouts available @ Route or Route404!
-  .component((fe) => {
+  .component(({location}) => {
     return <>
       <Title>😅 404</Title>
 
       <main class="not-found">
         <div class="code">404 😅</div>
         <div class="message">Oops! We can't find that page.</div>
-        <div class="path">{fe.getLocation().pathname}</div>
+        <div class="path">{location.pathname}</div>
         <A path="/" class="brand">🏡 Go Back Home</A>
       </main>
     </>
@@ -159,21 +159,22 @@ export default new Route404()
 - ✅ Error messages for each input show up next to that input
 - ✅ Start typing an error messages go away for that input
   ```tsx
+  import { vNum } from '@ace/vNum'
   import { clear } from '@ace/clear'
   import { Route } from '@ace/route'
   import { Submit } from '@ace/submit'
   import { apiSignUp } from '@ace/apis'
   import { Title } from '@solidjs/meta'
+  import { vParser } from '@ace/vParser'
   import { Messages } from '@ace/messages'
-  import { valibotParams } from '@ace/valibotParams'
-  import { object, optional, picklist } from 'valibot'
+  import { object, optional } from 'valibot'
   import { createOnSubmit } from '@ace/createOnSubmit'
   import { signUpSchema } from '@src/schemas/SignUpSchema'
 
 
   export default new Route('/sign-up/:sourceId?')
-    .pathParams(valibotParams(object({ sourceId: optional(picklist([1, 2]) )}))) // set path params type here & then this route's params are known app-wide 🙌
-    .component((fe) => {
+    .pathParams(vParser(object({ sourceId: optional(vNum()) }))) // set path params type here & then this route's params are known app-wide 🙌
+    .component((scope) => {
       const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
         const body = signUpSchema.parse({ // get parse & validate request body
           email: fd('email'), // fd() is a form data helper
@@ -184,7 +185,7 @@ export default new Route404()
       })
 
       return <>
-        <Title>Sign Up {fe.getPathParams().sourceId}</Title>
+        <Title>Sign Up {scope.pathParams.sourceId}</Title>
 
         <form onSubmit={onSubmit}>
           <input placeholder="Email" name="email" type="email" use:clear />
@@ -194,7 +195,7 @@ export default new Route404()
           <Messages name="password" />
 
           <div class="footer">
-            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses fe.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
+            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses scope.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
           </div>
         </form>
       </>
@@ -208,21 +209,21 @@ export default new Route404()
 ```tsx
 import { API } from '@ace/api'
 import { guestB4 } from '@src/lib/b4'
-import { valibotParams } from '@ace/valibotParams'
+import { vParser } from '@ace/vParser'
 import { object, optional, picklist } from 'valibot'
 
 
 export const GET = new API('/api/clothing', 'apiClothing')
   .b4([guestB4])
-  .searchParams(valibotParams(object({ category: optional(picklist(['men', 'women'])) })))
-  .resolve(async (be) => {
-    switch (be.searchParams.category) { // ❤️ Typesafe Search Params
+  .searchParams(vParser(object({ category: optional(picklist(['men', 'women'])) })))
+  .resolve(async (scope) => {
+    switch (scope.searchParams.category) { // ❤️ Typesafe Search Params
       case 'men':
       case 'women':
-        return be.success(clothing.filter(c => c.category === be.searchParams.category))
+        return scope.success(clothing.filter(c => c.category === scope.searchParams.category))
       default:
-        if (be.searchParams.category) return be.error('🚨 The valid categories are "men" & "women"')
-        else return be.success(clothing) // call be.Success() to send custom headers :)
+        if (scope.searchParams.category) return scope.error('🚨 The valid categories are "men" & "women"')
+        else return scope.success(clothing) // call scope.Success() to send custom headers :)
     }
   })
 
@@ -248,14 +249,12 @@ const clothing = [
 import { API } from '@ace/api'
 
 export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api endpoint @ the path /api/aloha AND we can call the function apiAloha() on the frontend or backed w/ request & response typesafety!
-  .resolve(async (be) => {
-    return be.success({ aloha: true })
-  })
+  .resolve(async (scope) => scope.success({ aloha: true }))
 ```
-- ✅ Props for: `be.success(data: T_Data, status = 200)`
+- ✅ Props for: `scope.success(data: T_Data, status = 200)`
     - `data` - Any valid json prop, so string, number, boolean, array or object
     - `status` - Optional, HTTP Response Status `default: 200`
-- 👷‍♀️ Props for: `be.Success({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit })`
+- 👷‍♀️ Props for: `scope.Success({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit })`
     - `data` -  Type: Any valid json prop, so string, number, boolean, array or object
     - `status` - Optional, HTTP Response Status `default: 200`
     - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
@@ -267,16 +266,16 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
 ```tsx
 import { API } from '@ace/api'
 import { object } from 'valibot'
-import { valibotParams } from '@ace/valibotParams'
+import { vParser } from '@ace/vParser'
 import { valibotString2Number } from '@ace/valibotString2Number'
 
 
 export const GET = new API('/api/fortune/:id', 'apiFortune')
-  .pathParams(valibotParams(object({ id: valibotString2Number() })))
-  .resolve(async (be) => {
-    return be.pathParams.id < 0 || be.pathParams.id > 2
-      ? be.error('🐛') // call be.Error() to send custom headers :)
-      : be.success({ id: be.pathParams.id, fortune: fortunes[be.pathParams.id] })
+  .pathParams(vParser(object({ id: valibotString2Number() })))
+  .resolve(async (scope) => {
+    return scope.pathParams.id < 0 || scope.pathParams.id > 2
+      ? scope.error('🐛') // call scope.Error() to send custom headers :)
+      : scope.success({ id: scope.pathParams.id, fortune: fortunes[scope.pathParams.id] })
   })
 
 
@@ -286,10 +285,10 @@ const fortunes = [
   'Your laughter spreads sunshine',
 ]
 ```
-- 🚨 Props for: `be.error(message: string, status = 400)`
+- 🚨 Props for: `scope.error(message: string, status = 400)`
     - `message` -  Error message
     - `status` - Optional, HTTP Response Status `default: 400`
-- ‼️ Props for: `be.Error({ error, status = 400, headers }: { error: AceError, status?: number, headers?: HeadersInit })`
+- ‼️ Props for: `scope.Error({ error, status = 400, headers }: { error: AceError, status?: number, headers?: HeadersInit })`
     - `error` - `AceError` constructor takes `{ status = 400, statusText, message, messages, rawBody }`. Setting a status here too can be helpful when you call a BE API and get an error status from them and wanna relay that and set a different status for this HTTP Response 😅 & `messages` are Valibot / Zod error messages of type `Record<string, string[]>`
     - `status` - Optional, HTTP Response Status `default: 400`
     - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
@@ -304,9 +303,7 @@ import { authB4 } from '@src/lib/b4'
 
 export const GET = new API('/api/aloha', 'apiAloha')
   .b4([authB4]) // run the `authB4()` async function before this api boots!
-  .resolve(async (be) => {
-    return be.success({ aloha: true })
-  })
+  .resolve(async (be) => scope.success('aloha')
 ```
 
 
@@ -315,33 +312,45 @@ export const GET = new API('/api/aloha', 'apiAloha')
 ```tsx
 import { go } from '@ace/go'
 import type { B4 } from '@ace/types'
+import { JWTResponse } from '@src/lib/types'
+import { jwtCookie2EventLocals } from '@ace/jwtCookie2EventLocals'
 
 
-export const guestB4: B4 = async ({jwt}) => { // see how we create a jwt in the POST example below w/ jwtCookieSet()
-  if (jwt.isValid) return go('/contracts') // go() knows about all your routes & provides autocomplete!
+export const exampleB4: B4<{example: string}> = async ({ event }) => {
+  event.locals.example = 'aloha'
+  // when using this b4 it'll have typesafety for event.locals.example as a string :)
 }
 
-export const authB4: B4 = async ({jwt}) => {
-  if (!jwt.isValid) return go('/sign-in/:messageId?', {messageId: '1'}) // call Go() to send custom status & headers
+
+export const authB4: B4<{jwt: JWTResponse}> = async ({ event }) => { // see how we create a jwt in the POST example below w/ jwtCookieSet()
+  await jwtCookie2EventLocals(event)
+  if (!event.locals.jwt.isValid) return go('/sign-in') // go() knows about all your routes & provides 
+}
+
+
+export const guestB4: B4<{jwt: JWTResponse}> = async ({ event }) => {
+  await jwtCookie2EventLocals(event)
+  if (event.locals.jwt.isValid) return go('/welcome') // call Go() to send custom status & headers
 }
 ```
 
 
 
-### 💛 Schema (For Request Body)!
+### 💛 Parser (For Request Body)!
+- Placed in a seperate file so it can be imported into `new API()` (BE) and `new Route()` (FE)
 ```tsx
 import { pipe, email, string, object, nonEmpty } from 'valibot'
-import { ValibotSchema, type InferValibotSchema } from '@ace/valibotSchema'
+import { vParser, type ValibotParser2Input } from '@ace/vParser'
 
 
-export const signInSchema = new ValibotSchema( // schema's validate (be) api's & (fe) forms's!
+export const signInParser  = vParser( // parsers validate (be) api's & (fe) forms's!
   object({
     email: pipe(string(), email('Please provide a valid email')),
     password: pipe(string(), nonEmpty('Please provide a password')),
   })
 )
 
-export type SignInSchema = InferValibotSchema<typeof signInSchema> // by defining runtime validations above, we get compile time types app-wide!
+export type SignInSchema = ValibotParser2Input<typeof signInParser> // by defining runtime validations above, we get compile time types app-wide!
 ```
 
 
@@ -352,32 +361,30 @@ export type SignInSchema = InferValibotSchema<typeof signInSchema> // by definin
 import { API } from '@ace/api'
 import { eq } from 'drizzle-orm'
 import { ttlDay } from '@ace/jwtCreate'
-import { JWTPayload } from 'ace.config'
 import { hashValidate } from '@ace/hashValidate'
+import type { JWTPayload } from '@src/lib/types'
 import { jwtCookieSet } from '@ace/jwtCookieSet'
 import { db, sessions, users } from '@src/lib/db'
-import { signInSchema, type SignInSchema } from '@src/schemas/SignInSchema'
+import { signInParser } from '@src/parsers/signInParser'
 
 
 export const POST = new API('/api/sign-in', 'apiSignIn')
-  .body<SignInSchema>()
-  .resolve(async (be) => {
-    const body = signInSchema.parse(await be.getBody()) // get, validate & parse body to { email: string, password: string }
-
+  .body(signInParser) // validate / parse request body
+  .resolve(async (scope) => {
     const _db = db() // since we'll call db() many times var it out
 
     const resGetUser = await _db // using their email, get their userId & hashed password
       .select({ userId: users.id, hash: users.password })
       .from(users)
-      .where(eq(users.email, body.email))
+      .where(eq(users.email, scope.body.email))
 
     const { userId, hash } = resGetUser[0] ?? {}
 
-    if (!userId) return be.error('Invalid sign in') // call be.Error() to send custom headers & status codes
-    if (!hash) return be.error('Please sign up')
+    if (!userId) return scope.error('Invalid sign in') // call scope.Error() to send custom headers & status codes
+    if (!hash) return scope.error('Please sign up')
 
-    const hashResponse = await hashValidate({ hash, password: body.password }) // check if the hash is valid
-    if (!hashResponse.isValid) return be.error('Invalid sign in')
+    const hashResponse = await hashValidate({ hash, password: scope.body.password }) // check if the hash is valid
+    if (!hashResponse.isValid) return scope.error('Invalid sign in')
 
     const ttl = ttlDay // we have exports for ttlMinute, ttlHour & ttlWeek too :)
 
@@ -386,12 +393,12 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
       .returning({ sessionId: sessions.id })
 
     const sessionId = resCreateSession[0]?.sessionId // notify if there was a db error
-    if (!sessionId) return be.error('Session create error')
+    if (!sessionId) return scope.error('Session create error')
 
     const payload: JWTPayload = { sessionId } // add jwt to cookie
     await jwtCookieSet({ jwtCreateProps: { ttl, payload } })
 
-    return be.success({yay: true})
+    return scope.success('yay')
   })
 ```
 
@@ -400,22 +407,22 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
 ### 💞 Redirect @ `resolve()`!
 ```tsx
 import { API } from '@ace/api'
+import { vParser } from '@ace/vParser'
 import { object, picklist } from 'valibot'
-import { valibotParams } from '@ace/valibotParams'
 
 
 export const GET = new API('/api/element/:element', 'apiElement')
-  .pathParams(valibotParams(object({ element: picklist(['ether', 'fire', 'water', 'air', 'earth']) })))
-  .resolve(async (be) => {
-    return be.pathParams.element === 'fire' // ✨ Typesafe API Path Params
-      ? be.error('🔥')
-      : be.go('/') // 💫 Typesafe API Redirects
+  .pathParams(vParser(object({ element: picklist(['ether', 'fire', 'water', 'air', 'earth']) })))
+  .resolve(async (scope) => {
+    return scope.pathParams.element === 'fire' // ✨ Typesafe API Path Params
+      ? scope.error('🔥')
+      : scope.go('/') // 💫 Typesafe API Redirects
   })
 ```
-- 💨 Props for: `be.go(path: T, params?: RoutePath2Params<T>)`
+- 💨 Props for: `scope.go(path: T, params?: RoutePath2Params<T>)`
     - `path` -  Path to Route as defined @ `new Route()`
     - `params` - Optional, Params to route as an object
-- 🏎️ Props for: `be.Go({ path, params, status = 301, headers }: { path: T, params?: RoutePath2Params<T>, status?: number, headers?: HeadersInit})`
+- 🏎️ Props for: `scope.Go({ path, params, status = 301, headers }: { path: T, params?: RoutePath2Params<T>, status?: number, headers?: HeadersInit})`
     - `path` -  Path to Route as defined @ `new Route()`
     - `params` - Optional, Params to route as an object
     - `status` - Optional, HTTP Response Status `default: 400`
@@ -540,34 +547,37 @@ export default new Route('/')
 ### 📣 Modal!
 - Add to `app.tsx` => `import '@ace/modal.styles.css'` & then:
 ```tsx
+
 import './Spark.css'
 import { Route } from '@ace/route'
+import { vBool } from '@ace/vBool'
 import { Title } from '@solidjs/meta'
+import { vParser } from '@ace/vParser'
 import { createEffect } from 'solid-js'
 import { object, optional } from 'valibot'
 import RootLayout from '@src/app/RootLayout'
-import { valibotParams } from '@ace/valibotParams'
-import { valibotString2Boolean } from '@ace/valibotString2Boolean'
 import { showModal, hideModal, onHideModal, isModalVisible, Modal } from '@ace/modal'
 
 
 export default new Route('/spark')
   .layouts([RootLayout])
-  .searchParams(valibotParams(object({ modal: optional(valibotString2Boolean()) })))
-  .component((fe) => {
-    onHideModal('⚡️', () => fe.Go({path: '/spark', replace: true})) // 💜 Typesafe Frontend Redirects
+  .searchParams(vParser(object({ modal: optional(vBool()) })))
+  .component(({ Go, SearchParams }) => {
+    onHideModal('⚡️', () => Go({path: '/spark', replace: true})) // 💜 Typesafe Frontend Redirects
 
     createEffect(() => {
-      if (fe.getSearchParams().modal) showModal('⚡️') // 💚 Typesafe Search Params
+      if (SearchParams().modal) showModal('⚡️') // 💚 Typesafe Search Params
       else if (isModalVisible('⚡️')) hideModal('⚡️')
     })
+
+    const show = () => Go({path: '/spark', searchParams: {modal: true}})
 
     return <>
       <Title>🧚‍♀️ Spark</Title>
 
-      <button onClick={() => fe.Go({path: '/spark', searchParams: {modal: true}})} type="button">Show Modal</button>
+      <button onClick={show} type="button">Show Modal</button>
 
-      <Modal id="⚡️"> {/* 🚨 The id prop defines how we identify modal's in helper functions :) */}
+      <Modal id="⚡️"> {/* 🚨 The id prop is how we identify modal's in helper functions :) */}
         <h1>Your creative spark will ignite something beautiful!</h1>
         <button onClick={() => hideModal('⚡️')} type="button">Hide Modal</button>
       </Modal>
@@ -779,7 +789,7 @@ export default new Route('/spark')
 1. [Create an Email Template](https://help.brevo.com/hc/en-us/articles/360019787120-Create-an-email-template)
     - On the edit template page, to have a link point to a param, set the `Link Target` to `{{params.RESET_LINK}}` & then:
     ```ts
-    if (!process.env.BREVO_API_KEY) return be.error('!process.env.BREVO_API_KEY')
+    if (!process.env.BREVO_API_KEY) return scope.error('!process.env.BREVO_API_KEY')
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -828,7 +838,7 @@ export default new Route('/spark')
     - Fix any browser console errors
     - Standard Fix
 1. `Type [example] is not assignable to type 'IntrinsicAttributes & [example]. Property [example] does not exist on type 'IntrinsicAttributes & [example].ts(2322)`
-    - Ensure the props on your functional components are destructured so rather then `export function ExampleComponent(fe: FE)` it should be `export function ExampleComponent({ fe }: { fe: FE })` 
+    - Ensure the props on your functional components are destructured so rather then `export function ExampleComponent(scope: ScopeComponent)` it should be `export function ExampleComponent({ scope }: { scope: ScopeComponent })` 
 1. `'default' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.`
     - Change this:
         ```ts
