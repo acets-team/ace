@@ -7,19 +7,13 @@
 
 import { API } from './api'
 import { Route } from './route'
-import { on404 } from '../on404'
 import { callB4 } from '../callB4'
 import { AceError } from './aceError'
 import { GoResponse } from './goResponse'
 import type { FetchEvent } from './types'
 import { regexRoutes } from './regexRoutes'
-import { regexApiPuts } from './regexApiPuts'
-import { regexApiGets } from './regexApiGets'
-import { validateBody } from '../validateBody'
-import { regexApiPosts } from './regexApiPosts'
 import { json, redirect } from '@solidjs/router'
 import { validateParams } from '../validateParams'
-import { regexApiDeletes } from './regexApiDeletes'
 import { getSearchParams } from '../getSearchParams'
 import { eventToPathname } from '../eventToPathname'
 import { pathnameToMatch, type RouteMatch } from '../pathnameToMatch'
@@ -82,49 +76,18 @@ export class MiddlewareContext {
    *    - Else => provide a 404 html
    */
   async getResponse() {
-    await this.#onAPIRequest(this.#event.request.method)
-
-    if (!this.#matchFound && this.#event.request.method === 'GET') {
+    // we don't validate api's here, we do that @ onAPIEvent b/c there we can access 'use server' items
+    if (!this.#matchFound && this.#event.request.method === 'GET' && !this.#pathname.startsWith('/api')) {
       const routeMatch = await pathnameToMatch(this.#pathname, regexRoutes)
 
       if (routeMatch?.handler instanceof Route) await this.#onRequest(routeMatch)
     }
-  
-    if (!this.#matchFound && this.#pathname.startsWith('/api')) return on404()
 
     if (this.#response) return this.#response
 
     // if nothing has been returned at this point then route matching happens via <Route /> components in createApp.tsx
   }
 
-
-  async #onAPIRequest(method: string) {
-    let apis
-
-    switch (method) {
-      case 'GET': 
-        apis = regexApiGets
-        break
-      case 'POST': 
-        apis = regexApiPosts
-        break
-      case 'PUT': 
-        apis = regexApiPuts
-        break
-      case 'DELETE': 
-        apis = regexApiDeletes
-        break
-      default:
-        throw new Error(`Invalid method @ #onApiRequest b/c "${method}" is not a valid method`)
-    }
-
-    const match = await pathnameToMatch(this.#pathname, apis)
-
-    if (match?.handler instanceof API) {
-      this.#matchFound = true
-      this.#response = await this.#onRequest(match)
-    }
-  }
 
   async #onRequest<T extends API | Route>(routeMatch: RouteMatch<T>) {
     try {
@@ -134,13 +97,9 @@ export class MiddlewareContext {
         pathParamsParser: routeMatch.handler.values.pathParamsParser,
         searchParamsParser: routeMatch.handler.values.searchParamsParser
       })
-            
-      const body = (routeMatch.handler instanceof API && routeMatch.handler.values.bodyParser)
-        ? await validateBody({api: routeMatch.handler, event: this.#event})
-        : undefined
 
       if (routeMatch.handler.values.b4) {
-        const b4Response = await callB4(routeMatch.handler, { body, pathParams, searchParams }, this.#event)
+        const b4Response = await callB4(routeMatch.handler, { pathParams, searchParams }, this.#event)
         if (b4Response) return b4Response
       }
     } catch (error) {
