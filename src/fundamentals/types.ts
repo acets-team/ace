@@ -4,7 +4,6 @@
  */
 
 
-import type { ScopeComponent } from './scopeComponent'
 import type { API } from './api'
 import type { JSX } from 'solid-js'
 import type { Route } from './route'
@@ -18,6 +17,7 @@ import type { regexApiPuts } from './regexApiPuts'
 import type { regexApiGets } from './regexApiGets'
 import type { regexApiNames } from './regexApiNames'
 import type { regexApiPosts } from './regexApiPosts'
+import type { ScopeComponent } from './scopeComponent'
 import type { regexApiDeletes } from './regexApiDeletes'
 import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'

@@ -22,10 +22,9 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
   /** Typed loosely so we may freely mutate it at runtime */
   #storage: APIStorage
 
-  constructor(path: string, fnName?: string) {
+  constructor(path: string, fnName: string) {
     this.#storage = { path, pattern: pathnameToPattern(path) }
-
-    if (fnName) this.values.fn = fnName
+    this.values.fn = fnName
   }
 
 

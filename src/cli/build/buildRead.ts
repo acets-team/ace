@@ -74,14 +74,17 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
     const apiPath = matches[3]
     const fnName = matches[5]  
 
-    if (apiPath && Build.apiMethods.has(apiMethod)) {
-      build.writes[getWriteKey(apiMethod)] += getConstEntry(apiPath, fsPath, apiMethod)
+    if (apiPath && fnName && Build.apiMethods.has(apiMethod)) {
+      build.writes[getWriteKey(apiMethod)] += getConstEntry(true, apiPath, fsPath, apiMethod, fnName)
 
-      if (fnName) {
-        build.writes.constApiName += getConstEntry(apiPath, fsPath, apiMethod, fnName)
+      build.writes.constApiName += getConstEntry(false, apiPath, fsPath, apiMethod, fnName)
 
-        build.writes.apiFunctions += `export const ${fnName} = createAPIFunction('${apiPath}', '${apiMethod}', () => import(${getImportFsPath(fsPath)}).then((m) => m.${apiMethod}))\n`
-      }
+      build.writes.apiFunctions += `export const ${fnName} = createAPIFunction('${apiPath}', '${apiMethod}', apiLoaders.${fnName}Loader)\n`
+    
+      build.writes.apiLoaders += `export async function ${fnName}Loader() {
+  'use server'
+  return (await import(${getImportFsPath(fsPath)})).${apiMethod}
+}\n\n`
     }
   }
 }
@@ -115,7 +118,7 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
   
       if (!routePath) continue // this tsx file has no propertly formatted export default new Route or new Route404
   
-      build.writes.constRoutes += getConstEntry(routePath, fsPath, 'default')
+      build.writes.constRoutes += getConstEntry(true, routePath, fsPath, 'default')
 
       const route: BuildRoute = { fsPath, routePath }
 

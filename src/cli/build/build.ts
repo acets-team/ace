@@ -39,7 +39,7 @@ export class Build {
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
-  writes: Writes = { types: '', constGET: '', constPOST: '', constPUT: '', constDELETE: '', constRoutes: '', apiFunctions: '', constApiName: '' }
+  writes: Writes = { types: '', constGET: '', constPOST: '', constPUT: '', constDELETE: '', constRoutes: '', apiFunctions: '', constApiName: '', apiLoaders: '' }
 
   /**
    * - We start off with a single root node
@@ -175,8 +175,9 @@ export type TreeNode = {
 export type Writes = {
   types: string,
   constGET: string,
-  constPOST: string,
   constPUT: string,
+  constPOST: string,
+  apiLoaders: string,
   constDELETE: string,
   constRoutes: string,
   constApiName: string,
@@ -204,12 +205,20 @@ export type Writes = {
   }
   ```
 */
-export const getConstEntry = (urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
-  return `  '${fnName || urlPath}': {
+export const getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
+  if (pathIsKey && fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
+    return `  '${urlPath}': regexApiNames['${fnName}'],\n`
+  } else if (fnName) { // regexApiNames
+    return `  '${fnName}': {
+    pattern: ${pathnameToPattern(urlPath)},
+    loader: apiLoaders.${fnName}Loader
+  },\n`
+  } else { // regexRoutes
+    return `  '${urlPath}': {
     pattern: ${pathnameToPattern(urlPath)},
     loader: () => import(${getImportFsPath(fsPath)}).then((m) => m.${moduleName})
-  },
-`
+  },\n`
+  }
 }
 
 

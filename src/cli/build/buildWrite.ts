@@ -42,6 +42,7 @@ function getPromises(build: Build) {
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiPuts(build), fileName: 'regexApiPuts.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiDeletes(build), fileName: 'regexApiDeletes.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiNames(build), fileName: 'regexApiNames.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApiLoaders(build), fileName: 'apiLoaders.ts' }),
     )
   }
 
@@ -77,7 +78,8 @@ export const env: string = '${build.env}'
 
 
 function renderApis(build: Build) {
-  return `import { createAPIFunction } from '../createAPIFunction' 
+  return `import * as apiLoaders from './apiLoaders'
+import { createAPIFunction } from '../createAPIFunction' 
 
 ${build.writes.apiFunctions}`
 }
@@ -93,7 +95,9 @@ ${build.writes.constRoutes ? build.writes.constRoutes.slice(0, -1) : ''}
 
 
 function renderRegexApiGets(build: Build) {
-  return `export const regexApiGets = {
+  return `import { regexApiNames } from './regexApiNames'
+
+export const regexApiGets = {
 ${build.writes.constGET ? build.writes.constGET.slice(0, -1) : ''}
 } as const\n`
 }
@@ -101,7 +105,9 @@ ${build.writes.constGET ? build.writes.constGET.slice(0, -1) : ''}
 
 
 function renderRegexApiPosts(build: Build) {
-  return `export const regexApiPosts = {
+  return `import { regexApiNames } from './regexApiNames'
+
+export const regexApiPosts = {
 ${build.writes.constPOST ? build.writes.constPOST.slice(0, -1) : ''}
 } as const\n`
 }
@@ -109,7 +115,9 @@ ${build.writes.constPOST ? build.writes.constPOST.slice(0, -1) : ''}
 
 
 function renderRegexApiPuts(build: Build) {
-  return `export const regexApiPuts = {
+  return `import { regexApiNames } from './regexApiNames'
+
+export const regexApiPuts = {
 ${build.writes.constPUT ? build.writes.constPUT.slice(0, -1) : ''}
 } as const\n`
 }
@@ -117,7 +125,9 @@ ${build.writes.constPUT ? build.writes.constPUT.slice(0, -1) : ''}
 
 
 function renderRegexApiDeletes(build: Build) {
-  return `export const regexApiDeletes = {
+  return `import { regexApiNames } from './regexApiNames'
+
+export const regexApiDeletes = {
 ${build.writes.constDELETE ? build.writes.constDELETE.slice(0, -1) : ''}
 } as const\n`
 }
@@ -125,9 +135,16 @@ ${build.writes.constDELETE ? build.writes.constDELETE.slice(0, -1) : ''}
 
 
 function renderRegexApiNames(build: Build) {
-  return `export const regexApiNames = {
+  return `import * as apiLoaders from '@ace/apiLoaders'
+
+export const regexApiNames = {
 ${build.writes.constApiName ? build.writes.constApiName.slice(0, -1) : ''}
 } as const\n`
+}
+
+
+function renderApiLoaders(build: Build) {
+  return build.writes.apiLoaders ? build.writes.apiLoaders.slice(0, -1) : ''
 }
 
 
