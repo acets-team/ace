@@ -51,6 +51,7 @@ export const fundamentals = new Map([
   ['dateTimeFormat', new Fundamental('tsx', 'solid', 'copy')],
   ['enums', new Fundamental('ts', 'solid', 'copy')],
   ['eventToPathname', new Fundamental('ts', 'solid', 'helper')],
+  ['fadeInOnMount', new Fundamental('ts', 'solid', 'copy')],
   ['feComponent', new Fundamental('tsx', 'solid', 'copy')],
   ['feFetch', new Fundamental('ts', 'solid', 'helper')],
   ['feMessages', new Fundamental('ts', 'solid', 'helper')],
