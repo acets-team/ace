@@ -82,7 +82,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
    * @example
     ```ts
     export const GET = new API('/api/character/:element', 'apiCharacter')
-      .pathParams(vParser(object({ element: picklist(elements) })))
+      .pathParams(vParse(object({ element: picklist(elements) })))
       .resolve(async (scope) => {
         return scope.success(scope.pathParams.element)
       })
@@ -99,15 +99,15 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
    * ### Set validating / parsing function for this api's body that runs before the api's resolve function
    * @example
     ```ts
-    .body(vParser(object({ email: pipe(string(), email()) })))
+    .body(vParse(object({ email: pipe(string(), email()) })))
     ```
    * @example
     ```ts
-    .body(vParser(object({ id: vNum() })))
+    .body(vParse(object({ id: vNum() })))
     ```
    * @example
     ```ts
-    .body(vParser(object({ choice: vBool() })))
+    .body(vParse(object({ choice: vBool() })))
     ```
    * @example
     ```ts
@@ -125,7 +125,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
     ```
    * @example
     ```ts
-    .body(zParser(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
+    .body(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
     ```
   * @param parser - Parsing function, accepts an input and validate / optionally parses the input
   */
@@ -139,15 +139,15 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
    * ### Set validating / parsing function for this api's path params that runs before the api's resolve function
    * @example
     ```ts
-    .pathParams(vParser(object({ email: pipe(string(), email()) })))
+    .pathParams(vParse(object({ email: pipe(string(), email()) })))
     ```
    * @example
     ```ts
-    .pathParams(vParser(object({ id: vNum() })))
+    .pathParams(vParse(object({ id: vNum() })))
     ```
    * @example
     ```ts
-    .pathParams(vParser(object({ choice: vBool() })))
+    .pathParams(vParse(object({ choice: vBool() })))
     ```
    * @example
     ```ts
@@ -165,7 +165,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
     ```
    * @example
     ```ts
-    .pathParams(zParser(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
+    .pathParams(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
     ```
   * @param parser - Parsing function, accepts an input and validate / optionally parses the input
   */
@@ -179,15 +179,15 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
    * ### Set validating / parsing function for this api's serch params that runs before the api's resolve function
    * @example
     ```ts
-    .searchParams(vParser(object({ email: pipe(string(), email()) })))
+    .searchParams(vParse(object({ email: pipe(string(), email()) })))
     ```
    * @example
     ```ts
-    .searchParams(vParser(object({ id: vNum() })))
+    .searchParams(vParse(object({ id: vNum() })))
     ```
    * @example
     ```ts
-    .searchParams(vParser(object({ choice: vBool() })))
+    .searchParams(vParse(object({ choice: vBool() })))
     ```
    * @example
     ```ts
@@ -205,7 +205,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
     ```
    * @example
     ```ts
-    .searchParams(zParser(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
+    .searchParams(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
     ```
   * @param parser - Parsing function, accepts an input and validate / optionally parses the input
   */

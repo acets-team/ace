@@ -1,4 +1,4 @@
-![Ace, the typesafetiest framework!](https://i.imgur.com/y6YtR9d.jpeg)
+![Ace, the typesafetiest framework!](https://i.imgur.com/0u8aTp8.png)
 
 
 
@@ -21,7 +21,7 @@ npx create-ace-app@latest
 ### 🥳 The Ace Stack
     👷‍♀️ The following docs show how to create the Ace stack, highlights:
 1. **Ace**
-    - Built on top of [Solid Start](https://docs.solidjs.com/), so we get fine grained reactivity, [aria compliant components](#-aria-compliant-components) & the typesafetiest framework! [Vite](https://vite.dev/) + [Lighning CSS](https://lightningcss.dev/) & [Easy Tailwind setup](#add-tailwind) too btw!
+    - Built w/ [Solid Start](https://docs.solidjs.com/), so we get fine grained reactivity, [aria compliant components](#-aria-compliant-components) & the typesafetiest framework! [Vite](https://vite.dev/) + [Lighning CSS](https://lightningcss.dev/) & [Easy Tailwind setup](#add-tailwind) too btw!
 1. **Brevo**
     - 300 marketing and/or API emails a day for [free](https://wsearchParamssearchParamsww.brevo.com/pricing/) & a free email inbox w/ your custom domain!
 1. **Cloudflare**
@@ -100,35 +100,35 @@ export default new Route404()
 - Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
 - If this page is refreshed, data begins gathering on the server
 - If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser
+- Each `load()` request does not wait for all to finish loading & is added to the DOM once the individual request is ready
   ```tsx
   import { load } from '@ace/load'
   import { Route } from '@ace/route'
-  import { Suspense } from 'solid-js'
-  import { guestB4 } from '@src/lib/b4'
+  import { reload } from '@ace/reload'
+  import { Loading } from '@ace/loading'
   import { apiCharacter } from '@ace/apis'
+  import { Show, Suspense } from 'solid-js'
   import RootLayout from '@src/app/RootLayout'
-  import { revalidate } from '@solidjs/router'
   import GuestLayout from '@src/app/GuestLayout'
   import type { APIName2LoadResponse } from '@ace/types'
 
 
   export default new Route('/smooth')
-    .b4([guestB4]) // run this async fn b4 this route renders
     .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps /smooth
-    .component(() => {
-      const air = load(() => apiCharacter({pathParams: {element: 'air'}}), 'air')
-      const fire = load(() => apiCharacter({pathParams: {element: 'fire'}}), 'fire')
-      const earth = load(() => apiCharacter({pathParams: {element: 'earth'}}), 'earth')
-      const water = load(() => apiCharacter({pathParams: {element: 'water'}}), 'water')
-
-      function getFresh() {
-        revalidate(['air', 'fire', 'earth', 'water'])
-      }
+    .component((fe) => {
+      const air = load(() => apiCharacter({ pathParams: {element: 'air'}}), '💨')
+      const fire = load(() => apiCharacter({pathParams: {element: 'fire'}}), '🔥')
+      const earth = load(() => apiCharacter({pathParams: {element: 'earth'}}), '🌎')
+      const water = load(() => apiCharacter({pathParams: {element: 'water'}}), '💦')
 
       return <>
         <h1>🚨 This element / all elements outside the Suspense below, render immediately!</h1>
 
-        <button onClick={getFresh} type="button">🔥 Get Fresh Data!</button>
+        <button onClick={() => reload('🔁', ['💨', '🔥', '🌎', '💦'])} type="button" disabled={fe.bits.isOn('🔁')}>
+          <Show when={fe.bits.isOn('🔁')} fallback="🔥 Get Fresh Data!">
+            <Loading />
+          </Show>
+        </button>
 
         <div class="characters">
           <Character element={fire} />
@@ -163,20 +163,21 @@ export default new Route404()
   import { clear } from '@ace/clear'
   import { Route } from '@ace/route'
   import { Submit } from '@ace/submit'
+  import { kParse } from '@ace/kParse'
+  import { vParse } from '@ace/vParse'
   import { apiSignUp } from '@ace/apis'
   import { Title } from '@solidjs/meta'
-  import { vParser } from '@ace/vParser'
   import { Messages } from '@ace/messages'
   import { object, optional } from 'valibot'
   import { createOnSubmit } from '@ace/createOnSubmit'
-  import { signUpSchema } from '@src/schemas/SignUpSchema'
+  import { signUpParser } from '@src/schemas/signUpParser'
 
 
   export default new Route('/sign-up/:sourceId?')
-    .pathParams(vParser(object({ sourceId: optional(vNum()) }))) // set path params type here & then this route's params are known app-wide 🙌
+    .pathParams(vParse(object({ sourceId: optional(vNum()) }))) // set path params type here & then this route's params are known app-wide 🙌
     .component((scope) => {
       const onSubmit = createOnSubmit(async (fd) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
-        const body = signUpSchema.parse({ // get parse & validate request body
+        const body = kParse(signUpParser, { // get parse & validate request body, kParse gives typesafety on fe, it knows the object keys that are necessary (email, password) and ensures the keys are sent to kParse() then the signUpParser() does the runtime validation / parsing
           email: fd('email'), // fd() is a form data helper
           password: fd('password')
         }) 
@@ -208,14 +209,14 @@ export default new Route404()
 - Required and/or optional search params available @ `routes` & `apis`!
 ```tsx
 import { API } from '@ace/api'
+import { vParse } from '@ace/vParse'
 import { guestB4 } from '@src/lib/b4'
-import { vParser } from '@ace/vParser'
 import { object, optional, picklist } from 'valibot'
 
 
 export const GET = new API('/api/clothing', 'apiClothing')
   .b4([guestB4])
-  .searchParams(vParser(object({ category: optional(picklist(['men', 'women'])) })))
+  .searchParams(vParse(object({ category: optional(picklist(['men', 'women'])) })))
   .resolve(async (scope) => {
     switch (scope.searchParams.category) { // ❤️ Typesafe Search Params
       case 'men':
@@ -266,12 +267,12 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
 ```tsx
 import { API } from '@ace/api'
 import { object } from 'valibot'
-import { vParser } from '@ace/vParser'
+import { vParse } from '@ace/vParse'
 import { valibotString2Number } from '@ace/valibotString2Number'
 
 
 export const GET = new API('/api/fortune/:id', 'apiFortune')
-  .pathParams(vParser(object({ id: valibotString2Number() })))
+  .pathParams(vParse(object({ id: valibotString2Number() })))
   .resolve(async (scope) => {
     return scope.pathParams.id < 0 || scope.pathParams.id > 2
       ? scope.error('🐛') // call scope.Error() to send custom headers :)
@@ -340,10 +341,10 @@ export const guestB4: B4<{jwt: JWTResponse}> = async ({ event }) => {
 - Placed in a seperate file so it can be imported into `new API()` (BE) and `new Route()` (FE)
 ```tsx
 import { pipe, email, string, object, nonEmpty } from 'valibot'
-import { vParser, type ValibotParser2Input } from '@ace/vParser'
+import { vParse, type ValibotParser2Input } from '@ace/vParse'
 
 
-export const signInParser  = vParser( // parsers validate (be) api's & (fe) forms's!
+export const signInParser  = vParse( // parsers validate (be) api's & (fe) forms's!
   object({
     email: pipe(string(), email('Please provide a valid email')),
     password: pipe(string(), nonEmpty('Please provide a password')),
@@ -407,12 +408,12 @@ export const POST = new API('/api/sign-in', 'apiSignIn')
 ### 💞 Redirect @ `resolve()`!
 ```tsx
 import { API } from '@ace/api'
-import { vParser } from '@ace/vParser'
+import { vParse } from '@ace/vParse'
 import { object, picklist } from 'valibot'
 
 
 export const GET = new API('/api/element/:element', 'apiElement')
-  .pathParams(vParser(object({ element: picklist(['ether', 'fire', 'water', 'air', 'earth']) })))
+  .pathParams(vParse(object({ element: picklist(['ether', 'fire', 'water', 'air', 'earth']) })))
   .resolve(async (scope) => {
     return scope.pathParams.element === 'fire' // ✨ Typesafe API Path Params
       ? scope.error('🔥')
@@ -427,21 +428,6 @@ export const GET = new API('/api/element/:element', 'apiElement')
     - `params` - Optional, Params to route as an object
     - `status` - Optional, HTTP Response Status `default: 400`
     - `headers` - Optional, HTTP Response Headers
-
-
-
-### 🤓 Redirect @ `b4()`!
-- If your b4 is in an imported function like above @ `Create Middleware` then no need to throw the redirect
-- If your b4 is defined in the same chain as defining a Route like below, throw a goThrow() to avoid the cirular type loops of defining a Route and returning a Route simultaneously ✅
-```tsx
-import { goThrow } from '@ace/go'
-import { Route } from '@ace/route'
-
-export default new Route('/')
-  .b4(async () => {
-    throw goThrow('/sign-in') // goThrow() knows about all your routes & provides autocomplete!
-  })
-```
 
 
 
@@ -552,7 +538,7 @@ import './Spark.css'
 import { Route } from '@ace/route'
 import { vBool } from '@ace/vBool'
 import { Title } from '@solidjs/meta'
-import { vParser } from '@ace/vParser'
+import { vParse } from '@ace/vParse'
 import { createEffect } from 'solid-js'
 import { object, optional } from 'valibot'
 import RootLayout from '@src/app/RootLayout'
@@ -561,7 +547,7 @@ import { showModal, hideModal, onHideModal, isModalVisible, Modal } from '@ace/m
 
 export default new Route('/spark')
   .layouts([RootLayout])
-  .searchParams(vParser(object({ modal: optional(vBool()) })))
+  .searchParams(vParse(object({ modal: optional(vBool()) })))
   .component(({ Go, SearchParams }) => {
     onHideModal('⚡️', () => Go({path: '/spark', replace: true})) // 💜 Typesafe Frontend Redirects
 
@@ -778,6 +764,32 @@ export default new Route('/spark')
 1. When you get an email from cloudflare that your domain is ready, push to Github and the deploy will now go to your custom domain! 💚
 
 
+### ☁️ What does the Proxy (orange‑cloud) do?
+- When a record is Proxied, traffic to that hostname is routed through Cloudflare’s edge network instead of hitting your origin directly. This gives you caching, DDoS protection, TLS termination, performance optimizations, and firewall rules all managed at Cloudflare’s layer
+
+
+### ✅ Get `www` DNS to resolve
+1. By default with your custom domain, `example.com` will work but `www.example.com` will give a browser 404 like
+    ```txt
+    Connection timed out Error code 522
+    Visit cloudflare.com for more information.
+    ```
+1. Add a `www` CNAME in Cloudflare DNS
+    - Go to your Cloudflare dashboard → DNS.
+        - Click “Add record”:
+        - Type: CNAME
+        - Name: www
+        - Target: www.example.com
+        - TTL: Auto
+        - Proxy status: Proxied (orange cloud) `On`
+    - Save.
+1. In your wrangler.toml update to: 
+  ```toml
+  routes = [
+    { pattern = "example.com", zone_id = "123456789", custom_domain = true },
+    { pattern = "www.example.com", zone_id = "123456789", custom_domain = true }
+  ]
+  ```
 
 ### 💌 Send emails!
 1. [Brevo](https://www.brevo.com/) offers **300** marketing / API emails a day for [free](https://www.brevo.com/pricing/), has a super easy integration w/ Cloudflare, and allows people to reply to your emails, so you get a free email inbox too!
@@ -814,8 +826,9 @@ export default new Route('/spark')
 
 
 # 🚨 Error Dictionary!
-
     Anytime you see "Standard Fix" below, do this please
+
+
 
 ## ✅ Standard Fix
 1. In browser, delete the `Solid Start` cookie that has the cookie name from `./ace.config.js`
@@ -824,6 +837,8 @@ export default new Route('/spark')
 1. `npm run dev`
 1. Ensure the port shown in `bash`, is the port in your `./ace.config.js`
 1. Open a new browser tab, place the url from `bash` into the browser & press `Enter`
+
+
 
 ## 🔔 Errors
 1. `TypeError: Comp is not a function at createComponent`
@@ -839,33 +854,10 @@ export default new Route('/spark')
     - Standard Fix
 1. `Type [example] is not assignable to type 'IntrinsicAttributes & [example]. Property [example] does not exist on type 'IntrinsicAttributes & [example].ts(2322)`
     - Ensure the props on your functional components are destructured so rather then `export function ExampleComponent(scope: ScopeComponent)` it should be `export function ExampleComponent({ scope }: { scope: ScopeComponent })` 
-1. `'default' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.`
-    - Change this:
-        ```ts
-        import { go } from '@ace/go'
-        import { Route } from '@ace/route'
-
-        export default new Route('/')
-          .b4(async () => {
-            return go('/sign-in')
-          })
-        ```
-    - To this:
-        ```ts
-        import { goThrow } from '@ace/go'
-        import { Route } from '@ace/route'
-
-        export default new Route('/')
-          .b4(async () => {
-            throw goThrow('/sign-in')
-          })
-        ```
-    - Throwing thankfully ends the inference loop of defining and returning a route 🙌
 
 
 
 # 👷‍♀️ FAQ!
-
 1. How to create secrets (passwords)
     - Bash: `openssl rand -base64 64`
     - The terminal may put the password on 2 lines, but place as one long string in `.env` file

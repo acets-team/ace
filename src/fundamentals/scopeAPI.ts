@@ -34,7 +34,7 @@ export class ScopeAPI<T_Params extends URLPathParams = {}, T_Search extends URLS
   }
 
 
-  static CreateFromHttp<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: APIEvent, params: T_Params, search: T_Search, body: T_Body) {
+  static CreateFromHttp<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: RequestEvent, params: T_Params, search: T_Search, body: T_Body) {
     return new ScopeAPI(event, params, search, body)
   }
 

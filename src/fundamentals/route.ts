@@ -7,7 +7,7 @@
 
 import type { Layout } from './layout'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { B4, RouteComponent, URLPathParams, URLSearchParams, Parser } from './types'
+import type { RouteComponent, URLPathParams, URLSearchParams, Parser } from './types'
 
 
 
@@ -53,44 +53,6 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
 
 
   /** 
-   * ### Set async functions to run before route/api boots
-   * - IF `b4()` return is truthy => returned value is sent to the client & route handler is not processed
-   * - 🚨 If returning the response must be a `Response` object b/c this is what is given to the client
-   * - It is not recomended to do db calls in this function
-   * - `b4()` purpose is to:
-   *     - Read `event` contents (request, headers, cookies)
-   *     - Read / Append `event.locals`
-   *     - Do a redirect w/ `go()` or `Go()`
-   * @example
-    ```ts
-    import { go } from '@ace/go'
-    import type { B4 } from '@ace/types'
-
-    export const authB4: B4 = async ({ jwt }) => {
-      if (!jwt.isValid) return go('/')
-    }
-
-    export const guestB4: B4 = async ({ jwt }) => {
-      if (jwt.isValid) return go('/welcome')
-    }
-
-    export const eventB4: B4<{example: string}> = async ({ event }) => {
-      event.locals.example = 'aloha'
-    }
-    ```
-   * @example
-    ```ts
-    export default new Route('/smooth')
-      .b4([guestB4, eventB4])
-    ```
-  */
-  b4(b4: B4<any>[]): this {
-    this.#storage.b4 = b4
-    return this
-  }
-
-
-  /** 
    * - Group funcitionality & styling
    * - The first layout provided will wrap all the remaining layouts & the current route
    */
@@ -107,7 +69,7 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
    * @example
     ```ts
     export default new Route('/fortune/:id')
-      .pathParams(vParser(object({ id: vNum() })))
+      .pathParams(vParse(object({ id: vNum() })))
     ```
    */
   pathParams<NewParams extends URLPathParams>(schema: Parser<NewParams>): Route<NewParams, T_Search> {
@@ -123,7 +85,7 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
    * @example
     ```ts
     export default new Route('/spark')
-      .searchParams(vParser(object({ modal: optional(vBool()) })))
+      .searchParams(vParse(object({ modal: optional(vBool()) })))
     ```
    */
   searchParams<NewSearch extends URLSearchParams>(schema: Parser<NewSearch>): Route<T_Params, NewSearch> {
@@ -136,7 +98,6 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
 export type RouteValues<T_Params extends URLPathParams, T_Search extends URLSearchParams> = {
   path: string
   pattern: RegExp
-  b4?: B4<any>[]
   layouts?: Layout[]
   component?: RouteComponent<T_Params, T_Search>
   pathParamsParser?: Parser<T_Params>
@@ -147,7 +108,6 @@ export type RouteValues<T_Params extends URLPathParams, T_Search extends URLSear
 export type RouteStorage = {
   path: string
   pattern: RegExp
-  b4?: B4<any>[]
   layouts?: Layout[]
   component?: RouteComponent<any, any>
   pathParamsParser?: Parser<any>

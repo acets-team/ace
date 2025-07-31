@@ -6,7 +6,7 @@
 
 
 import type { Layout } from './layout'
-import type { B4, RouteComponent } from './types'
+import type { RouteComponent } from './types'
 import { pathnameToPattern } from './pathnameToPattern'
 
 
@@ -54,44 +54,6 @@ export class Route404 {
 
 
   /** 
-   * ### Set async functions to run before route/api boots
-   * - IF `b4()` return is truthy => returned value is sent to the client & route handler is not processed
-   * - 🚨 If returning the response must be a `Response` object b/c this is what is given to the client
-   * - It is not recomended to do db calls in this function
-   * - `b4()` purpose is to:
-   *     - Read `event` contents (request, headers, cookies)
-   *     - Read / Append `event.locals`
-   *     - Do a redirect w/ `go()` or `Go()`
-   * @example
-    ```ts
-    import { go } from '@ace/go'
-    import type { B4 } from '@ace/types'
-
-    export const authB4: B4 = async ({ jwt }) => {
-      if (!jwt.isValid) return go('/')
-    }
-
-    export const guestB4: B4 = async ({ jwt }) => {
-      if (jwt.isValid) return go('/welcome')
-    }
-
-    export const eventB4: B4<{example: string}> = async ({ event }) => {
-      event.locals.example = 'aloha'
-    }
-    ```
-   * @example
-    ```ts
-    export default new Route404()
-      .b4([guestB4, eventB4])
-    ```
-  */
-  b4(b4: B4<any>[]): this {
-    this.#storage.b4 = b4
-    return this
-  }
-
-
-  /** 
    * ### Set the component function to run when route is called
    * - Not an async fnction, See `load()` for that please
    * @example
@@ -131,7 +93,6 @@ export class Route404 {
 export type Route404Storage = {
   path: '*'
   pattern: RegExp
-  b4?: B4<any>[]
   layouts?: Layout[]
   component?: RouteComponent<any, any>
 }
@@ -141,7 +102,6 @@ export type Route404Storage = {
 export type Rou404teValues = {
   path: string
   pattern: RegExp
-  b4?: B4<any>[]
   layouts?: Layout[]
   component?: RouteComponent<any, any>
 }
