@@ -78,7 +78,7 @@ export class FEMessages {
    */
   align(res: any) {
     if (res && typeof res === 'object') {
-      if (res?.isAceError === true) this.#align(res)
+      if (res?.isAceError === true || res?.message) this.#align(res)
       else if (res?.error?.isAceError === true) this.#align(res.error)
     }
   }

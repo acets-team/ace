@@ -6,6 +6,7 @@
 
 
 import { scope } from './scopeComponent'
+import { dateFromInput } from './dateFromInput'
 
 
 /**
@@ -21,7 +22,7 @@ import { scope } from './scopeComponent'
  * @example
  ```ts
   const onSubmit = createOnSubmit(async (fd, event) => {
-    const body = signUpSchema.parse({ email: fd('email') })
+    const body = kParse(signUpParser, { email: fd('email') })
 
     const res = await apiSignUp({ body, bitKey: 'save' }) // a bit is a boolean signal
 
@@ -36,7 +37,7 @@ import { scope } from './scopeComponent'
  * ---
  * 
  * @param callback - Async function to call on submit
- * @param callback.fd - The 1st param provided to `callback()`. `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />`
+ * @param callback.fd - The 1st param provided to `callback()`. `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />` 🚨 If the input type is a date the value will be the local iso string
  * @param callback.event - The 2nd param provided to `callback()`. The `event`, of type `SubmitEvent`, is typically used when `fd()` is not low level enough
  */
 export function createOnSubmit(callback: OnSubmitCallback) {
@@ -48,7 +49,19 @@ export function createOnSubmit(callback: OnSubmitCallback) {
       if (!(event.currentTarget instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
 
       const formData = new FormData(event.currentTarget)
-      const fd = (name: string) => formData.get(name)
+
+      /** `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />` 🚨 If the input type is a `date` the value is the local iso string */
+      const fd: FormDataFunction = (name: string) => {
+        if (!(event.currentTarget instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
+
+        const value = formData.get(name)
+        if (value === null || value === '') return null
+
+        const input = event.currentTarget.elements.namedItem(name)
+        if (input instanceof HTMLInputElement && typeof value === 'string' && (input.type === 'date' || input.type === 'datetime-local')) return dateFromInput(value, input.type).toISOString()
+
+        return value
+      }
 
       await callback(fd, { ...event, currentTarget: event.currentTarget })
     } catch (e) {

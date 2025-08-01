@@ -557,3 +557,13 @@ export type Parser<T> = (input: unknown) => T
 
 /** The api methods we support */
 export type ApiMethods = InferEnums<typeof apiMethods>
+
+
+/**
+ * - String is passed to `new Date()`
+ * - Date is already a `new Date()`
+ * - Number is `epoch` and passed to `new Date()` assumed to be in milliseconds
+ * @link https://epoch.vercel.app/
+ * @link https://orm.drizzle.team/docs/guides/timestamp-default-value
+ */
+export type DateLike = string | Date | number

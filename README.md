@@ -4,7 +4,7 @@
 
 ### 🧚‍♀️ Create Ace App!
 ```bash
-npx create-ace-app@latest
+nvm use 24 && npx create-ace-app@latest
 ```
 
 
@@ -431,6 +431,19 @@ export const GET = new API('/api/element/:element', 'apiElement')
 
 
 
+### 🔀 Redirect @ `new Route()`!
+- 🚨 Throw the `go()` or `Go()`, throwing thankfully ends the inference loop of defining and returning a route 🙌
+```tsx
+import { Route } from '@ace/route'
+
+export default new Route('/')
+  .resolve(async ({go}) => {
+    throw go('/sign-in')
+  })
+```
+
+
+
 ![Squirrel Engineer](https://i.imgur.com/V5J2qJq.jpeg)
 
 
@@ -750,6 +763,9 @@ export default new Route('/spark')
 1. Select radio `Quick scan for DNS records`
 1. Select `Free` Plan
 1. At the Review DNS Records page, delete records w/ errors not covered by a certificate, if unsure, save them somewhere to add again later
+    - ☁️ What does the Proxy (orange‑cloud) do?
+        - When a record is Proxied, traffic to that hostname is routed through Cloudflare’s edge network instead of hitting your origin directly. This gives you caching, DDoS protection, TLS termination, performance optimizations, and firewall rules all managed at Cloudflare’s layer
+        - Email-related DNS record (DKIM/SPF) don't need proxy b/c proxy would break proper verification
 1. Click `Continue to Activation`
 1. Copy Nameservers and paste them where you bought the domain. For namecheap this is @ `Domain List` > `Nameservers` > `Custom DNS`
 1. In Cloudflare click continue
@@ -764,25 +780,8 @@ export default new Route('/spark')
 1. When you get an email from cloudflare that your domain is ready, push to Github and the deploy will now go to your custom domain! 💚
 
 
-### ☁️ What does the Proxy (orange‑cloud) do?
-- When a record is Proxied, traffic to that hostname is routed through Cloudflare’s edge network instead of hitting your origin directly. This gives you caching, DDoS protection, TLS termination, performance optimizations, and firewall rules all managed at Cloudflare’s layer
-
 
 ### ✅ Get `www` DNS to resolve
-1. By default with your custom domain, `example.com` will work but `www.example.com` will give a browser 404 like
-    ```txt
-    Connection timed out Error code 522
-    Visit cloudflare.com for more information.
-    ```
-1. Add a `www` CNAME in Cloudflare DNS
-    - Go to your Cloudflare dashboard → DNS.
-        - Click “Add record”:
-        - Type: CNAME
-        - Name: www
-        - Target: www.example.com
-        - TTL: Auto
-        - Proxy status: Proxied (orange cloud) `On`
-    - Save.
 1. In your wrangler.toml update to: 
   ```toml
   routes = [
@@ -790,6 +789,7 @@ export default new Route('/spark')
     { pattern = "www.example.com", zone_id = "123456789", custom_domain = true }
   ]
   ```
+
 
 ### 💌 Send emails!
 1. [Brevo](https://www.brevo.com/) offers **300** marketing / API emails a day for [free](https://www.brevo.com/pricing/), has a super easy integration w/ Cloudflare, and allows people to reply to your emails, so you get a free email inbox too!
@@ -854,7 +854,22 @@ export default new Route('/spark')
     - Standard Fix
 1. `Type [example] is not assignable to type 'IntrinsicAttributes & [example]. Property [example] does not exist on type 'IntrinsicAttributes & [example].ts(2322)`
     - Ensure the props on your functional components are destructured so rather then `export function ExampleComponent(scope: ScopeComponent)` it should be `export function ExampleComponent({ scope }: { scope: ScopeComponent })` 
-
+1. `Argument of type '(scope: ScopeComponent<any, any>) => void' is not assignable to parameter of type 'RouteComponent<any, any>'. Type 'void' is not assignable to type 'Element'.`
+    - Change this:
+        ```ts
+        export default new Route('/')
+          .component((scope) => {
+            return scope.go('/sign-in/:messageId?')
+          })
+        ```
+    - To this:
+        ```ts
+        export default new Route('/')
+          .component((scope) => {
+            throw scope.go('/sign-in/:messageId?')
+          })
+        ```
+    - Throwing thankfully ends the inference loop of defining and returning a route 🙌
 
 
 # 👷‍♀️ FAQ!
