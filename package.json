@@ -20,6 +20,7 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "publish": "npm publish --access public",
+    "cloud": "npm run build && npm version patch && git push && npm run publish",
     "build": "node ./src/fresh.js && tsc && tsc -p tsconfig.srcBuild.json && node ./src/srcBuild.js",
     "postbuild": "chmod +x dist/src/cli/cli.js || true"
   },
