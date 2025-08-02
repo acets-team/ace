@@ -71,4 +71,17 @@ export type PluginsConfig = {
    * - `drizzle-orm`
    */
   turso?: boolean
+
+  /**
+   * Enables **AgGrid** fundamentals (helpful modules @ `./ace`)
+   * 
+ * - Requires the following npm dev imports:
+ *     - `ag-grid-community` (🚨 Only used for types)
+ * - Requires the following cdn script:
+ *     - @ entry-server.tsx > below {scripts} > `<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>`
+ *     - Users download it once and then it's cdn from their
+ *     - Avoids big script in fe or be build
+ * @link https://www.ag-grid.com/
+   */
+  agGrid?: boolean
 }

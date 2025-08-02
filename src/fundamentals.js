@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'zod' | 'valibot' | 'turso'} pluginName - Name of plugin
+   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -28,6 +28,7 @@ class Fundamental {
 export const fundamentals = new Map([
   ['a', new Fundamental('tsx', 'solid', 'copy')],
   ['aceError', new Fundamental('ts', 'solid', 'copy')],
+  ['agGrid', new Fundamental('tsx', 'agGrid', 'copy')],
   ['api', new Fundamental('ts', 'solid', 'copy')],
   ['animatedFor', new Fundamental('tsx', 'solid', 'copy')],
   ['base64UrlDecode', new Fundamental('ts', 'solid', 'copy')],

@@ -29,6 +29,7 @@
     "@solidjs/router": "^0.15.3",
     "@solidjs/start": "^1.1.4",
     "@types/node": "^22.15.30",
+    "ag-grid-community": "^34.1.0",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
     "esbuild": "^0.25.5",
