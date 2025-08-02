@@ -207,7 +207,7 @@ export type Writes = {
 */
 export const getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
   if (pathIsKey && fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
-    return `  '${urlPath}': regexApiNames['${fnName}'],\n`
+    return `  '${urlPath}': regexApiNames.${fnName},\n`
   } else if (fnName) { // regexApiNames
     return `  '${fnName}': {
     pattern: ${pathnameToPattern(urlPath)},
