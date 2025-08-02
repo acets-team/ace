@@ -2,7 +2,7 @@
   "name": "@acets-team/ace",
   "license": "MIT",
   "type": "module",
-  "version": "0.0.44",
+  "version": "0.0.45",
   "types": "dist/index.d.ts",
   "author": "https://github.com/acets-team",
   "homepage": "https://github.com/acets-team/ace#readme",
