@@ -8,7 +8,7 @@ import { env } from 'node:process'
 import { DrizzleConfig } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/libsql'
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
-import { createClient, type Config } from '@libsql/client'
+import { createClient, type Config } from '@libsql/client/web'
 
 
 // TS allows us to write multiple type signatures (called overloads) for a single function, so that the compiler can provide more accurate typing information depending on how the function is called
