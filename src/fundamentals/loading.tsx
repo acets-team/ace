@@ -38,25 +38,22 @@ import type { JSX, Component } from 'solid-js'
  * ### 🎨 Custom CSS Variables:
  * - `--ace-loading-color`: Primary color, default: `gold`
  * - `--ace-loading-two-color`: Secondary color for `type="two"`, default: `white`
- * - `--ace-loading-width`: Spinner width, default: `2.1rem`
- * - `--ace-loading-height`: Spinner height, default: `2.1rem`
+ * - `--ace-loading-size`: Spinner height & width, default: `2.1rem`
  * - `--ace-loading-thickness`: Spinner thickness, default: `0.3rem`
  * - `--ace-loading-speed`: Spin speed, default: `1s`
  * 
  * @param props.type - Optional, spinner type: `'one' (default) or 'two'`
- * @param props.width - Optional, spinner width, `default: 2.1rem`
- * @param props.height - Optional, spinner height, `default: 2.1rem`
+ * @param props.size - Optional, spinner height & width, `default: 2.1rem`
  * @param props.thickness - Optional, spinner thickness, `default: 0.3rem`
  * @param props.speed - Optional, spinner speed, `default: 1s`
  * @param props.twoColor - Optional, if type is `two`, this will set the color for the 2nd spinner, `default: white`
  * @param props.label - Optional, text to announce to screen readers, `default: 'Loading...'`
  * @param props.spanProps - Optional, additional props to spread onto the outer `span`
  */
-export const Loading: Component<LoadingProps> = ({ type, width, height, thickness, color, speed, twoColor, label, spanProps }) => {
+export const Loading: Component<LoadingProps> = ({ type, size, thickness, color, speed, twoColor, label, spanProps }) => {
   const style: JSX.CSSProperties = {}
 
-  if (width) style['--ace-loading-width'] = width
-  if (height) style['--ace-loading-height'] = height
+  if (size) style['--ace-loading-size'] = size
   if (thickness) style['--ace-loading-thickness'] = thickness
   if (color) style['--ace-loading-color'] = color
   if (speed) style['--ace-loading-speed'] = speed
@@ -80,10 +77,8 @@ export const Loading: Component<LoadingProps> = ({ type, width, height, thicknes
 export type LoadingProps = {
   /** Optional, spinner type: 'one' (default) or 'two' */
   type?: 'one' | 'two'
-  /** Optional, spinner width, `default: 2.1rem` */
-  width?: string
-  /** Optional, spinner height, `default: 2.1rem` */
-  height?: string
+  /** Optional,  spinner height & width, default: `2.1rem` */
+  size?: string
   /** Optional, spinner thickness, `default: 0.3rem` */
   thickness?: string
   /** Optional, spinner color, `default: gold` */

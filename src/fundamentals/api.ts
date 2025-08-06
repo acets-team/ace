@@ -9,7 +9,7 @@
 import type { ScopeAPI } from './scopeAPI'
 import type { RequestEvent } from 'solid-js/web'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { APIBody, URLSearchParams, URLPathParams, B4, AceResponse, AceResponseResponse, Parser, BaseEventLocals, MergeLocals } from './types'
+import type { ApiBody, UrlSearchParams, UrlPathParams, B4, AceResponse, AceResponseResponse, Parser, BaseEventLocals, MergeLocals } from './types'
 
 
 
@@ -18,7 +18,7 @@ import type { APIBody, URLSearchParams, URLPathParams, B4, AceResponse, AceRespo
  * - When defining the API you may give it a path that can be called w/in or w/out the application & a function name
  * - When calling via function name from `FE` a fetch is done and when calling from `BE` the resolve function is called directly
  */
-export class API<T_Params extends URLPathParams = any, T_Search extends URLSearchParams = any, T_Body extends URLPathParams = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> {
+export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any, T_Body extends UrlPathParams = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> {
   /** Typed loosely so we may freely mutate it at runtime */
   #storage: APIStorage
 
@@ -129,7 +129,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
     ```
   * @param parser - Parsing function, accepts an input and validate / optionally parses the input
   */
-  body<T_New_Body extends APIBody>(parser: Parser<T_New_Body>): API<T_Params, T_Search, T_New_Body, T_Response, T_Locals> {
+  body<T_New_Body extends ApiBody>(parser: Parser<T_New_Body>): API<T_Params, T_Search, T_New_Body, T_Response, T_Locals> {
     this.#storage.bodyParser = parser
     return this as any
   }
@@ -169,7 +169,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
     ```
   * @param parser - Parsing function, accepts an input and validate / optionally parses the input
   */
-  pathParams<T_New_PathParams extends URLPathParams>(parser: Parser<T_New_PathParams>): API<T_New_PathParams, T_Search, T_Body, T_Response, T_Locals>  {
+  pathParams<T_New_PathParams extends UrlPathParams>(parser: Parser<T_New_PathParams>): API<T_New_PathParams, T_Search, T_Body, T_Response, T_Locals>  {
     this.#storage.pathParamsParser = parser
     return this as any
   }
@@ -209,7 +209,7 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
     ```
   * @param parser - Parsing function, accepts an input and validate / optionally parses the input
   */
-  searchParams<T_New_SearchParams extends URLSearchParams>(parser: Parser<T_New_SearchParams>): API<T_Params, T_New_SearchParams, T_Body, T_Response, T_Locals> {
+  searchParams<T_New_SearchParams extends UrlSearchParams>(parser: Parser<T_New_SearchParams>): API<T_Params, T_New_SearchParams, T_Body, T_Response, T_Locals> {
     this.#storage.searchParamsParser = parser
     return this as any
   }
@@ -217,16 +217,16 @@ export class API<T_Params extends URLPathParams = any, T_Search extends URLSearc
 
 
 export type APIResolveFunction<
-  T_Params extends URLPathParams,
-  T_Search extends URLSearchParams,
-  T_Body extends APIBody,
+  T_Params extends UrlPathParams,
+  T_Search extends UrlSearchParams,
+  T_Body extends ApiBody,
   T_Response_Data,
   T_Locals extends BaseEventLocals = {}
 > = (scope: ScopeAPI<T_Params,T_Search,T_Body> & { event: RequestEvent & { locals: T_Locals } }) => Promise<AceResponse<T_Response_Data>>
 
 
 
-export type APIValues<T_Params extends URLPathParams = any, T_Search extends URLSearchParams = any, T_Body extends APIBody = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> = {
+export type APIValues<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any, T_Body extends ApiBody = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> = {
   path: string
   pattern: RegExp
   fn?: string

@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid'} pluginName - Name of plugin
+   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid' | 'brevo'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -34,7 +34,7 @@ export const fundamentals = new Map([
   ['base64UrlDecode', new Fundamental('ts', 'solid', 'copy')],
   ['base64UrlEncode', new Fundamental('ts', 'solid', 'copy')],
   ['bits', new Fundamental('ts', 'solid', 'helper')],
-  ['buildURL', new Fundamental('ts', 'solid', 'copy')],
+  ['buildUrl', new Fundamental('ts', 'solid', 'helper')],
   ['callAPIResolve', new Fundamental('ts', 'solid', 'helper')],
   ['carousel', new Fundamental('tsx', 'solid', 'copy')],
   ['carousel.styles', new Fundamental('css', 'solid', 'copy')],
@@ -48,6 +48,7 @@ export const fundamentals = new Map([
   ['createApp', new Fundamental('tsx', 'solid', 'custom')],
   ['createKey', new Fundamental('ts', 'solid', 'copy')],
   ['createOnSubmit', new Fundamental('ts', 'solid', 'copy')],
+  ['createRouteUrl', new Fundamental('ts', 'solid', 'copy')],
   ['date2Epoch', new Fundamental('ts', 'solid', 'copy')],
   ['date2Iso', new Fundamental('ts', 'solid', 'copy')],
   ['dateFromInput', new Fundamental('ts', 'solid', 'copy')],
@@ -59,6 +60,7 @@ export const fundamentals = new Map([
   ['feComponent', new Fundamental('tsx', 'solid', 'copy')],
   ['feFetch', new Fundamental('ts', 'solid', 'helper')],
   ['feMessages', new Fundamental('ts', 'solid', 'helper')],
+  ['getOrigin', new Fundamental('ts', 'solid', 'helper')],
   ['getSearchParams', new Fundamental('ts', 'solid', 'helper')],
   ['getRequestEvent', new Fundamental('ts', 'solid', 'copy')],
   ['go', new Fundamental('ts', 'solid', 'copy')],
@@ -95,7 +97,9 @@ export const fundamentals = new Map([
   ['resolveAlias', new Fundamental('ts', 'solid', 'helper')],
   ['route', new Fundamental('ts', 'solid', 'copy')],
   ['route404', new Fundamental('ts', 'solid', 'copy')],
+  ['sendBrevoTemplate', new Fundamental('ts', 'brevo', 'copy')],
   ['scopeAPI', new Fundamental('ts', 'solid', 'copy')],
+  ['scopeB4', new Fundamental('ts', 'solid', 'helper')],
   ['scopeComponent', new Fundamental('tsx', 'solid', 'copy')],
   ['scopeComponentChildren', new Fundamental('ts', 'solid', 'helper')],
   ['selectPlaceholder', new Fundamental('ts', 'solid', 'copy')],
@@ -109,6 +113,7 @@ export const fundamentals = new Map([
   ['toast.styles', new Fundamental('css', 'solid', 'copy')],
   ['tooltip', new Fundamental('tsx', 'solid', 'copy')],
   ['tooltip.styles', new Fundamental('css', 'solid', 'copy')],
+  ['ttl', new Fundamental('ts', 'solid', 'copy')],
   ['tursoConnect', new Fundamental('ts', 'turso', 'copy')],
   ['types', new Fundamental('ts', 'solid', 'custom')],
   ['vBool', new Fundamental('ts', 'valibot', 'copy')],

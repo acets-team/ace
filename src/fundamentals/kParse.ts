@@ -8,17 +8,19 @@ import type { AnyValue, Parser } from './types'
 
 
 /**
- * - The input type to a parser is unknown
+ * - The input type to a parser is unknown, ex: `(input: unknown) => parse(input)`
  * - Sometimes we'd love to get some typescript feedback that we are calling a parser with the proper keys
  * - `kParse()` will let you know what keys need to be sent for an input, the `k` stands for `keys`
+ * - So in the example below, if we change the `password` key to `pass` we'll get typescript feedback :)
+ * - The parser will do the exact validations and `kParse()` will just steer us in the right direction telling us what keys need to be sent based on the parsers schema
  * @example
   ```ts
   const onSubmit = createOnSubmit(async (fd) => {
-    const body = kParse(signInParser, {email: fd('email'), password: fd('password')})
-    const errorMessage = (await apiSignIn({ bitKey: 'signIn', body })).error?.message
+    const body = kParse(signInParser, { email: fd('email'), password: fd('password') })
+    const {error} = await apiSignIn({ body, bitKey: 'signIn' })
 
-    if (errorMessage) showToast({ type: 'info', value: errorMessage })
-    else showToast({ type: 'success', value: 'Success!' })
+    if (!error?.message) revalidate(apiGetJwtCookieKey)
+    else showToast({ type: 'info', value: error.message })
   })
   ```
  * @param parser - A parser function validates and optionally parses an input

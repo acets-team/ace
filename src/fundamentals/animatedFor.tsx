@@ -44,7 +44,7 @@ import { onMount, type JSX } from 'solid-js'
     export default new Route('/fortunes')
       .component((scope) => {  
         const forAnimator = new ForAnimator()
-        const [fortunes, setFortunes] = createKey<APIName2Data<'apiFortune'>>()
+        const [fortunes, setFortunes] = createKey<ApiName2Data<'apiFortune'>>()
 
         async function onClick() {
           forAnimator.preFetch()

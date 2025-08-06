@@ -18,7 +18,7 @@ import { revalidate } from '@solidjs/router'
   import { Loading } from '@ace/loading'
   import { apiCharacter } from '@ace/apis'
   import { Show, Suspense } from 'solid-js'
-  import type { APIName2LoadResponse } from '@ace/types'
+  import type { ApiName2LoadResponse } from '@ace/types'
 
 
   export default new Route('/smooth')
@@ -45,7 +45,7 @@ import { revalidate } from '@solidjs/router'
     })
 
 
-  function Character({ element }: { element: APIName2LoadResponse<'apiCharacter'> }) { // once a load has finished the character will render
+  function Character({ element }: { element: ApiName2LoadResponse<'apiCharacter'> }) { // once a load has finished the character will render
     return <>
       <div class="character">
         <Suspense fallback={<div class="ace-shimmer"></div>}>

@@ -7,9 +7,12 @@
 import { go, Go } from './go'
 import { respond } from './respond'
 import { AceError } from './aceError'
+import { getOrigin } from '../getOrigin'
 import type { RequestEvent } from 'solid-js/web'
-import type { APIEvent } from '@solidjs/start/server'
-import type { APIBody, URLSearchParams, URLPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
+import { getRequestEvent } from './getRequestEvent'
+import type { CookieSerializeOptions } from 'cookie-es'
+import { setCookie, getCookie, deleteCookie } from 'h3'
+import type { ApiBody, UrlSearchParams, UrlPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
 
 
 
@@ -19,29 +22,34 @@ import type { APIBody, URLSearchParams, URLPathParams, AceResponse, Routes, Rout
  *     - Get current request event, body and/or params
  *     - Respond w/ a consistent shape
  */
-export class ScopeAPI<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}> {
+export class ScopeAPI<T_Params extends UrlPathParams = {}, T_Search extends UrlSearchParams = {}, T_Body extends ApiBody = {}> {
   readonly body: T_Body
-  readonly event: RequestEvent
   readonly pathParams: T_Params
   readonly searchParams: T_Search
 
 
-  private constructor(event: RequestEvent, params: T_Params, search: T_Search, body: T_Body) {
+  constructor(params: T_Params, search: T_Search, body: T_Body) {
     this.body = body
-    this.event = event
     this.pathParams = params
     this.searchParams = search
   }
 
 
-  static CreateFromHttp<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: RequestEvent, params: T_Params, search: T_Search, body: T_Body) {
-    return new ScopeAPI(event, params, search, body)
+  get event(): RequestEvent {
+    return getRequestEvent()
+  }
+  
+  
+  /**  Like doing `window.location.origin` on the `fe`, which gives back `http://localhost:3000` or `https://example.com` */
+  get origin() {
+    return getOrigin(this.event)
   }
 
 
-  static CreateFromFn<T_Params extends URLPathParams = {}, T_Search extends URLSearchParams = {}, T_Body extends APIBody = {}>(event: RequestEvent, params: T_Params, search: T_Search, body: T_Body) {
-    return new ScopeAPI(event, params, search, body)
-  }
+  getCookie = (name: string) => getCookie(this.event.nativeEvent, name)
+  clearCookie = (name: string) => deleteCookie(this.event.nativeEvent, name)
+  /** @example setCookie('Lovely', 'Yes', { maxAge: ttlWeek, httpOnly: true, sameSite: 'lax' }) */
+  setCookie = (name: string, value: string, serializeOptions?: CookieSerializeOptions) => setCookie(this.event.nativeEvent, name, value, serializeOptions)
 
 
   /**
@@ -109,7 +117,7 @@ export class ScopeAPI<T_Params extends URLPathParams = {}, T_Search extends URLS
    * @param options.headers - Optional, HTTP Response Headers
    * @returns - An API Response of type `AceResponse<null>`
    */
-  Go<T_Path extends Routes>({ path, pathParams, searchParams, status = 301, headers }: { path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit}): AceResponse<null> {
+  Go<T_Path extends Routes>({ path, pathParams, searchParams, status = 301, headers }: { path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }): AceResponse<null> {
     return Go({path, pathParams, searchParams, status, headers})
   }
 }

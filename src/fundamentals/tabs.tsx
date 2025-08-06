@@ -5,7 +5,7 @@
  */
 
 
-import { buildURL } from './buildURL'
+import { buildUrl } from '../buildUrl'
 import { regexRoutes } from './regexRoutes'
 import { useLocation } from '@solidjs/router'
 import { pathnameToMatch } from '../pathnameToMatch'
@@ -260,7 +260,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
             return <>
               { tab instanceof HashTab && <a href={tab.hash} class={`tab ${isActive() ? 'active' : ''}`} aria-current={isActive() ? 'page' : undefined} onClick={ev => onTabClick(i(), tab, ev)}>{tab.label}</a> }
 
-              { tab instanceof RouteTab && <a href={buildURL((tab as RouteTab<any>).path, {pathParams: (tab as RouteTab<any>).pathParams, searchParams: (tab as RouteTab<any>).searchParams})} class={`tab ${isActive() ? 'active' : ''}`} onClick={ev => onTabClick(i(), tab, ev)} > {tab.label} </a> }
+              { tab instanceof RouteTab && <a href={buildUrl((tab as RouteTab<any>).path, {pathParams: (tab as RouteTab<any>).pathParams, searchParams: (tab as RouteTab<any>).searchParams})} class={`tab ${isActive() ? 'active' : ''}`} onClick={ev => onTabClick(i(), tab, ev)} > {tab.label} </a> }
 
               { tab instanceof ContentTab && <div id={`tab-${i()}`} role="tab" tabindex={isActive() ? 0 : -1} aria-selected={isActive()} aria-controls={`tab-content-${i()}`} class={`tab ${isActive() ? 'active' : ''}`} onClick={() => onTabClick(i(), tab)} > {tab.label} </div> }
             </>

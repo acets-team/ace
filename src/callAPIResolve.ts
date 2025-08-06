@@ -1,35 +1,40 @@
+import { ScopeB4 } from './scopeB4'
 import type { API } from './fundamentals/api'
 import { validateBody } from './validateBody'
-import type { RequestEvent } from 'solid-js/web'
 import { validateParams } from './validateParams'
 import { ScopeAPI } from './fundamentals/scopeAPI'
-import { API2Response } from './fundamentals/types'
-import { GoResponse } from './fundamentals/goResponse'
+import { redirectStatusCodes } from './fundamentals/vars'
+import { getRequestEvent } from './fundamentals/getRequestEvent'
+import type { Api2Response, ApiBody, UrlPathParams, UrlSearchParams } from './fundamentals/types'
 
 
 
-export async function callAPIResolve(event: RequestEvent, api: API, rawPathParams: any, rawSearchParams: any, source: 'onAPIEvent' | 'createAPIFunction') {
-  const ctx = await CallAPIResolveContext.Create(event, api, rawPathParams, rawSearchParams, source)
+export async function callAPIResolve(api: API, rawPathParams: any, rawSearchParams: any) {
+  const ctx = await CallAPIResolveContext.Create(api, rawPathParams, rawSearchParams)
 
   const b4Response = await ctx.getB4Response()
   if (b4Response) return b4Response
 
-  return ctx.getResolveResponse()
+  return await ctx.getResolveResponse()
 }
 
 
 
 export class CallAPIResolveContext {
   api: API
-  pathParams: any
-  searchParams: any
-  event: RequestEvent
+  pathParams: UrlPathParams
+  searchParams: UrlSearchParams
   body: Record<string, unknown>
   scope: ScopeAPI<any, any, {}>
 
 
+  get event() {
+    return getRequestEvent()
+  }
 
-  static async Create(event: RequestEvent, api: API, rawPathParams: any, rawSearchParams: any, source: 'onAPIEvent' | 'createAPIFunction') {
+
+
+  static async Create(api: API, rawPathParams: any, rawSearchParams: any) {
     const parsedParams = validateParams({
       rawParams: rawPathParams ?? {},
       rawSearch: rawSearchParams ?? {},
@@ -37,22 +42,19 @@ export class CallAPIResolveContext {
       searchParamsParser: api.values.searchParamsParser
     })
 
-    const body = (api.values.bodyParser) ? await validateBody({api: api, event}) : {}
+    const body = (api.values.bodyParser) ? await validateBody({api, event: getRequestEvent()}) : {}
 
-    const scope = source === 'onAPIEvent'
-      ? ScopeAPI.CreateFromHttp(event, parsedParams.pathParams, parsedParams.searchParams, body)
-      : ScopeAPI.CreateFromFn(event, parsedParams.pathParams, parsedParams.searchParams, body)
+    const scope = new ScopeAPI(parsedParams.pathParams, parsedParams.searchParams, body)
 
-    return new CallAPIResolveContext(event, api, body, scope, parsedParams.pathParams, parsedParams.searchParams)
+    return new CallAPIResolveContext(api, body, scope, parsedParams.pathParams, parsedParams.searchParams)
   }
 
 
 
-  private constructor(event: RequestEvent, api: API, body: Record<string, unknown>, scope: ScopeAPI<any, any, {}>, pathParams: any, searchParams: any) {
+  private constructor(api: API, body: ApiBody, scope: ScopeAPI<any, any, {}>, pathParams: UrlPathParams, searchParams: UrlSearchParams) {
     this.api = api
     this.body = body
     this.scope = scope
-    this.event = event
     this.pathParams = pathParams
     this.searchParams = searchParams
   }
@@ -61,18 +63,14 @@ export class CallAPIResolveContext {
 
   async getB4Response(): Promise<Response | undefined> {
     if (this.api.values.b4 && this.api.values.b4.length) {  
+      const scopeB4 = new ScopeB4(this.event, this.pathParams, this.searchParams, this.body)
+
       for (const fn of this.api.values.b4) {
-        const b4Response = await fn({ event: this.event, pathParams: this.pathParams, searchParams: this.searchParams, body: this.body })
-    
+        const b4Response = await fn(scopeB4)
+
         if (b4Response) {
-          if (!(b4Response instanceof Response)) throw new Error('b4 function must return a Response object')
-          else {
-            const clonedResponse = b4Response.clone()
-            const jsonResponse = await clonedResponse.json()
-    
-            if (jsonResponse.go) throw new GoResponse(jsonResponse.go)
-            else return b4Response
-          }
+          if (b4Response instanceof Response) return b4Response
+          else throw new Error('b4 function must return a Response object')
         }
       }
     }
@@ -87,13 +85,14 @@ export class CallAPIResolveContext {
 
     if (!(originalResponse instanceof Response)) throw new Error(`Error w/ API ${this.api.values.fn} aka ${this.api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), scope.success(), scope.Success(), scope.error(), scope.Error(), scope.go(), scope.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${originalResponse}`)
 
-    const inferResponse: API2Response<T_API> = (await originalResponse.json())
+    if (redirectStatusCodes.has(originalResponse.status)) return originalResponse
+    else {
+      const inferResponse: Api2Response<T_API> = (await originalResponse.json())
 
-    if (inferResponse.go) throw new GoResponse(inferResponse.go)
-
-    return new Response(JSON.stringify(inferResponse), {
-      status: originalResponse.status,
-      headers: new Headers(originalResponse.headers)
-    })
+      return new Response(JSON.stringify(inferResponse), {
+        status: originalResponse.status,
+        headers: new Headers(originalResponse.headers)
+      })
+    }
   }
 }

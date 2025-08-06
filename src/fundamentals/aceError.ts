@@ -6,8 +6,10 @@
 
 
 import { config } from 'ace.config'
-import { defaultError } from './vars'
-import type { APIResponse, FlatMessages } from './types'
+import { isServer } from 'solid-js/web'
+import { GoResponse } from './goResponse'
+import type { ApiResponse, FlatMessages } from './types'
+import { defaultError, redirectStatusCodes } from './vars'
 
 
 /**
@@ -37,29 +39,42 @@ export class AceError {
    * - Typically called in the catch block of a try / cactch
    * @param options `{ error, data, defaultMessage = '❌ Sorry but an error just happened' }`
    */
-  static catch<T>(options?: { error?: any, data?: any, defaultMessage?: string }): APIResponse<T>  {
-    let res: APIResponse<T> | undefined
+  static async catch(error: any) {
+    if (error instanceof GoResponse) {
+      if (!isServer) throw window.location.href = error.url
+      else {
+        let headers = new Headers(error.headers)
+        headers.append('Location', error.url)
 
-    if (options?.error) {
-      if (options.error instanceof AceError) res = options.error.get<T>(options.data)
-      else if (typeof options.error === 'object' && typeof options.error.error === 'object' && typeof options.error.error.message === 'string') res = AceError.simple(options.error.error.message)
-      else if (options.error instanceof Error || (typeof options.error === 'object' && options.error.message)) res = AceError.simple(options.error.message)
-      else if (typeof options.error === 'string') res = AceError.simple(options.error)      
+        const status = redirectStatusCodes.has(error.status) ? error.status : 301
+        return new Response(null, { status, headers })
+      }
+    } else {
+      let res: ApiResponse<null> | undefined
+
+      if (error) {
+        if (error instanceof AceError) res = error.get<null>(null)
+        else if (typeof error === 'object' && typeof error.error === 'object' && typeof error.error.message === 'string') res = AceError.simple(error.error.message)
+        else if (error instanceof Error || (typeof error === 'object' && error.message)) res = AceError.simple(error.message)
+        else if (typeof error === 'string') res = AceError.simple(error)      
+      }
+
+      if (!res) res = AceError.simple(defaultError)
+
+      if (config.logCaughtErrors) {
+        console.error(JSON.stringify(res, null, 2))
+
+        if (error instanceof Error && error.stack) console.error(error.stack)
+        else console.trace()
+      }
+
+      return new Response(JSON.stringify(res), { status: 400 })
     }
-
-    if (!res) res = AceError.simple(defaultError)
-
-    if (config.logCaughtErrors) {
-      console.error(JSON.stringify(res, null, 2))
-      console.trace()
-    }
-
-    return res
   }
 
 
-  get<T extends any>(data?: T): APIResponse {
-    const res: APIResponse = { data }
+  get<T extends any>(data?: T): ApiResponse {
+    const res: ApiResponse = { data }
 
     if (this.status || this.statusText || this.message || this.messages || this.rawBody) {
       res.error = { isAceError: true }
@@ -75,7 +90,7 @@ export class AceError {
   }
 
 
-  static simple(message: string, status: number = 400): APIResponse {
+  static simple(message: string, status: number = 400): ApiResponse {
     return { error: { isAceError: true, status, message } }
   }
 

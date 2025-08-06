@@ -110,7 +110,7 @@ export default new Route404()
   import { Show, Suspense } from 'solid-js'
   import RootLayout from '@src/app/RootLayout'
   import GuestLayout from '@src/app/GuestLayout'
-  import type { APIName2LoadResponse } from '@ace/types'
+  import type { ApiName2LoadResponse } from '@ace/types'
 
 
   export default new Route('/smooth')
@@ -140,7 +140,7 @@ export default new Route404()
     })
 
 
-  function Character({ element }: { element: APIName2LoadResponse<'apiCharacter'> }) { // once a load has finished the character will render
+  function Character({ element }: { element: ApiName2LoadResponse<'apiCharacter'> }) { // once a load has finished the character will render
     return <>
       <div class="character">
         <Suspense fallback={<div class="ace-shimmer"></div>}>
@@ -797,25 +797,15 @@ export default new Route('/spark')
     - During this process there is an option of `Authenticate the domain automatically`. If you're using Cloudflare we recommend this option, it adds all the DNS records in 1 lovely step!
 1. [Ensure you have a sender setup](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email)
 1. [Create an API Key](https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys)
-    - Add api key to `.env` file
+    - Add `BREVO_API_KEY` to `.env` file
 1. [Create an Email Template](https://help.brevo.com/hc/en-us/articles/360019787120-Create-an-email-template)
-    - On the edit template page, to have a link point to a param, set the `Link Target` to `{{params.RESET_LINK}}` & then:
+    - On the edit template page, to have a link point to a param, set the `Link Target` to `{{params.EXAMPLE_LINK}}` & then [(reference)](https://developers.brevo.com/docs/send-a-transactional-email):
+    - Ensure you have `plugins > brevo` set to true in your Ace config, do a [dev restart](#-when-a-dev-restart-is-necessary) & then:
     ```ts
-    if (!process.env.BREVO_API_KEY) return scope.error('!process.env.BREVO_API_KEY')
-
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": process.env.BREVO_API_KEY
-      },
-      body: JSON.stringify({
-        to: [{ email: 'chris@gmail.com', name: 'Christopher Carrington' }],
-        templateId: 1,
-        params: {
-          RESET_LINK: 'http://example.com/yay'
-        }
-      })
+    const response = await sendBrevoTemplate({ // send brevo email 
+      templateId: 1,
+      to: [{ email, name }],
+      params: { EXAMPLE_LINK: scope.origin + createRouteUrl('/magic-link/:token', {pathParams: {token}}) }
     })
     ```
 1. [API Documentation](https://developers.brevo.com/reference/sendtransacemail)

@@ -7,11 +7,11 @@
 
 import type { Layout } from './layout'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { RouteComponent, URLPathParams, URLSearchParams, Parser } from './types'
+import type { RouteComponent, UrlPathParams, UrlSearchParams, Parser } from './types'
 
 
 
-export class Route<T_Params extends URLPathParams = any, T_Search extends URLSearchParams = any> {
+export class Route<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any> {
   /** Typed loosely so we may freely mutate it at runtime */
   #storage: RouteStorage
   
@@ -72,7 +72,7 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
       .pathParams(vParse(object({ id: vNum() })))
     ```
    */
-  pathParams<NewParams extends URLPathParams>(schema: Parser<NewParams>): Route<NewParams, T_Search> {
+  pathParams<NewParams extends UrlPathParams>(schema: Parser<NewParams>): Route<NewParams, T_Search> {
     this.#storage.pathParamsParser = schema
     return this as any
   }
@@ -88,14 +88,14 @@ export class Route<T_Params extends URLPathParams = any, T_Search extends URLSea
       .searchParams(vParse(object({ modal: optional(vBool()) })))
     ```
    */
-  searchParams<NewSearch extends URLSearchParams>(schema: Parser<NewSearch>): Route<T_Params, NewSearch> {
+  searchParams<NewSearch extends UrlSearchParams>(schema: Parser<NewSearch>): Route<T_Params, NewSearch> {
     this.#storage.searchParamsParser = schema
     return this as any
   }
 }
 
 
-export type RouteValues<T_Params extends URLPathParams, T_Search extends URLSearchParams> = {
+export type RouteValues<T_Params extends UrlPathParams, T_Search extends UrlSearchParams> = {
   path: string
   pattern: RegExp
   layouts?: Layout[]

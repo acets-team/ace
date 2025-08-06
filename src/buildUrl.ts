@@ -1,17 +1,11 @@
-/**
- * 🧚‍♀️ How to access:
- *     - import { buildURL } from '@ace/buildURL'
- */
-
-
-import type { URLPathParams, URLSearchParams } from './types'
+import type { UrlPathParams, UrlSearchParams } from './fundamentals/types'
 
 
 /**
  * @param path As it shows in @ `new Route()` config, so w/ params
  * @returns URL with path & search params properly set
  */
-export function buildURL(path: string, options?: { pathParams?: URLPathParams, searchParams?: URLSearchParams }): string {
+export function buildUrl(path: string, options?: { pathParams?: UrlPathParams, searchParams?: UrlSearchParams }): string {
   let url = path
 
   if (options?.pathParams) { // add params to url

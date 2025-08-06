@@ -18,7 +18,7 @@ import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
  * ### API Example TS
  * @example
   ```ts
-  const [clothing, setClothing] = createKey<APIName2Data<'apiClothing'>>([])
+  const [clothing, setClothing] = createKey<ApiName2Data<'apiClothing'>>([])
 
   async function onChange() {
     const res = await apiClothing({ bitKey: 'clothing' })

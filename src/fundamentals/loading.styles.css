@@ -5,8 +5,8 @@
 
 
 .ace-loading {
-  width: var(--ace-loading-width, 2.1rem);
-  height: var(--ace-loading-height, 2.1rem);
+  width: var(--ace-loading-size, 2.1rem);
+  height: var(--ace-loading-size, 2.1rem);
   border-top: var(--ace-loading-thickness, 0.3rem) solid var(--ace-loading-color, gold);
   border-right: var(--ace-loading-thickness, 0.3rem) solid transparent;
   animation: aceLoadingRotation var(--ace-loading-speed, 1s) linear infinite;
@@ -29,8 +29,8 @@
 
 .ace-loading--two {
   &::after {
-    width: var(--ace-loading-width, 2.1rem);
-    height: var(--ace-loading-width, 2.1rem);
+    width: var(--ace-loading-size, 2.1rem);
+    height: var(--ace-loading-size, 2.1rem);
     border-bottom: var(--ace-loading-thickness, 0.3rem) solid var(--ace-loading-two-color, white);
     border-left: var(--ace-loading-thickness, 0.3rem) solid transparent;
     content: '';  

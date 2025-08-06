@@ -6,7 +6,8 @@
 
 
 import { AceError } from './aceError'
-import type { AceResponse, APIResponse } from './types'
+import { redirectStatusCodes } from './vars'
+import type { AceResponse, ApiResponse } from './types'
 
 
 /**
@@ -14,32 +15,43 @@ import type { AceResponse, APIResponse } from './types'
  * @param props.data - Optional, data to respond w/, when `falsy` is `null`
  * @param props.error - Optional, AceError to respond w/, when `falsy` is `null`
  * @param props.go - Optional, redirect to respond w/, when `falsy` is `null`
- * @param props.status - HTTP status 
+ * @param props.status - HTTP status
  * @param props.headers - Optional, HTTP headers, automatically adds a content type of application json
- * @returns 
  */
 export function respond<T_Data>({ data, error, go, status, headers }: RespondProps<T_Data>): AceResponse<T_Data> {
-  const responseJSON: APIResponse<T_Data> = {}
+  const h = new Headers(headers)
+  if (!go) h.set('Content-Type', 'application/json')
+  
+  const init: ResponseInit = { status, headers: h }
+  
+  if (go) {
+    h.set('Location', go)
 
-  if (go) responseJSON.go = go
+    if (!redirectStatusCodes.has(status)) init.status = 301
+    return new Response(null, init)
+  }
+
+  const responseJSON: ApiResponse<T_Data> = {}
+
   if (data !== null && data !== undefined) responseJSON.data = data
   if (error instanceof AceError) responseJSON.error = error.get().error
 
-  const init: ResponseInit = {
-    status,
-    headers: { 'Content-Type': 'application/json', ...headers }
-  }
-
   const res: AceResponse<T_Data> = new Response(JSON.stringify(responseJSON), init)
   res.__dataType = null as T_Data
+
   return res
 }
 
 
 export type RespondProps<T_Data> = {
+  /** Optional, data to respond w/, when `falsy` is `null` */
   data?: T_Data,
+  /** Optional, AceError to respond w/, when `falsy` is `null` */
   error?: AceError,
+  /** Optional, redirect to respond w/, when `falsy` is `null` */
   go?: string,
+  /** HTTP status */
   status: number,
+  /** Optional, HTTP headers, automatically adds a content type of application json */
   headers?: HeadersInit
 }

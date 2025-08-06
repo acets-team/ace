@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { jwtCreate, ttlMinute, ttlHour, ttlDay, ttlWeek } from '@ace/jwtCreate'
+ *     - import { jwtCreate } from '@ace/jwtCreate'
  *     - import type { JwtCreateProps } from '@ace/jwtCreate'
  */
 
@@ -26,7 +26,7 @@ import { base64UrlEncode } from './base64UrlEncode'
   const jwt = await jwtCreate<JWTPayload>({ ttl: ttlWeek, payload: { userId: 42 } })
   ```
  * @param props.payload - The JSON-serializable payload for the jwt token
- * @param props.ttl - Time-to-live in milliseconds
+ * @param props.ttl - Time-to-live in seconds
  * @returns A signed JWT string using HS512
  */
 export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payload, ttl }: JwtCreateProps<T_JWTPayload>): Promise<string> {
@@ -40,7 +40,7 @@ export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payl
 
   const iat = Math.floor(Date.now() / 1000) // current time in seconds
 
-  const exp = iat + Math.floor(ttl / 1000) // expiration time in seconds
+  const exp = iat + ttl // expiration time in seconds
 
   const body = { ...payload, iat, exp }
 
@@ -60,16 +60,9 @@ export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payl
 
 
 
-export const ttlMinute = 1000 * 60
-export const ttlHour = 60 * ttlMinute
-export const ttlDay = 24 * ttlHour
-export const ttlWeek = 7 * ttlDay
-
-
-
 export type JwtCreateProps<T_JWTPayload extends BaseJWTPayload = {}> = {
   /** The JSON-serializable payload for the jwt token */
   payload: T_JWTPayload
-  /** Time-to-live in milliseconds */
+  /** Time-to-live in seconds */
   ttl: number
 }

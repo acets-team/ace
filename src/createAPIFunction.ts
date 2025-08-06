@@ -1,28 +1,27 @@
 import { isServer } from 'solid-js/web'
 import type { API } from './fundamentals/api'
 import { AceError } from './fundamentals/aceError'
-import { GoResponse } from './fundamentals/goResponse'
 import type { ApiMethods } from './fundamentals/types'
-import type { APIFnProps, API2Function } from './fundamentals/types'
+import type { ApiFnProps, Api2Function } from './fundamentals/types'
 
 
 
-export function createAPIFunction<T_API extends API<any, any, any, any, any>>(path: string, method: ApiMethods, apiLoader: () => Promise<T_API>): API2Function<T_API> {
-  const fn = async (options?: APIFnProps<T_API>) => {
+export function createAPIFunction<T_API extends API<any, any, any, any, any>>(path: string, method: ApiMethods, apiLoader: () => Promise<T_API>): Api2Function<T_API> {
+  const fn = async (options?: ApiFnProps<T_API>) => {
     try {
       if (isServer) return await handleBE(apiLoader, options)
       else return await handleFE(path, method, options)
     } catch (error) {
-      throw await handleError(error)
+      return await AceError.catch(error)
     }
   }
 
-  return fn as API2Function<T_API> // assert that `fn` really *is* our conditional API2Function
+  return fn as Api2Function<T_API> // assert that `fn` really *is* our conditional API2Function
 }
 
 
 
-async function handleFE<T_API extends API<any, any, any, any, any>>(path: string, method: ApiMethods, options?: APIFnProps<T_API>) {
+async function handleFE<T_API extends API<any, any, any, any, any>>(path: string, method: ApiMethods, options?: ApiFnProps<T_API>) {
   const { scope } = await import('./fundamentals/scopeComponent')
 
   switch (method) {
@@ -36,27 +35,10 @@ async function handleFE<T_API extends API<any, any, any, any, any>>(path: string
 
 
 
-async function handleBE<T_API extends API<any, any, any, any, any>>(apiLoader: () => Promise<T_API>, options?: APIFnProps<T_API>) {
-  const [api, {callAPIResolve}, {getRequestEvent}] = await Promise.all([
-    apiLoader(),
-    import('./callAPIResolve'),
-    import('./fundamentals/getRequestEvent'),
-  ])
+async function handleBE<T_API extends API<any, any, any, any, any>>(apiLoader: () => Promise<T_API>, options?: ApiFnProps<T_API>) {
+  const [api, {callAPIResolve}] = await Promise.all([ apiLoader(), import('./callAPIResolve') ])
 
-  const o = options ?? ({} as APIFnProps<T_API>)
+  const o = options ?? ({} as ApiFnProps<T_API>)
 
-  return await callAPIResolve(getRequestEvent(), api, o.pathParams ?? {}, o.searchParams ?? {}, 'createAPIFunction')
-}
-
-
-
-async function handleError(error: any) {
-  if (!(error instanceof GoResponse)) return AceError.catch({ error })
-  else {
-    if (!isServer) return window.location.href = error.url
-    else {
-      const { redirect } = await import('@solidjs/router')
-      return redirect(error.url)
-    }
-  }
+  return await callAPIResolve(api, o.pathParams ?? {}, o.searchParams ?? {})
 }

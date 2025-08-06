@@ -15,3 +15,6 @@ export const jwtCookieKey = () => config.jwtCookieKey || 'aceJWT'
 export const apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE'])
 
 export const defaultError = '❌ Sorry but an error just happened'
+
+export const redirectStatusCodes = new Set([301, 302, 303, 307, 308])
+ 
