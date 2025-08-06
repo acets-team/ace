@@ -6,10 +6,10 @@
 
 
 import { config } from 'ace.config'
+import { defaultError } from './vars'
 import { isServer } from 'solid-js/web'
 import { GoResponse } from './goResponse'
 import type { ApiResponse, FlatMessages } from './types'
-import { defaultError, redirectStatusCodes } from './vars'
 
 
 /**
@@ -46,7 +46,7 @@ export class AceError {
         let headers = new Headers(error.headers)
         headers.append('Location', error.url)
 
-        const status = redirectStatusCodes.has(error.status) ? error.status : 301
+        const status = [301, 302, 303, 307, 308].includes(error.status) ? error.status : 301 // varing out these codes into a Set causes errors @ cloudflare workers b/c they need to know at build time is this a redirect
         return new Response(null, { status, headers })
       }
     } else {

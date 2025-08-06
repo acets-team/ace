@@ -6,7 +6,6 @@
 
 
 import { AceError } from './aceError'
-import { redirectStatusCodes } from './vars'
 import type { AceResponse, ApiResponse } from './types'
 
 
@@ -19,18 +18,16 @@ import type { AceResponse, ApiResponse } from './types'
  * @param props.headers - Optional, HTTP headers, automatically adds a content type of application json
  */
 export function respond<T_Data>({ data, error, go, status, headers }: RespondProps<T_Data>): AceResponse<T_Data> {
-  const h = new Headers(headers)
-  if (!go) h.set('Content-Type', 'application/json')
-  
-  const init: ResponseInit = { status, headers: h }
-  
   if (go) {
-    h.set('Location', go)
+    const h = new Headers(headers)
+    h.set('Location', '/')
+    const s = [301, 302, 303, 307, 308].includes(status) ? status : 301 // varing out these codes into a Set causes errors @ cloudflare workers b/c they need to know at build time is this a redirect
 
-    if (!redirectStatusCodes.has(status)) init.status = 301
-    return new Response(null, init)
+    return new Response(null, { headers: h, status: s })
   }
 
+  const h = new Headers(headers)
+  const init: ResponseInit = { status, headers: h }
   const responseJSON: ApiResponse<T_Data> = {}
 
   if (data !== null && data !== undefined) responseJSON.data = data
