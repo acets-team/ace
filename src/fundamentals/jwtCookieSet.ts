@@ -41,7 +41,7 @@ export async function jwtCookieSet<T_JWTPayload extends BaseJWTPayload = {}>({ j
     httpOnly: true,
     sameSite: 'lax',
     secure: env !== 'local',
-    expires: new Date(Date.now() + jwtCreateProps.ttl),
+    maxAge: jwtCreateProps.ttl,
     ...cookieOptions,
   })
 

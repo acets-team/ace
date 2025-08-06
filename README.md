@@ -1,4 +1,4 @@
-![Ace, the typesafetiest framework!](https://i.imgur.com/0u8aTp8.png)
+![Ace, the typesafetiest framework!](https://i.imgur.com/qoibppy.png)
 
 
 
