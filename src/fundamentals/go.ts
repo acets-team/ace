@@ -19,7 +19,7 @@ import type { Routes, RoutePath2PathParams, AceResponse, RoutePath2SearchParams 
  * @returns - An API Response of type `AceResponse<null>`
  */
 export function go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
-  return respond({ go: buildUrl(path, {pathParams: params?.pathParams, searchParams: params?.searchParams}), status: 301 })
+  return respond({ go: buildUrl(path, params), status: 301 })
 }
 
 

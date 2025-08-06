@@ -105,7 +105,7 @@ export class ScopeAPI<T_Params extends UrlPathParams = {}, T_Search extends UrlS
    * @returns - An API Response of type `AceResponse<null>`
    */
   go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
-    return go(path, {pathParams: params?.pathParams, searchParams: params?.searchParams})
+    return go(path, params)
   }
 
 

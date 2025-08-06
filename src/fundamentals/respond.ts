@@ -20,8 +20,8 @@ import type { AceResponse, ApiResponse } from './types'
 export function respond<T_Data>({ data, error, go, status, headers }: RespondProps<T_Data>): AceResponse<T_Data> {
   if (go) {
     const h = new Headers(headers)
-    h.set('Location', '/')
-    const s = [301, 302, 303, 307, 308].includes(status) ? status : 301 // varing out these codes into a Set causes errors @ cloudflare workers b/c they need to know at build time is this a redirect
+    h.set('Location', go)
+    const s = [301, 302, 303, 307, 308].includes(status) ? status : 301
 
     return new Response(null, { headers: h, status: s })
   }
