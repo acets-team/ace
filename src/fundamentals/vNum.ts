@@ -4,7 +4,7 @@
  */
 
 
-import { number, picklist, pipe, regex, string, transform, union } from 'valibot'
+import { pipe, regex, string, union, number,  picklist, transform, nonNullish } from 'valibot'
 
 
 /**
@@ -24,16 +24,18 @@ export function vNum(options?: vNumProps) {
     : /^\d+$/ // allow positive whole numbers
 
   const base = pipe(
-    union([ string(), number() ]),
+    union([ string(options?.errorMessage), number(options?.errorMessage) ]),
     transform(String),
     regex(regularExpression),
     transform(Number),
-    number()
+    number(options?.errorMessage)
   )
 
-  return options?.picklist
-    ? pipe(base, picklist(options.picklist))
-    : base
+  return nonNullish(
+    options?.picklist
+      ? pipe(base, picklist(options.picklist, options?.errorMessage))
+      : base
+  , options?.errorMessage)
 }
 
 
@@ -44,4 +46,6 @@ type vNumProps = {
   allowNegative?: boolean,
   /** Optional, defaults to empty array, array of numbers that this number must be one of, if empty array then any number is valid */
   picklist?: number[]
+  /** Optional, default is whataver valibot says for a specific case */
+  errorMessage?: string
 }
