@@ -5,12 +5,12 @@
 
 
 import type { API } from './api'
-import type { JSX } from 'solid-js'
 import type { Route } from './route'
 import type { apiMethods } from './vars'
 import type { InferEnums } from './enums'
 import type { ScopeB4 } from '../scopeB4'
 import type { Route404 } from './route404'
+import type { JSX, Accessor } from 'solid-js'
 import type { AceErrorProps } from './aceError'
 import type { regexRoutes } from './regexRoutes'
 import type { regexApiPuts } from './regexApiPuts'
@@ -19,7 +19,6 @@ import type { regexApiNames } from './regexApiNames'
 import type { regexApiPosts } from './regexApiPosts'
 import type { ScopeComponent } from './scopeComponent'
 import type { regexApiDeletes } from './regexApiDeletes'
-import type { AccessorWithLatest } from '@solidjs/router'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
 
@@ -382,7 +381,7 @@ export type POSTPath2SearchParams<T_Path extends POSTPaths> = Api2SearchParams <
   function Characters(res: ApiName2LoadResponse<'apiCharacter'>) {}
   ```
  */
-export type ApiName2LoadResponse<T_Name extends ApiNames> = AccessorWithLatest<undefined | ApiName2Response<T_Name>>
+export type ApiName2LoadResponse<T_Name extends ApiNames> = Accessor<undefined | ApiName2Response<T_Name>>
 
  
 /** The component to render for a route */

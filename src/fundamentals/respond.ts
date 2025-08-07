@@ -27,6 +27,7 @@ export function respond<T_Data>({ data, error, go, status, headers }: RespondPro
   }
 
   const h = new Headers(headers)
+  h.set('content-type', 'application/json')
   const init: ResponseInit = { status, headers: h }
   const responseJSON: ApiResponse<T_Data> = {}
 
