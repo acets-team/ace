@@ -13,6 +13,7 @@ export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?:
     case 'GET':
       requestInit = {
         method,
+        redirect: 'manual',
         credentials: 'same-origin',
       }
       break
@@ -21,6 +22,7 @@ export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?:
     case 'DELETE':
       requestInit = {
         method,
+        redirect: 'manual',
         credentials: 'same-origin',
         body: body ? JSON.stringify(body) : null,
         headers: { 'content-type': 'application/json' },
