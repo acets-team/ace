@@ -73,3 +73,13 @@
 - ALL get a ready-to-run executable CLI 
 - The || true allows us to gracefully skip on windows
 - Windows doesn’t care about executable (+x) permissions like Linux or Mac does
+
+
+## Did an npm unlink @acets-team/ace but it's still linked in working directory
+- `nvm use 24` in the ace directory
+- `npm unlink @acets-team/ace` in the ace directory
+- `npm unlink @acets-team/ace -g` in the ace directory
+- `nvm use 24` in the working directory
+- `npm unlink @acets-team/ace` in the working directory
+- `npm unlink @acets-team/ace -g` in the working directory
+- `which ace` to see what version still has it linked, `nvm` to that node version, do the same there, then come back to node version 24

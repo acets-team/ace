@@ -105,9 +105,14 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @param params.searchParams - Optional or required dependding on the path
    * @returns Redirect `new Response()`
    */
-  go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
-    return this.respond({ go: buildUrl(path, params), status: 301 })
+  go<T_Path extends Routes>({ headers, path, pathParams, searchParams }: {headers?: HeadersInit, path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>}) {
+    const h = new Headers(headers)
+    h.set('Location', buildUrl(path, {pathParams, searchParams}))
+    return new Response(null, { headers: h, status: 301 })
   }
+  // go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
+  //   return this.respond({ go: buildUrl(path, params), status: 301 })
+  // }
 
   /** @example setCookie('Alpha', 'Omega', { maxAge: ttlWeek, httpOnly: true, sameSite: 'lax' }) */
   setCookie(name: string, value: string, options?: CookieSerializeOptions) {
