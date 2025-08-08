@@ -1,5 +1,6 @@
 import type { API } from './fundamentals/api'
 import { validateBody } from './validateBody'
+import { goHeader } from './fundamentals/vars'
 import { ScopeBE } from './fundamentals/scopeBE'
 import { validateParams } from './validateParams'
 import { getRequestEvent } from './fundamentals/getRequestEvent'
@@ -78,7 +79,9 @@ export class CallAPIResolveContext {
 
     if (!(originalResponse instanceof Response)) throw new Error(`Error w/ API ${this.api.values.fn} aka ${this.api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), scope.success(), scope.Success(), scope.error(), scope.Error(), scope.go(), scope.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${originalResponse}`)
 
-    if ([301, 302, 303, 307, 308].includes(originalResponse.status)) return originalResponse // varing out these codes into a Set causes errors @ cloudflare workers b/c they need to know at build time is this a redirect
+    const redirectUrl = originalResponse.headers.get(goHeader)
+
+    if (redirectUrl) return originalResponse
     else {
       const inferResponse: Api2Response<T_API> = (await originalResponse.json())
 

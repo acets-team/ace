@@ -1,3 +1,4 @@
+import { goHeader } from './vars'
 import { AceError } from './aceError'
 import { buildUrl } from '../buildUrl'
 import { type RequestEvent } from 'solid-js/web'
@@ -41,22 +42,22 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @param props.data - Optional, data to respond w/, can be in the response w/ `props.error` too
    * @param props.error - Optional, AceError to respond w/, can be in the response w/ `props.error` too
    * @param props.go - Optional, redirect to respond w/, when this is set, data & error are not in the response
-   * @param props.status - HTTP status
+   * @param props.status - Optional, default is 200, HTTP status
    * @param props.headers - Optional, HTTP headers, automatically adds a content type of application json when go is not set
    * @returns - `new Response()` based on options
    */
-  respond<T_Data>({data, error, go, status, headers}: { data?: T_Data, error?: AceError, go?: string, status: number, headers?: HeadersInit }): AceResponse<T_Data> {
-    if (go) return this.#giveRedirect(status, go, headers)
+  respond<T_Data, T_Path extends Routes>({data, error, path, pathParams, searchParams, status = 200, headers}: { data?: T_Data, error?: AceError, path?: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }): AceResponse<T_Data> {
+    if (path) return this.#giveRedirect(path, {pathParams, searchParams, headers})
     else return this.#giveJSON(status, data ?? null, error ?? null, headers)
   }
 
 
-  #giveRedirect(s: number, go: string, h?: HeadersInit) {
-    const headers = new Headers(h)
-    headers.set('Location', go)
-    const status = [301, 302, 303, 307, 308].includes(s) ? s : 301 // varing out these codes into a Set causes errors @ cloudflare workers b/c they need to know at build time is this a redirect
+  #giveRedirect<T_Path extends Routes>(path: T_Path, options?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, headers?: HeadersInit }) {
+    const headers = new Headers(options?.headers)
 
-    return new Response(null, { headers, status })
+    headers.set(goHeader, buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}))
+
+    return new Response(null, { status: 204, headers })
   }
 
 
@@ -105,23 +106,10 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @param params.searchParams - Optional or required dependding on the path
    * @returns Redirect `new Response()`
    */
-  go<T_Path extends Routes>({ init: initOverrides, path, pathParams, searchParams }: { path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, init?: Partial<ResponseInit> }): [null, ResponseInit] {
-    return [
-      null,
-      {
-        status: 301,
-        headers: {
-          'Content-Type': 'application/json',
-          Location: buildUrl(path, {pathParams, searchParams}),
-          ...(initOverrides?.headers ?? {})
-        },
-        ...initOverrides,
-      }
-    ]
+  go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
+    return this.respond({ path, pathParams: params?.pathParams, searchParams: params?.searchParams })
   }
-  // go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
-  //   return this.respond({ go: buildUrl(path, params), status: 301 })
-  // }
+
 
   /** @example setCookie('Alpha', 'Omega', { maxAge: ttlWeek, httpOnly: true, sameSite: 'lax' }) */
   setCookie(name: string, value: string, options?: CookieSerializeOptions) {

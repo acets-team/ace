@@ -4,9 +4,11 @@
  */
 
 
+import { goHeader } from './vars'
 import { AceError } from './aceError'
-import { query, createAsync } from '@solidjs/router'
-import { createSignal, onMount, type Accessor } from 'solid-js'
+import { isServer } from 'solid-js/web'
+import type {Accessor } from 'solid-js'
+import { query, createAsync, redirect } from '@solidjs/router'
 
 
 /**
@@ -28,29 +30,6 @@ import { createSignal, onMount, type Accessor } from 'solid-js'
  * @param apiSetsCookies - 🚨 If the api sets cookies then this must be true. This will ensure the browser sends this request and then the browser will recieve the response w/ Set-Cookie headers.
  */
 export function load<T_Response>( fetchFn: () => Promise<T_Response>, cacheKey: string, apiSetsCookies?: boolean ): Accessor<T_Response | undefined> {
-  if (apiSetsCookies) {
-    const [response, setResponse] = createSignal<T_Response>()
-
-    onMount(async () => {
-      try {
-        const response = await fetchFn()
-
-        if (response instanceof Response) {
-          const clonedResponse = response.clone()
-          const data = await clonedResponse.json() as T_Response
-
-          setResponse(() => data)
-        }
-
-        setResponse(() => response)
-      } catch (error) {
-        const e =  await AceError.catch(error) as T_Response
-        setResponse(() => e)
-      }
-    })
-
-    return response
-  } else {
     const loaded = query(fetchFn, cacheKey) // if a redirect status is returned here, the redirect happens & `createAsync()` does not run
 
     return createAsync(async () => {
@@ -58,6 +37,13 @@ export function load<T_Response>( fetchFn: () => Promise<T_Response>, cacheKey: 
         const response = await loaded()
 
         if (response instanceof Response) {
+          const redirectUrl = response.headers.get(goHeader)
+
+          if (redirectUrl) {
+            if (isServer) throw redirect(redirectUrl, { headers: response.headers })
+            else throw window.location.href = redirectUrl
+          }
+
           const clonedResponse = response.clone()
           const data = await clonedResponse.json() as T_Response
 
@@ -69,5 +55,4 @@ export function load<T_Response>( fetchFn: () => Promise<T_Response>, cacheKey: 
         return await AceError.catch(error) as T_Response
       }
     }, {deferStream: true})
-  }
 }

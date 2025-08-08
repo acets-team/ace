@@ -15,3 +15,5 @@ export const jwtCookieKey = () => config.jwtCookieKey || 'aceJWT'
 export const apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE'])
 
 export const defaultError = '❌ Sorry but an error just happened'
+
+export const goHeader = '_AceGo'

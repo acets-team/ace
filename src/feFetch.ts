@@ -1,3 +1,4 @@
+import { goHeader } from './fundamentals/vars'
 import { AceError } from './fundamentals/aceError'
 import type { ApiMethods } from './fundamentals/types'
 
@@ -31,8 +32,9 @@ export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?:
   }
 
   const response = await fetch(url, requestInit)
+  const redirectUrl = response.headers.get(goHeader)
 
-  if (response.redirected) throw window.location.href = response.url
+  if (redirectUrl) throw window.location.href = redirectUrl
 
   if (response.headers.get('content-type')?.includes('application/json')) return (await response.json()) as Promise<T>
   else throw new AceError({ status: response.status, statusText: response.statusText, rawBody: await response.text() })
