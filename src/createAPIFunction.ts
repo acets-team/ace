@@ -16,7 +16,7 @@ export function createAPIFunction<T_API extends API<any, any, any, any, any>>(pa
     }
   }
 
-  return fn as Api2Function<T_API> // assert that `fn` really *is* our conditional API2Function
+  return fn as unknown as Api2Function<T_API> // assert that `fn` really *is* our conditional API2Function
 }
 
 

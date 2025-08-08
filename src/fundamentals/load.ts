@@ -13,30 +13,36 @@ import { query, createAsync, redirect } from '@solidjs/router'
 
 
 /**
- * ### Does the lovely Solid Start `query()` + `createAsync()` combo for us!
- * - On initial page load if a `load()` is present on the page, this request will begin on the server, if the request finishes before the page has rendered the content will be in the original render, else will be streamed in
+ * ### Load API data into a component on render
+ * - On page refresh if a `load()` is present on the page, this request will begin on the server, if the request finishes before the page has rendered the API response will be in the original render, else the API response will be streamed in, so place .tsx API response information w/in a `<Suspense>`
  * - On SPA navigation this request will begin in the browser
- * - 🚨 Please put response w/in `<Suspense>` or else things will get weird (duplicate calls made on fe, page flickers, etc)
+ * - 🚨 Please put response w/in `<Suspense>` or else things will get weird (page flickers)
  * @example
     ```ts
     const air = load(() => apiCharacter({pathParams: {element: 'air'}}), '💨')
     ```
  * @param fetchFn - Anonymous async function
- * @param cacheKey - Helps browser cache this data for back button, or multi calls on page, but a page refresh is always fresh data and can be used w/ our `reload()` or Solid's `revalidate()` https://docs.solidjs.com/solid-router/reference/data-apis/revalidate
- * @param apiSetsCookies - 🚨 If the api sets cookies then this must be true. This will ensure the browser sends this request and then the browser will recieve the response w/ Set-Cookie headers.
+ * @param cacheKey - Helps browser cache this data, a page refresh is always fresh data, this `cachKey` helps you make calls again to the same API using our `reload()` or Solid's `revalidate()` https://docs.solidjs.com/solid-router/reference/data-apis/revalidate
+ * @param apiSetsCookies - 🚨 If the api sets cookies then `apiSetsCookies` must be true. This will ensure the browser sends this request and then the browser recieves the response w/ Set-Cookie headers.
  */
 export function load<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: string, apiSetsCookies?: boolean): Accessor<T_Response | undefined> {
-  if (apiSetsCookies) {
-    const [response, setResponse] = createSignal<T_Response>()
+  if (apiSetsCookies) return loadOnMount(fetchFn)
+  else return loadOnDemand(fetchFn, cacheKey)
+}
 
-    onMount(async () => setResponse(await getResponse(await fetchFn())))
 
-    return response
-  } else {
-    const loaded = query(fetchFn, cacheKey)
 
-    return createAsync(async () => await getResponse(await loaded()))
-  }
+function loadOnMount<T_Response>(fetchFn: () => Promise<T_Response>) {
+  const [response, setResponse] = createSignal<T_Response>()
+  onMount(async () => setResponse(await getResponse(await fetchFn())))
+  return response
+}
+
+
+
+function loadOnDemand<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: string) {
+  const loaded = query(fetchFn, cacheKey)
+  return createAsync<T_Response>(async () => await getResponse(await loaded()))
 }
 
 

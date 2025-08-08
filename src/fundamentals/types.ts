@@ -82,37 +82,6 @@ export type RegexRouteMapAndPath2Route<T_Map extends RegexMap<'route'>, T_Path e
   : never
 
 
-/** 
- * - Receives: API Function Name
- * - Gives: API Response Data
-*/
-export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
-  ? T_API extends API<any, any, any, infer T_Response, any>
-    ? Exclude<T_Response, null>
-    : never
-  : never
-
-
-/** 
- * - Receives: API Function Name
- * - Gives: API Response
-*/
-export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
-  ? AceResponse<ApiResponse<ApiName2Data<T_Name>>>
-  : never
-
-
-/** 
- * - Receives: API Function Name
- * - Gives: API Request Props
-*/
-export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API> // Get module type T_API from the RegexMapEntry
-  ? T_API extends API< infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals > // ensure T_API is indeed an API<…>
-    ? BaseAPIFnProps<API<T_PathParams,T_SearchParams,T_Body,T_Response,T_Locals>> & { bitKey?: string } // build props type
-    : never
-  : never
-
-
 /**
  * - When we create a Response object the type for the stringified json is lost b/c the Response object does not accept generics
  * - When we create an AceResponse we can store / infer the type for the stringified json in @ `__resType`!
@@ -134,6 +103,88 @@ export type ApiResponse<T_Data = any> = {
 }
 
 
+/** 
+ * - Receives: AceResponse
+ * - Gives: API Response
+*/
+export type AceResponse2ApiResponse<T_AceResponse> = T_AceResponse extends AceResponse<infer T_Data>
+  ? ApiResponse<T_Data>
+  : never
+
+
+/** 
+ * - Receives: API
+ * - Gives: ApiResponse
+*/
+export type Api2Response<T_API> = T_API extends API<any, any, any, any, any>
+  ? ApiResponse<Api2Data<T_API>>
+  : never
+
+
+/** 
+ * - Receives: API
+ * - Gives: Response data type
+*/
+export type Api2Data<T_API> = T_API extends API<any, any, any, infer T_Response, any>
+  ? T_Response extends ApiResponse<infer T_Data>
+    ? Exclude<T_Data, null>
+    : never
+  : never
+
+
+/** 
+ * - Receives: API
+ * - Gives: Request body type
+*/
+export type Api2Body<T_API extends API<any,any,any,any,any>> = T_API extends API<any, any, infer T_Body, any, any>
+  ? GetPopulated<T_Body>
+  : undefined
+
+
+/** 
+ * - Receives: API
+ * - Gives: Request params type
+*/
+export type Api2PathParams<T_API extends API<any,any,any,any,any>> = T_API extends API<infer T_Params, any, any, any, any>
+  ? GetPopulated<T_Params>
+  : undefined
+
+
+/** 
+ * - Receives: API
+ * - Gives: Request search params type
+*/
+export type Api2SearchParams<T_API extends API<any,any,any,any,any>> = T_API extends API<any, infer T_Search, any, any, any>
+  ? GetPopulated<T_Search>
+  : undefined
+
+
+/** If object has keys return object, else return undefined */
+export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
+
+
+/** If testing item is an object and has keys returns true, else return false */
+export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? false : true : false
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: API Response
+*/
+export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+  ? Api2Response<T_API>
+  : never
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: API Response Data
+*/
+export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+  ? Api2Data<T_API>
+  : never
+
+
 /**
  * - Receives: API Function Name, so => `apiExample`
  * - Gives: The type for the `load()` response
@@ -144,25 +195,31 @@ export type ApiResponse<T_Data = any> = {
   function Characters(res: ApiName2LoadResponse<'apiCharacter'>) {}
   ```
  */
-export type ApiName2LoadResponse<T_Name extends ApiNames> = Accessor<undefined | ApiResponse<ApiName2Data<T_Name>>>
+export type ApiName2LoadResponse<T_Name extends ApiNames> = Accessor<undefined | ApiName2Response<T_Name>>
 
 
 /** 
- * - Receives: API
- * - Gives: FullAPIResponse
+ * - Receives: API Function Name
+ * - Gives: API Request Props
+ * @example
+    ```ts
+    const props: ApiName2Props<'apiClothing'> = { bitKey: 'clothing' }
+    if (category) props.searchParams = { category }
+    const res = await apiClothing(props)
+    ```
 */
-export type Api2Response<T_API extends API<any, any, any, any, any>> = ApiResponse<Api2Data<T_API>>
-
-
-/** 
- * - Receives: API
- * - Gives: Response data type
-*/
-export type Api2Data<T_API extends API<any, any, any, any, any>> = T_API extends API<any, any, any, infer T_Response, any>
-  ? T_Response extends ApiResponse<infer T_Data>
-    ? T_Data
+export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API> // Get module type T_API from the RegexMapEntry
+  ? T_API extends API< infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals > // ensure T_API is indeed an API<…>
+    ? BaseAPIFnProps<API<T_PathParams,T_SearchParams,T_Body,T_Response,T_Locals>> & { bitKey?: string } // build props type
     : never
   : never
+
+
+/** Building an options object whose properties are only present if they have keys */
+export type BaseAPIFnProps<T_API extends API<any,any,any,any,any>> =
+  OptionalIfNoRequired<'body', Api2Body<T_API>> &
+  OptionalIfNoRequired<'pathParams', Api2PathParams<T_API>> &
+  OptionalIfNoRequired<'searchParams', Api2SearchParams<T_API>>
 
 
 /** 
@@ -175,10 +232,17 @@ export type Api2Function<T_API extends API<any, any, any, any, any>> = RequiredK
   : (options: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
 
 
+/** 
+ * - The props (arguments) that are sent to an api function
+ * - BitKey is optional
+*/
+export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string }
+
+
 /** Utility to extract the *required* keys of some object */
 export type RequiredKeys<T_Object> = {
   [K in keyof T_Object]-?: {} extends Pick<T_Object, K> ? never : K
-}[keyof T_Object];
+}[keyof T_Object]
 
 
 /**
@@ -188,82 +252,6 @@ export type RequiredKeys<T_Object> = {
 export type OptionalIfNoRequired<Name extends string, T> = RequiredKeys<T> extends never
   ? { [P in Name]?: T }
   : { [P in Name]: T }
-
-
-/** If testing item is an object and has keys returns true, else return false */
-export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? false : true : false
-
-
-/** Building an options object whose properties are only present if they have keys */
-export type BaseAPIFnProps<T_API extends API<any,any,any,any,any>> =
-  OptionalIfNoRequired<'body', Api2Body<T_API>> &
-  OptionalIfNoRequired<'pathParams', Api2PathParams<T_API>> &
-  OptionalIfNoRequired<'searchParams', Api2SearchParams<T_API>>
-
-
-/** 
- * - The props (arguments) that are sent to an api function
- * - BitKey is optional
-*/
-export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string }
-
-/** 
- * - Receives: API GET path
- * - Gives: Response data type
-*/
-export type GETPath2Data<T_Path extends GETPaths> = Api2Response<RegexApiMapAndPath2API<typeof regexApiGets, T_Path>>
-
-
-/** 
- * - Receives: API PUT path
- * - Gives: Response data type
-*/
-export type PUTPath2Data<T_Path extends PUTPaths> = Api2Response<RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
-
-
-/** 
- * - Receives: API DELETE path
- * - Gives: Response data type
-*/
-export type DELETEPath2Data<T_Path extends DELETEPaths> = Api2Response<RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
-
-
-/** 
- * - Receives: API POST path
- * - Gives: Response data type
-*/
-export type POSTPath2Data<T_Path extends POSTPaths> = Api2Response<RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
-
-
-/** If object has keys return object, else return undefined */
-export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
-
-
-/** 
- * - Receives: API
- * - Gives: Request params type
-*/
-export type Api2PathParams<T_API extends API<any,any,any,any,any>> = T_API extends API<infer T_Params, any, any, any, any>
-  ? GetPopulated<T_Params>
-  : undefined  
-
-
-/** 
- * - Receives: API
- * - Gives: Request body type
-*/
-export type Api2Body<T_API extends API<any,any,any,any,any>> = T_API extends API<any, any, infer T_Body, any, any>
-  ? GetPopulated<T_Body>
-  : undefined  
-
-
-/** 
- * - Receives: API
- * - Gives: Request search params type
-*/
-export type Api2SearchParams<T_API extends API<any,any,any,any,any>> = T_API extends API<any, infer T_Search, any, any, any>
-  ? GetPopulated<T_Search>
-  : undefined
 
 
 /** 
@@ -283,35 +271,6 @@ export type Route2SearchParams<T_Route extends Route<any, any>> = T_Route extend
   ? GetPopulated<T_Search>
   : undefined
 
-
-/** 
- * - Receives: API GET path
- * - Gives: The type for that api's params
-*/
-export type GETPath2PathParams<T_Path extends GETPaths> = Api2PathParams<RegexApiMapAndPath2API<typeof regexApiGets, T_Path>>
-
-
-/** 
- * - Receives: API PUT path
- * - Gives: The type for that api's params
-*/
-export type PUTPath2PathParams<T_Path extends PUTPaths> = Api2PathParams<RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
-
-
-/** 
- * - Receives: API DELETE path
- * - Gives: The type for that api's params
-*/
-export type DELETEPath2PathParams<T_Path extends DELETEPaths> = Api2PathParams<RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
-
-
-/** 
- * - Receives: API POST path
- * - Gives: The type for that api's params
-*/
-export type POSTPath2PathParams<T_Path extends POSTPaths> = Api2PathParams<RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
-
-
 /** 
  * - Receives: Route path
  * - Gives: The type for that route's path params
@@ -326,55 +285,6 @@ export type RoutePath2PathParams<T_Path extends Routes> = Route2PathParams<Regex
 export type RoutePath2SearchParams<T_Path extends Routes> = Route2SearchParams<RegexRouteMapAndPath2Route<typeof regexRoutes, T_Path>>
 
 
-/** 
- * - Receives: API GET path
- * - Gives: The type for that api's search params
-*/
-export type GETPath2SearchParams<T_Path extends GETPaths> = Api2SearchParams<RegexApiMapAndPath2API<typeof regexApiGets, T_Path>>
-
-
-/** 
- * - Receives: API POST path
- * - Gives: The type for that api's body
-*/
-export type POSTPath2Body<T_Path extends POSTPaths> = Api2Body<RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
-
-
-/** 
- * - Receives: API PUT path
- * - Gives: The type for that api's body
-*/
-export type PUTPath2Body<T_Path extends PUTPaths> = Api2Body<RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
-
-
-/** 
- * - Receives: API DELETE path
- * - Gives: The type for that api's body
-*/
-export type DELETEPath2Body<T_Path extends DELETEPaths> = Api2Body<RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
-
-
-/** 
- * - Receives: API PUT path
- * - Gives: The type for that api's search params
-*/
-export type PUTPath2SearchParams<T_Path extends PUTPaths> = Api2SearchParams <RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>>
-
-
-/** 
- * - Receives: API DELETE path
- * - Gives: The type for that api's search params
-*/
-export type DELETEPath2SearchParams<T_Path extends DELETEPaths> = Api2SearchParams <RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>>
-
-
-/** 
- * - Receives: API POST path
- * - Gives: The type for that api's search params
-*/
-export type POSTPath2SearchParams<T_Path extends POSTPaths> = Api2SearchParams <RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
-
- 
 /** The component to render for a route */
 export type RouteComponent<T_Params extends UrlPathParams, T_Search extends UrlSearchParams> = (scope: ScopeComponent<T_Params, T_Search>) => JSX.Element
 
