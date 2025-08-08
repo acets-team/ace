@@ -111,19 +111,39 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
   }
 
 
-  /** @example setCookie('Alpha', 'Omega', { maxAge: ttlWeek, httpOnly: true, sameSite: 'lax' }) */
+  /** 
+   * @example
+    ```ts
+    import { env } from '@ace/env'
+    import { ttlWeek } from '@ace/ttl'
+    import { jwtCookieKey } from '@ace/vars'
+    import { jwtCreate } from '@ace/jwtCreate'
+
+    scope.setCookie(jwtCookieKey(), await jwtCreate({ ttl: ttlWeek, payload }), {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: ttlWeek,
+      secure: env !== 'local',
+    })
+    ```
+   * @param name - Cookie name
+   * @param value - Cookie value
+   * @param options - `CookieSerializeOptions`
+   * @link https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie 
+   */
   setCookie(name: string, value: string, options?: CookieSerializeOptions) {
     return setCookie(this.event.nativeEvent, name, value, options)
   }
 
 
-  /** @example getCookie('Zion') */
+  /** @example getCookie('jwt') */
   getCookie(name: string) {
     return getCookie(this.event.nativeEvent, name)
   }
 
 
-  /** @example clearCookie('Brb') */
+  /** @example clearCookie('jwt') */
   clearCookie(name: string) {
     return deleteCookie(this.event.nativeEvent, name)
   }
