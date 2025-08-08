@@ -28,7 +28,7 @@ import type { FullJWTPayload, JWTValidateResponse, JWTValidateFailure, JWTValida
  *     - `{ isValid: true; payload }` on success, payload automatically includes `iat` (issued time in seconds) & `exp` (expiration in seconds)
  *     - `{ isValid: falsem errorId, errorMessage }` on failure  
  */
-export async function jwtValidate<T_JWTPayload extends BaseJWTPayload = {}>(jwt: string): Promise<JWTValidateResponse<T_JWTPayload>> {
+export async function jwtValidate<T_JWTPayload extends BaseJWTPayload = {}>(jwt?: string): Promise<JWTValidateResponse<T_JWTPayload>> {
   if (!process.env.JWT_SECRET) throw new Error('!process.env.JWT_SECRET')
 
   if (!jwt) return error('FALSY_JWT', 'JWT not provided')
