@@ -255,6 +255,34 @@ export type OptionalIfNoRequired<Name extends string, T> = RequiredKeys<T> exten
 
 
 /** 
+ * - Receives: GET Path
+ * - Gives: API
+*/
+export type GETPath2Api<T_Path extends GETPaths> = RegexApiMapAndPath2API<typeof regexApiGets, T_Path>
+
+
+/** 
+ * - Receives: POST Path
+ * - Gives: API
+*/
+export type POSTPath2Api<T_Path extends POSTPaths> = RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>
+
+
+/** 
+ * - Receives: PUT Path
+ * - Gives: API
+*/
+export type PUTPath2Api<T_Path extends PUTPaths> = RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>
+
+
+/** 
+ * - Receives: DELETE Path
+ * - Gives: API
+*/
+export type DELETEPath2Api<T_Path extends DELETEPaths> = RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>
+
+  
+/** 
  * - Receives: Route
  * - Gives: Route path params type
 */

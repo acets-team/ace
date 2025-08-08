@@ -12,7 +12,7 @@ import { FEMessages } from '../feMessages'
 import { useLocation } from '@solidjs/router'
 import { getScopeComponentChildren } from '../scopeComponentChildren'
 import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
-import type { GETPaths, GETPath2PathParams, GETPath2SearchParams, POSTPaths, POSTPath2Body, POSTPath2PathParams, GETPath2Data, POSTPath2Data, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, POSTPath2SearchParams, PUTPaths, DELETEPaths, PUTPath2PathParams, DELETEPath2PathParams, PUTPath2SearchParams, DELETEPath2SearchParams, PUTPath2Body, DELETEPath2Body, PUTPath2Data, DELETEPath2Data, ApiMethods } from './types'
+import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, ApiMethods, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data } from './types'
 
 
 export let scope!: ScopeComponent // the "!" tells ts: we'll assign this before it’s used but, ex: if a scope.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error 
@@ -138,8 +138,8 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    */
-  async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: GETPath2PathParams<T_Path>, searchParams?: GETPath2SearchParams<T_Path>, bitKey?: string }): Promise<GETPath2Data<T_Path>> {
-    return this._fetch<GETPath2Data<T_Path>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'GET', bitKey: options?.bitKey })
+  async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<GETPath2Api<T_Path>>, searchParams?: Api2SearchParams<GETPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<GETPath2Api<T_Path>>> {
+    return this._fetch<Api2Data<GETPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'GET', bitKey: options?.bitKey })
   }
 
 
@@ -150,8 +150,8 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async POST<T_Path extends POSTPaths>(path: T_Path, options?: { pathParams?: POSTPath2PathParams<T_Path>, searchParams?: POSTPath2SearchParams<T_Path>, body?: POSTPath2Body<T_Path>, bitKey?: string }): Promise<POSTPath2Data<T_Path>> {
-    return this._fetch<POSTPath2Data<T_Path>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
+  async POST<T_Path extends POSTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<POSTPath2Api<T_Path>>, searchParams?: Api2SearchParams<POSTPath2Api<T_Path>>, body?: Api2Body<POSTPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<POSTPath2Api<T_Path>>> {
+    return this._fetch<Api2Data<POSTPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
   }
 
 
@@ -162,8 +162,8 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async PUT<T_Path extends PUTPaths>(path: T_Path, options?: { pathParams?: PUTPath2PathParams<T_Path>, searchParams?: PUTPath2SearchParams<T_Path>, body?: PUTPath2Body<T_Path>, bitKey?: string }): Promise<PUTPath2Data<T_Path>> {
-    return this._fetch<PUTPath2Data<T_Path>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'PUT', bitKey: options?.bitKey, body: options?.body })
+  async PUT<T_Path extends PUTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<PUTPath2Api<T_Path>>, searchParams?: Api2SearchParams<PUTPath2Api<T_Path>>, body?: Api2Body<PUTPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<PUTPath2Api<T_Path>>> {
+    return this._fetch<Api2Data<PUTPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'PUT', bitKey: options?.bitKey, body: options?.body })
   }
 
 
@@ -174,8 +174,8 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async DELETE<T_Path extends DELETEPaths>(path: T_Path, options?: { pathParams?: DELETEPath2PathParams<T_Path>, searchParams?: DELETEPath2SearchParams<T_Path>, body?: DELETEPath2Body<T_Path>, bitKey?: string }): Promise<DELETEPath2Data<T_Path>> {
-    return this._fetch<DELETEPath2Data<T_Path>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'DELETE', bitKey: options?.bitKey, body: options?.body })
+  async DELETE<T_Path extends DELETEPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<DELETEPath2Api<T_Path>>, searchParams?: Api2SearchParams<DELETEPath2Api<T_Path>>, body?: Api2Body<DELETEPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<DELETEPath2Api<T_Path>>> {
+    return this._fetch<Api2Data<DELETEPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'DELETE', bitKey: options?.bitKey, body: options?.body })
   }
 
 
