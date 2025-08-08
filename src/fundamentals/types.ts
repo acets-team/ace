@@ -6,9 +6,9 @@
 
 import type { API } from './api'
 import type { Route } from './route'
+import type { ScopeBE } from './scopeBE'
 import type { apiMethods } from './vars'
 import type { InferEnums } from './enums'
-import type { ScopeB4 } from '../scopeB4'
 import type { Route404 } from './route404'
 import type { JSX, Accessor } from 'solid-js'
 import type { AceErrorProps } from './aceError'
@@ -84,21 +84,21 @@ export type RegexRouteMapAndPath2Route<T_Map extends RegexMap<'route'>, T_Path e
 
 /** 
  * - Receives: API Function Name
- * - Gives: API Response
+ * - Gives: API Response Data
 */
-export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
   ? T_API extends API<any, any, any, infer T_Response, any>
-    ? T_Response
+    ? Exclude<T_Response, null>
     : never
   : never
 
 
 /** 
  * - Receives: API Function Name
- * - Gives: API Response Data
+ * - Gives: API Response
 */
-export type ApiName2Data<T_Name extends ApiNames> = ApiName2Response<T_Name> extends ApiResponse<infer T_Response>
-  ? Exclude<T_Response, null>
+export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+  ? AceResponse<ApiResponse<ApiName2Data<T_Name>>>
   : never
 
 
@@ -110,7 +110,7 @@ export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name
   ? T_API extends API< infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals > // ensure T_API is indeed an API<…>
     ? BaseAPIFnProps<API<T_PathParams,T_SearchParams,T_Body,T_Response,T_Locals>> & { bitKey?: string } // build props type
     : never
-  : never;
+  : never
 
 
 /**
@@ -123,15 +123,6 @@ export interface AceResponse<T_Data> extends Response {
 }
 
 
-/** 
- * - Receives: AceResponse
- * - Gives: API Response
-*/
-export type AceResponseResponse<T_AceResponse> = T_AceResponse extends AceResponse<infer T_Data>
-  ? ApiResponse<T_Data>
-  : never;
-
-
 /**
  * - Required API response from `new API()` > `.resolve()`
  * - The go prop never get's to the fe, by then the redirect will happen
@@ -141,6 +132,19 @@ export type ApiResponse<T_Data = any> = {
   data?: T_Data
   error?: AceErrorProps
 }
+
+
+/**
+ * - Receives: API Function Name, so => `apiExample`
+ * - Gives: The type for the `load()` response
+ * @example
+  ```ts
+  const res = load(() => apiCharacter({params: {element: 'water'}}))
+
+  function Characters(res: ApiName2LoadResponse<'apiCharacter'>) {}
+  ```
+ */
+export type ApiName2LoadResponse<T_Name extends ApiNames> = Accessor<undefined | ApiResponse<ApiName2Data<T_Name>>>
 
 
 /** 
@@ -370,19 +374,6 @@ export type DELETEPath2SearchParams<T_Path extends DELETEPaths> = Api2SearchPara
 */
 export type POSTPath2SearchParams<T_Path extends POSTPaths> = Api2SearchParams <RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>>
 
-
-/**
- * - Receives: API Function Name, so => `apiExample`
- * - Gives: The type for the `load()` response
- * @example
-  ```ts
-  const res = load(() => apiCharacter({params: {element: 'water'}}))
-
-  function Characters(res: ApiName2LoadResponse<'apiCharacter'>) {}
-  ```
- */
-export type ApiName2LoadResponse<T_Name extends ApiNames> = Accessor<undefined | ApiName2Response<T_Name>>
-
  
 /** The component to render for a route */
 export type RouteComponent<T_Params extends UrlPathParams, T_Search extends UrlSearchParams> = (scope: ScopeComponent<T_Params, T_Search>) => JSX.Element
@@ -434,7 +425,7 @@ export type FullJWTPayload<T_JWTPayload extends BaseJWTPayload = {}> = T_JWTPayl
  * - If the aaf's response is truthy, that response is given to client & the api and/or route fn is not called, else the api and/or route fn is called
  * - To share data between b4 function and other b4 function and the api fn add data to event.locals
  */
-export type B4<T_Locals extends BaseEventLocals = {}> = ({ event, pathParams, searchParams, body }: ScopeB4<T_Locals>) => Promise<Response | void>
+export type B4<T_Locals extends BaseEventLocals = {}> = (scope: ScopeBE<any, any, any, T_Locals>) => Promise<Response | void>
 
 
 /** The object that is passed between b4 async functions and given to the api */

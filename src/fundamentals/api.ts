@@ -6,10 +6,9 @@
 
 
 
-import type { ScopeAPI } from './scopeAPI'
-import type { RequestEvent } from 'solid-js/web'
+import type { ScopeBE } from './scopeBE'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { ApiBody, UrlSearchParams, UrlPathParams, B4, AceResponse, AceResponseResponse, Parser, BaseEventLocals, MergeLocals } from './types'
+import type { ApiBody, UrlSearchParams, UrlPathParams, B4, AceResponse, Parser, BaseEventLocals, MergeLocals } from './types'
 
 
 
@@ -73,7 +72,7 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
   */
   b4<const T_B4_Functions extends B4<any>[]>(b4: T_B4_Functions): API<T_Params, T_Search, T_Body, T_Response, MergeLocals<T_B4_Functions>> {
     this.#storage.b4 = b4
-    return this
+    return this as any
   }
 
 
@@ -88,8 +87,28 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
       })
     ```
   */
-  resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any, T_Locals>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponseResponse<Awaited<ReturnType<T_Resolve_Fn>>>, T_Locals> {
-    this.#storage.resolve = resolveFunction
+  // resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any, T_Locals>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponseResponse<Awaited<ReturnType<T_Resolve_Fn>>>, T_Locals> {
+  //   this.#storage.resolve = resolveFunction
+  //   return this as any
+  // }
+  resolve<
+    NewData
+  >(
+    resolveFunction: APIResolveFunction<
+      T_Params,
+      T_Search,
+      T_Body,
+      NewData,
+      T_Locals
+    >
+  ): API<
+    T_Params,
+    T_Search,
+    T_Body,
+    NewData,    // now capture `NewData` as the instance’s response type
+    T_Locals
+  > {
+    this.#storage.resolve = resolveFunction as any
     return this as any
   }
 
@@ -216,14 +235,20 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
 }
 
 
+// export type APIResolveFunction<
+//   T_Params extends UrlPathParams,
+//   T_Search extends UrlSearchParams,
+//   T_Body extends ApiBody,
+//   T_Response_Data,
+//   T_Locals extends BaseEventLocals = {}
+// > = (scope: ScopeAPI<T_Params,T_Search,T_Body> & { event: RequestEvent & { locals: T_Locals } }) => Promise<AceResponse<T_Response_Data>>
 export type APIResolveFunction<
   T_Params extends UrlPathParams,
   T_Search extends UrlSearchParams,
   T_Body extends ApiBody,
   T_Response_Data,
   T_Locals extends BaseEventLocals = {}
-> = (scope: ScopeAPI<T_Params,T_Search,T_Body> & { event: RequestEvent & { locals: T_Locals } }) => Promise<AceResponse<T_Response_Data>>
-
+> = (scope: ScopeBE<T_Params, T_Search, T_Body, T_Locals>) => Promise<AceResponse<T_Response_Data>>
 
 
 export type APIValues<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any, T_Body extends ApiBody = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> = {

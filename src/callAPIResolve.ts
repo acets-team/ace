@@ -1,8 +1,7 @@
-import { ScopeB4 } from './scopeB4'
 import type { API } from './fundamentals/api'
 import { validateBody } from './validateBody'
+import { ScopeBE } from './fundamentals/scopeBE'
 import { validateParams } from './validateParams'
-import { ScopeAPI } from './fundamentals/scopeAPI'
 import { getRequestEvent } from './fundamentals/getRequestEvent'
 import type { Api2Response, ApiBody, UrlPathParams, UrlSearchParams } from './fundamentals/types'
 
@@ -24,12 +23,7 @@ export class CallAPIResolveContext {
   pathParams: UrlPathParams
   searchParams: UrlSearchParams
   body: Record<string, unknown>
-  scope: ScopeAPI<any, any, {}>
-
-
-  get event() {
-    return getRequestEvent()
-  }
+  scopeAPI: ScopeBE<any, any, {}, any>
 
 
 
@@ -43,17 +37,17 @@ export class CallAPIResolveContext {
 
     const body = (api.values.bodyParser) ? await validateBody({api, event: getRequestEvent()}) : {}
 
-    const scope = new ScopeAPI(parsedParams.pathParams, parsedParams.searchParams, body)
+    const scope = new ScopeBE(parsedParams.pathParams, parsedParams.searchParams, body)
 
     return new CallAPIResolveContext(api, body, scope, parsedParams.pathParams, parsedParams.searchParams)
   }
 
 
 
-  private constructor(api: API, body: ApiBody, scope: ScopeAPI<any, any, {}>, pathParams: UrlPathParams, searchParams: UrlSearchParams) {
+  private constructor(api: API, body: ApiBody, scope: ScopeBE<any, any, {}, any>, pathParams: UrlPathParams, searchParams: UrlSearchParams) {
     this.api = api
     this.body = body
-    this.scope = scope
+    this.scopeAPI = scope
     this.pathParams = pathParams
     this.searchParams = searchParams
   }
@@ -62,7 +56,7 @@ export class CallAPIResolveContext {
 
   async getB4Response(): Promise<Response | undefined> {
     if (this.api.values.b4 && this.api.values.b4.length) {  
-      const scopeB4 = new ScopeB4(this.event, this.pathParams, this.searchParams, this.body)
+      const scopeB4 = new ScopeBE(this.pathParams, this.searchParams, this.body)
 
       for (const fn of this.api.values.b4) {
         const b4Response = await fn(scopeB4)
@@ -80,7 +74,7 @@ export class CallAPIResolveContext {
   async getResolveResponse<T_API extends API<any,any,any,any, any>>(): Promise<Response | undefined> {
     if (typeof this.api.values.resolve !== 'function') throw new Error("typeof api.values.resolve === 'function'")
 
-    const originalResponse = await this.api.values.resolve(this.scope)
+    const originalResponse = await this.api.values.resolve(this.scopeAPI)
 
     if (!(originalResponse instanceof Response)) throw new Error(`Error w/ API ${this.api.values.fn} aka ${this.api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), scope.success(), scope.Success(), scope.error(), scope.Error(), scope.go(), scope.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${originalResponse}`)
 
