@@ -8,7 +8,7 @@
 
 import type { ScopeBE } from './scopeBE'
 import { pathnameToPattern } from './pathnameToPattern'
-import type { ApiBody, UrlSearchParams, UrlPathParams, B4, AceResponse, Parser, BaseEventLocals, MergeLocals } from './types'
+import type { B4, Parser, ApiBody, AceResponse, MergeLocals, UrlSearchParams, UrlPathParams, BaseEventLocals, AceResponse2ApiResponse } from './types'
 
 
 
@@ -37,39 +37,13 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
    * ### Set async functions to run before route/api boots
    * - IF `b4()` return is truthy => returned value is sent to the client & route handler is not processed
    * - 🚨 If returning the response must be a `Response` object b/c this is what is given to the client
-   * - It is not recomended to do db calls in this function
-   * - `b4()` purpose is to:
-   *     - Read `event` contents (request, headers, cookies)
-   *     - Read / Append `event.locals`
-   *     - Do a redirect w/ `go()` or `Go()`
-   * @example
-    ```ts
-    import { go } from '@ace/go'
-    import type { B4 } from '@ace/types'
-
-    export const authB4: B4 = async ({ jwt }) => {
-      if (!jwt.isValid) return go('/')
-    }
-
-    export const guestB4: B4 = async ({ jwt }) => {
-      if (jwt.isValid) return go('/welcome')
-    }
-
-    export const eventB4: B4<{example: string}> = async ({ event }) => {
-      event.locals.example = 'aloha'
-    }
-    ```
-   * @example
-    ```ts
-    export default new Route('/smooth')
-      .b4([guestB4, eventB4])
-    ```
    * @example
     ```ts
     export const GET = new API('/api/character/:element', 'apiCharacter')
       .b4([authB4, eventB4])
     ```
-  */
+   * @param b4 - Array of functions to happen before `.resolve()`
+   */
   b4<const T_B4_Functions extends B4<any>[]>(b4: T_B4_Functions): API<T_Params, T_Search, T_Body, T_Response, MergeLocals<T_B4_Functions>> {
     this.#storage.b4 = b4
     return this as any
@@ -86,29 +60,10 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
         return scope.success(scope.pathParams.element)
       })
     ```
-  */
-  // resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any, T_Locals>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponseResponse<Awaited<ReturnType<T_Resolve_Fn>>>, T_Locals> {
-  //   this.#storage.resolve = resolveFunction
-  //   return this as any
-  // }
-  resolve<
-    NewData
-  >(
-    resolveFunction: APIResolveFunction<
-      T_Params,
-      T_Search,
-      T_Body,
-      NewData,
-      T_Locals
-    >
-  ): API<
-    T_Params,
-    T_Search,
-    T_Body,
-    NewData,    // now capture `NewData` as the instance’s response type
-    T_Locals
-  > {
-    this.#storage.resolve = resolveFunction as any
+   * @param resolveFunction - Async function that holds primary api route handling logic
+   */
+  resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any, T_Locals>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponse2ApiResponse<Awaited<ReturnType<T_Resolve_Fn>>>, T_Locals> {
+    this.#storage.resolve = resolveFunction
     return this as any
   }
 
@@ -118,15 +73,7 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
    * ### Set validating / parsing function for this api's body that runs before the api's resolve function
    * @example
     ```ts
-    .body(vParse(object({ email: pipe(string(), email()) })))
-    ```
-   * @example
-    ```ts
-    .body(vParse(object({ id: vNum() })))
-    ```
-   * @example
-    ```ts
-    .body(vParse(object({ choice: vBool() })))
+    .body(vParse(object({ id: vNum(), choice: vBool(), eamil: vEmail(), createdAt: optional(vDate()), email: pipe(string(), email()) })))
     ```
    * @example
     ```ts
@@ -158,15 +105,7 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
    * ### Set validating / parsing function for this api's path params that runs before the api's resolve function
    * @example
     ```ts
-    .pathParams(vParse(object({ email: pipe(string(), email()) })))
-    ```
-   * @example
-    ```ts
-    .pathParams(vParse(object({ id: vNum() })))
-    ```
-   * @example
-    ```ts
-    .pathParams(vParse(object({ choice: vBool() })))
+    .pathParams(vParse(object({ id: vNum(), choice: vBool(), eamil: vEmail(), createdAt: optional(vDate()), email: pipe(string(), email()) })))
     ```
    * @example
     ```ts
@@ -198,15 +137,7 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
    * ### Set validating / parsing function for this api's serch params that runs before the api's resolve function
    * @example
     ```ts
-    .searchParams(vParse(object({ email: pipe(string(), email()) })))
-    ```
-   * @example
-    ```ts
-    .searchParams(vParse(object({ id: vNum() })))
-    ```
-   * @example
-    ```ts
-    .searchParams(vParse(object({ choice: vBool() })))
+    .searchParams(vParse(object({ id: vNum(), choice: vBool(), eamil: vEmail(), createdAt: optional(vDate()), email: pipe(string(), email()) })))
     ```
    * @example
     ```ts
@@ -235,13 +166,7 @@ export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearc
 }
 
 
-// export type APIResolveFunction<
-//   T_Params extends UrlPathParams,
-//   T_Search extends UrlSearchParams,
-//   T_Body extends ApiBody,
-//   T_Response_Data,
-//   T_Locals extends BaseEventLocals = {}
-// > = (scope: ScopeAPI<T_Params,T_Search,T_Body> & { event: RequestEvent & { locals: T_Locals } }) => Promise<AceResponse<T_Response_Data>>
+
 export type APIResolveFunction<
   T_Params extends UrlPathParams,
   T_Search extends UrlSearchParams,
@@ -249,6 +174,7 @@ export type APIResolveFunction<
   T_Response_Data,
   T_Locals extends BaseEventLocals = {}
 > = (scope: ScopeBE<T_Params, T_Search, T_Body, T_Locals>) => Promise<AceResponse<T_Response_Data>>
+
 
 
 export type APIValues<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any, T_Body extends ApiBody = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> = {
