@@ -13,17 +13,14 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
   readonly body: T_Body
   readonly pathParams: T_Params
   readonly searchParams: T_Search
+  readonly event: RequestEvent & { locals: T_Locals }
 
 
   constructor(params: T_Params, search: T_Search, body: T_Body) {
     this.body = body
     this.pathParams = params
     this.searchParams = search
-  }
-
-
-  get event(): RequestEvent & { locals: T_Locals } {
-    return getRequestEvent() as RequestEvent & { locals: T_Locals }
+    this.event = getRequestEvent() as RequestEvent & { locals: T_Locals }
   }
 
 
