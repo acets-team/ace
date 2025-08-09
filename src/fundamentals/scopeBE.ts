@@ -116,10 +116,10 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
     ```ts
     import { env } from '@ace/env'
     import { ttlWeek } from '@ace/ttl'
-    import { jwtCookieKey } from '@ace/vars'
     import { jwtCreate } from '@ace/jwtCreate'
+    import { jwtCookieName } from '@src/lib/vars'
 
-    scope.setCookie(jwtCookieKey(), await jwtCreate({ ttl: ttlWeek, payload }), {
+    scope.setCookie(jwtCookieName, await jwtCreate({ ttl: ttlWeek, payload }), {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',

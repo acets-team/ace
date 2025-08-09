@@ -7,8 +7,8 @@
 import { goHeader } from './vars'
 import { AceError } from './aceError'
 import { isServer } from 'solid-js/web'
+import { query, createAsync } from '@solidjs/router'
 import {createSignal, onMount, type Accessor } from 'solid-js'
-import { query, createAsync, redirect } from '@solidjs/router'
 
 
 
@@ -42,7 +42,7 @@ function loadOnMount<T_Response>(fetchFn: () => Promise<T_Response>) {
 
 function loadOnDemand<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: string) {
   const loaded = query(fetchFn, cacheKey)
-  return createAsync<T_Response>(async () => await getResponse(await loaded()))
+  return createAsync<T_Response>(async () => await getResponse(await loaded()), {deferStream: true})
 }
 
 
@@ -53,16 +53,17 @@ async function getResponse<T_Response>(response: any) {
       const redirectUrl = response.headers.get(goHeader)
 
       if (redirectUrl) {
-        if (isServer) throw redirect(redirectUrl, { headers: response.headers })
+        if (isServer) return null as T_Response
         else {
           window.location.href = redirectUrl
           throw new Error('Redirecting to: ' + redirectUrl)
         }
       }
 
+      if (response.status === 204) return null as T_Response
+
       const clonedResponse = response.clone()
       const data = await clonedResponse.json() as T_Response
-
       return data
     }
 

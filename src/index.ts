@@ -24,8 +24,6 @@ export type AceConfig = {
   apiDir?: string,
   /** The directory that holds your routes and layouts */
   appDir?: string,
-  /** The name of the browser cookie that is set when you call jwtCookieCreate() */
-  jwtCookieKey?: string,
   /** Would you like to log errors */
   logCaughtErrors?: boolean,
   /** Ace is a set of helpful files we call fundamentals. Fundamentals are grouped by plugins. Set a plugin to true to gain access to the fundamentals it holds. */
