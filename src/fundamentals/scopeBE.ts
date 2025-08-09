@@ -1,3 +1,4 @@
+import { env } from './env'
 import { goHeader } from './vars'
 import { AceError } from './aceError'
 import { buildUrl } from '../buildUrl'
@@ -111,26 +112,26 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
   /** 
    * @example
     ```ts
-    import { env } from '@ace/env'
     import { ttlWeek } from '@ace/ttl'
     import { jwtCreate } from '@ace/jwtCreate'
     import { jwtCookieName } from '@src/lib/vars'
 
-    scope.setCookie(jwtCookieName, await jwtCreate({ ttl: ttlWeek, payload }), {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: ttlWeek,
-      secure: env !== 'local',
-    })
+    scope.setCookie(jwtCookieName, await jwtCreate({ ttl: ttlWeek, payload }), { maxAge: ttlWeek })
     ```
    * @param name - Cookie name
    * @param value - Cookie value
-   * @param options - `CookieSerializeOptions`
+   * @param options - `CookieSerializeOptions` from `cookie-es`, `options` passed to setCookie => `{ path: '/', httpOnly: true, sameSite: 'lax', secure: env !== 'local', ...options }`
+   * @link https://www.npmjs.com/package/cookie-es
    * @link https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie 
    */
   setCookie(name: string, value: string, options?: CookieSerializeOptions) {
-    return setCookie(this.event.nativeEvent, name, value, options)
+    return setCookie(this.event.nativeEvent, name, value, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: env !== 'local',
+      ...options
+    })
   }
 
 
