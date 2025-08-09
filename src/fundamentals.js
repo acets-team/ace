@@ -60,6 +60,7 @@ export const fundamentals = new Map([
   ['feComponent', new Fundamental('tsx', 'solid', 'copy')],
   ['feFetch', new Fundamental('ts', 'solid', 'helper')],
   ['feMessages', new Fundamental('ts', 'solid', 'helper')],
+  ['getGoUrl', new Fundamental('ts', 'solid', 'copy')],
   ['getSearchParams', new Fundamental('ts', 'solid', 'helper')],
   ['getRequestEvent', new Fundamental('ts', 'solid', 'copy')],
   ['goResponse', new Fundamental('ts', 'solid', 'copy')],

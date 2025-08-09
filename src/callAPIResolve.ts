@@ -1,9 +1,9 @@
 import type { API } from './fundamentals/api'
 import { validateBody } from './validateBody'
-import { goHeader } from './fundamentals/vars'
 import { ScopeBE } from './fundamentals/scopeBE'
 import { validateParams } from './validateParams'
 import { getRequestEvent } from './fundamentals/getRequestEvent'
+import { getGoUrl } from './fundamentals/getGoUrl'
 import type { Api2Response, ApiBody, UrlPathParams, UrlSearchParams } from './fundamentals/types'
 
 
@@ -79,9 +79,9 @@ export class CallAPIResolveContext {
 
     if (!(originalResponse instanceof Response)) throw new Error(`Error w/ API ${this.api.values.fn} aka ${this.api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), scope.success(), scope.Success(), scope.error(), scope.Error(), scope.go(), scope.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${originalResponse}`)
 
-    const redirectUrl = originalResponse.headers.get(goHeader)
+    const goUrl = getGoUrl(originalResponse)
 
-    if (redirectUrl) return originalResponse
+    if (goUrl) return originalResponse
     else {
       const inferResponse: Api2Response<T_API> = (await originalResponse.json())
 

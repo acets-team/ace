@@ -6,11 +6,10 @@
 
 
 import { config } from 'ace.config'
-import { defaultError, goHeader } from './vars'
 import { isServer } from 'solid-js/web'
 import { GoResponse } from './goResponse'
+import { defaultError, goHeaderName } from './vars'
 import type { ApiResponse, FlatMessages } from './types'
-import { buildUrl } from '../buildUrl'
 
 
 /**
@@ -45,10 +44,11 @@ export class AceError {
       if (!isServer) throw window.location.href = error.url
       else {
         const headers = new Headers(error.headers)
+        const status = 204
 
-        headers.set(goHeader, error.url)
+        headers.set(goHeaderName, error.url)
 
-        return new Response(null, { status: 204, headers })
+        return new Response(null, { status, headers })
       }
     } else {
       let res: ApiResponse<null> | undefined

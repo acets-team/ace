@@ -1,6 +1,7 @@
-import { goHeader } from './fundamentals/vars'
 import { AceError } from './fundamentals/aceError'
 import type { ApiMethods } from './fundamentals/types'
+import { getGoUrl } from './fundamentals/getGoUrl'
+
 
 /**
  * - Do a fetch call on the fe
@@ -32,10 +33,10 @@ export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?:
   }
 
   const response = await fetch(url, requestInit)
-  const redirectUrl = response.headers.get(goHeader)
+  const goUrl = getGoUrl(response)
 
-  if (redirectUrl) throw window.location.href = redirectUrl
+  if (goUrl) throw window.location.href = goUrl
 
-  if (response.headers.get('content-type')?.includes('application/json')) return (await response.json()) as Promise<T>
+  if (response.headers.get('content-type')?.toLowerCase().includes('json')) return (await response.json()) as Promise<T>
   else throw new AceError({ status: response.status, statusText: response.statusText, rawBody: await response.text() })
 }

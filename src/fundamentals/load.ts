@@ -5,9 +5,9 @@
  */
 
 
-import { goHeader } from './vars'
 import { AceError } from './aceError'
 import { isServer } from 'solid-js/web'
+import { getGoUrl } from './getGoUrl'
 import { query, createAsync, redirect } from '@solidjs/router'
 import {createSignal, type Accessor, onMount } from 'solid-js'
 
@@ -59,14 +59,11 @@ function loadOnDemand<T_Response>(fetchFn: () => Promise<T_Response>, cacheKey: 
 async function getResponse<T_Response>(response: any) {
   try {
     if (response instanceof Response) {
-      const redirectUrl = response.headers.get(goHeader)
+      const goUrl = getGoUrl(response)
 
-      if (redirectUrl) {
-        if (isServer) throw redirect(redirectUrl, { headers: response.headers })
-        else {
-          window.location.href = redirectUrl
-          throw new Error('Redirecting to: ' + redirectUrl)
-        }
+      if (goUrl) {
+        if (isServer) throw redirect(goUrl, { headers: response.headers })
+        else throw new Error('feFetch() is already throwing a redirect() so this code will not happen')
       }
 
       const clonedResponse = response.clone()
