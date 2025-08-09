@@ -1,9 +1,9 @@
 import { env } from './env'
-import { goHeaderName } from './vars'
 import { AceError } from './aceError'
 import { buildUrl } from '../buildUrl'
 import { type RequestEvent } from 'solid-js/web'
 import { getRequestEvent } from './getRequestEvent'
+import { goHeaderName, goStatusCode } from './vars'
 import type { CookieSerializeOptions } from 'cookie-es'
 import { setCookie, getCookie, deleteCookie } from 'h3'
 import type { ApiBody, ApiResponse, UrlSearchParams, UrlPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals } from './types'
@@ -25,7 +25,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
     this.event = getRequestEvent() as RequestEvent & { locals: T_Locals }
     this.defaultHeaders = {
       Vary: 'Origin',
-      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Origin': this.origin,
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Expose-Headers': goHeaderName,
     }
@@ -58,13 +58,11 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
 
 
   #giveRedirect<T_Path extends Routes>(path: T_Path, options?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, headers?: HeadersInit }) {
-    const origin = this.origin
-
     return new Response(null, {
-      status: 204, // if we use a 3xx response then query() follows it before we get to createAsync() and then createAsync() is given the html we're redirecting to, so this fools that
+      status: goStatusCode,
       headers: {
         ...this.defaultHeaders,
-        [goHeaderName]: origin + buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}),
+        [goHeaderName]: this.origin + buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}),
         ...options?.headers
       }
     })
@@ -72,7 +70,6 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
 
 
   #giveJSON<T_Data>(status: number, data: T_Data | null, error: AceError | null, headers?: HeadersInit) {
-    const origin = this.origin
     const responseJSON: ApiResponse<T_Data> = {}
 
     if (data !== null && data !== undefined) responseJSON.data = data
