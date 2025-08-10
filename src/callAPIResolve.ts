@@ -1,9 +1,10 @@
 import type { API } from './fundamentals/api'
 import { validateBody } from './validateBody'
+import { parseResponse } from './parseResponse'
 import { ScopeBE } from './fundamentals/scopeBE'
 import { validateParams } from './validateParams'
-import { getRequestEvent } from './fundamentals/getRequestEvent'
 import { getGoUrl } from './fundamentals/getGoUrl'
+import { getRequestEvent } from './fundamentals/getRequestEvent'
 import type { Api2Response, ApiBody, UrlPathParams, UrlSearchParams } from './fundamentals/types'
 
 
@@ -83,7 +84,7 @@ export class CallAPIResolveContext {
 
     if (goUrl) return originalResponse
     else {
-      const inferResponse: Api2Response<T_API> = (await originalResponse.json())
+      const inferResponse = parseResponse<Api2Response<T_API>>(originalResponse)
 
       return new Response(JSON.stringify(inferResponse), {
         status: originalResponse.status,

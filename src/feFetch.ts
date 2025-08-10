@@ -1,21 +1,20 @@
-import { AceError } from './fundamentals/aceError'
-import type { ApiMethods } from './fundamentals/types'
+import { parseResponse } from './parseResponse'
 import { getGoUrl } from './fundamentals/getGoUrl'
+import type { ApiMethods } from './fundamentals/types'
 
 
 /**
- * - Do a fetch call on the fe
- * - If the server called `go()` aka `Response.redirect()` then `feFetch()` does the redirect via `window.location.href`
- * @returns Parsed Response data
+ * ### Do a fetch call on the fe
+ * - If the server called `scope.go()` then `feFetch()` does the redirect via `window.location.href`
+ * @returns IF the header content-type is json => `Parsed Response data`, ELSE => `Response` object
  */
 export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?: any): Promise<T> {
-  let requestInit = {}
+  let requestInit: RequestInit = {}
 
   switch (method) {
     case 'GET':
       requestInit = {
         method,
-        redirect: 'manual',
         credentials: 'same-origin',
       }
       break
@@ -24,7 +23,6 @@ export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?:
     case 'DELETE':
       requestInit = {
         method,
-        redirect: 'manual',
         credentials: 'same-origin',
         body: body ? JSON.stringify(body) : null,
         headers: { 'content-type': 'application/json' },
@@ -33,10 +31,10 @@ export async function feFetch<T>(url: string, method: ApiMethods = 'GET', body?:
   }
 
   const response = await fetch(url, requestInit)
+
   const goUrl = getGoUrl(response)
 
   if (goUrl) throw window.location.href = goUrl
 
-  if (response.headers.get('content-type')?.toLowerCase().includes('json')) return (await response.json()) as Promise<T>
-  else throw new AceError({ status: response.status, statusText: response.statusText, rawBody: await response.text() })
+  return await parseResponse<T>(response)
 }

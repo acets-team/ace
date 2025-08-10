@@ -7,6 +7,7 @@ import { goHeaderName, goStatusCode } from './vars'
 import type { CookieSerializeOptions } from 'cookie-es'
 import { setCookie, getCookie, deleteCookie } from 'h3'
 import type { ApiBody, ApiResponse, UrlSearchParams, UrlPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals } from './types'
+import { destructureReady } from './destructureReady'
 
 
 /** Base scope for both API and middleware scopes */
@@ -24,11 +25,10 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
     this.searchParams = search
     this.event = getRequestEvent() as RequestEvent & { locals: T_Locals }
     this.defaultHeaders = {
-      Vary: 'Origin',
-      'Access-Control-Allow-Origin': this.origin,
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Expose-Headers': goHeaderName,
     }
+    destructureReady(this)
   }
 
 
@@ -58,12 +58,15 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
 
 
   #giveRedirect<T_Path extends Routes>(path: T_Path, options?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, headers?: HeadersInit }) {
-    return new Response(null, {
+    const url = this.origin + buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+
+    return new Response(JSON.stringify({[goHeaderName]: url}), {
       status: goStatusCode,
       headers: {
         ...this.defaultHeaders,
-        [goHeaderName]: this.origin + buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}),
-        ...options?.headers
+        [goHeaderName]: url,
+        ...options?.headers,
+        'Content-Type': 'application/json'
       }
     })
   }

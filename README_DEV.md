@@ -3,7 +3,7 @@
 
 
 ## How may I deploy a new version?
-1. 💬 Commit all changes!
+1. 💬 Commit all changes! 
 1. ⬆️ Increase version in `package.json`: `MAJOR.MINOR.PATCH`
     - Potential prerequisites:
         - `npm login`
@@ -21,28 +21,6 @@
 
 
 
-## When to minor?
-- `npm create solid` example for:
-    - Basic
-    - Mongoose
-    - D1
-    - Postgresql
-    - SQLite
-- Docs for
-    - tailwind
-    - node deploy
-- Fundamental for
-    - markdown create
-    - markdown view
-
-
-## When to 1.0?
-- 100% test code coverage
-- all component fundamentals are aria compliant
-- No Github bugs exist that we'd love completed b4 1.0
-
-
-
 ## Readme purpose
 - Descriptive code snippets
 - Error dictionary
@@ -54,14 +32,8 @@
 - NPM lifecycle hook ensures `npm publish` does an `npm run build` first automatically
 
 
-
-## Why `"postbuild": "chmod +x dist/src/cli/cli.js || true",` in package.json?
-- NPM lifecycle hook ensures windows quietly fails quietly & mac/linux runs chmod which adds the executable bit to the generated cli.js 
-
-
 ## Why is the `/dist` sent to NPM?
 - This is the case @ `.npmignore` so all receive compiled code immediately with no extra steps required
-
 
 
 ## Why is `/dist` not sent to Github?
@@ -83,3 +55,15 @@
 - `npm unlink @acets-team/ace` in the working directory
 - `npm unlink @acets-team/ace -g` in the working directory
 - `which ace` to see what version still has it linked, `nvm` to that node version, do the same there, then come back to node version 24
+
+
+# Redirects:
+- Why Status code `200`?
+    - If we use a 3xx response then `feFetch()` tries to do redirects so then it'll do a `fetch(`) for the next page which is wrong so this fools that
+- Why Header name `Location`?
+    - By using `Location` as the header name, `query()` actually handles server side redirects which is helpful
+    - By putting the url in the header no json parsing is necessary
+- `load()` flow w/ `spa` => `falsy` & url navigate
+    - `query()` does the redirect server side
+- `load()` flow w/ `spa` => `falsy` & link navigate ***OR*** `load()` flow w/ `spa` => `truthy` ***OR*** `onClick` => `apiX()`
+    - `throw window.location.href` @ `feFetch()`

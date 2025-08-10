@@ -10,6 +10,7 @@ import { buildUrl } from '../buildUrl'
 import { isServer } from 'solid-js/web'
 import { FEMessages } from '../feMessages'
 import { useLocation } from '@solidjs/router'
+import { destructureReady } from './destructureReady'
 import { getScopeComponentChildren } from '../scopeComponentChildren'
 import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
 import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, ApiMethods, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data } from './types'
@@ -46,6 +47,11 @@ export const ScopeComponentContextProvider: ParentComponent = (props) => {
 export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_Params extends UrlSearchParams = {}> {
   bits = new Bits()
   messages = new FEMessages()
+
+
+  constructor() {
+    destructureReady(this)
+  }
 
 
   /**
@@ -182,11 +188,16 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   protected async _fetch<T>(url: string, { method, body, bitKey }: { method: ApiMethods; body?: any; bitKey?: string }): Promise<T> {
     if (bitKey) this.bits.set(bitKey, true)
 
-    const res = await feFetch<T>(url, method, body)
+    let res
 
-    this.messages.align(res)
-
-    if (bitKey) this.bits.set(bitKey, false)
+    try {
+      res = await feFetch<T>(url, method, body)
+      this.messages.align(res)
+    } catch(e) {
+      throw e
+    } finally {
+      if (bitKey) this.bits.set(bitKey, false)
+    }
 
     return res
   }
