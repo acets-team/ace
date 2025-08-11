@@ -65,8 +65,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
       headers: {
         ...this.defaultHeaders,
         [goHeaderName]: url,
-        ...options?.headers,
-        'Content-Type': 'application/json'
+        ...options?.headers
       }
     })
   }
@@ -80,7 +79,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
 
     const res: AceResponse<T_Data> = new Response(JSON.stringify(responseJSON), {
       status,
-      headers: { ...this.defaultHeaders, ...headers }
+      headers: { ...this.defaultHeaders, ...headers, 'Content-Type': 'application/json' }
     })
 
     res.__dataType = null as T_Data
