@@ -1,11 +1,9 @@
 import type { API } from './fundamentals/api'
 import { validateBody } from './validateBody'
-import { parseResponse } from './parseResponse'
 import { ScopeBE } from './fundamentals/scopeBE'
 import { validateParams } from './validateParams'
-import { getGoUrl } from './fundamentals/getGoUrl'
 import { getRequestEvent } from './fundamentals/getRequestEvent'
-import type { Api2Response, ApiBody, UrlPathParams, UrlSearchParams } from './fundamentals/types'
+import type { AceResponse, Api2Response, ApiBody, UrlPathParams, UrlSearchParams } from './fundamentals/types'
 
 
 
@@ -76,20 +74,9 @@ export class CallAPIResolveContext {
   async getResolveResponse<T_API extends API<any,any,any,any, any>>(): Promise<Response | undefined> {
     if (typeof this.api.values.resolve !== 'function') throw new Error("typeof api.values.resolve === 'function'")
 
-    const originalResponse = await this.api.values.resolve(this.scopeAPI)
+    const resolveResponse = await this.api.values.resolve(this.scopeAPI)
 
-    if (!(originalResponse instanceof Response)) throw new Error(`Error w/ API ${this.api.values.fn} aka ${this.api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), scope.success(), scope.Success(), scope.error(), scope.Error(), scope.go(), scope.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${originalResponse}`)
-
-    const goUrl = getGoUrl(originalResponse)
-
-    if (goUrl) return originalResponse
-    else {
-      const inferResponse = parseResponse<Api2Response<T_API>>(originalResponse)
-
-      return new Response(JSON.stringify(inferResponse), {
-        status: originalResponse.status,
-        headers: new Headers(originalResponse.headers)
-      })
-    }
+    if (resolveResponse instanceof Response) return resolveResponse as AceResponse<Api2Response<T_API>>
+    else throw new Error(`Error w/ API ${this.api.values.fn} aka ${this.api.values.path} -- API\'s must return a Response, please return from your api w/ respond(), scope.success(), scope.Success(), scope.error(), scope.Error(), scope.go(), scope.Go(), or throw a new Error() or throw a new AceError(). the current response is not an instanceOf Response, current: ${resolveResponse}`)
   }
 }
