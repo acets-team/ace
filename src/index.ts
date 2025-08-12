@@ -30,6 +30,8 @@ export type AceConfig = {
   plugins: PluginsConfig,
   /** Default is `tsconfig.json` */
   tsConfigPath?: string,
+  /** The key is based on the env which is set w/ the build command, ex: `ace build local`, so in that example the key is `local`. The value is a string or array of strings which are the allowed origins to request your api. Helpful for API Response Headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin 🚨 If your origin is '*' cookies won't work, not an Ace limitation, that's just how HTTP work :) */
+  origins: Record<string, string | string[]>
 }
 
 

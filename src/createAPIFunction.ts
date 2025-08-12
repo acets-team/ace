@@ -1,5 +1,6 @@
 import { isServer } from 'solid-js/web'
 import type { API } from './fundamentals/api'
+import { apiMethods } from './fundamentals/vars'
 import { AceError } from './fundamentals/aceError'
 import type { ApiMethods } from './fundamentals/types'
 import type { ApiFnProps, Api2Function } from './fundamentals/types'
@@ -25,10 +26,10 @@ async function handleFE<T_API extends API<any, any, any, any, any>>(path: string
   const { scope } = await import('./fundamentals/scopeComponent')
 
   switch (method) {
-    case 'GET': return scope.GET(path as never, options as any)
-    case 'POST': return scope.POST(path as never, options as any)
-    case 'PUT': return scope.PUT(path as never, options as any)
-    case 'DELETE': return scope.DELETE(path as never, options as any)
+    case apiMethods.keys.GET: return scope.GET(path as never, options)
+    case apiMethods.keys.POST: return scope.POST(path as never, options)
+    case apiMethods.keys.PUT: return scope.PUT(path as never, options)
+    case apiMethods.keys.DELETE: return scope.DELETE(path as never, options)
     default: throw new Error(`"${method}" is not a valid method @ handleFE()`)
   }
 }

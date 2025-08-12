@@ -33,7 +33,7 @@ export class Build {
   config: AceConfig
   dirWriteRoot: string
   fsSolidTypes?: string
-  static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but if we call vars from build.js things get fishy b/c vars imports ace.config and build does not have access to tsconfig aliases
+  static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
   
   dirWriteFundamentals: string
   whiteList = new FundamentalWhiteList()

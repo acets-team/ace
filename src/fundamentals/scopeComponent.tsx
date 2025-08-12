@@ -5,11 +5,13 @@
 
 
 import { Bits } from '../bits'
-import { feFetch } from '../feFetch'
+import { apiMethods } from './vars'
+import { getGoUrl } from './getGoUrl'
 import { buildUrl } from '../buildUrl'
 import { isServer } from 'solid-js/web'
 import { FEMessages } from '../feMessages'
 import { useLocation } from '@solidjs/router'
+import { parseResponse } from '../parseResponse'
 import { destructureReady } from './destructureReady'
 import { getScopeComponentChildren } from '../scopeComponentChildren'
 import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
@@ -138,14 +140,39 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   }
 
 
+  #getRequestInit(requestInit: Partial<RequestInit>, body?: unknown): RequestInit {
+    const finalInit: RequestInit = { credentials: 'same-origin', ...(requestInit || {}) } 
+    const headers = new Headers(finalInit.headers) // normalize headers to Headers so we can safely inspect / set
+    const hasBody = body !== null && body !== undefined
+    const browserSetContentTypeBasedOnBodyInstance = (body instanceof FormData || body instanceof File || body instanceof Blob || body instanceof URLSearchParams) // w/ these requests, the content type is set by the browser, so that the browser can identify delimeters in the header
+    const shouldDefaultContentType = (!headers.has('content-type') && hasBody && !browserSetContentTypeBasedOnBodyInstance)
+    
+    if (shouldDefaultContentType) headers.set('content-type', 'application/json')  // default content type
+
+    const finalBody = (((headers.get('content-type') || '').includes('application/json'))
+      ? hasBody && typeof body !== 'string' ? JSON.stringify(body) : body
+      : body) as BodyInit
+    
+    headers.set('Origin', window.location.origin) // if we don't send Origin then on same origin requests (dev) the browser won't send an origin header (but be expects one). But when we set origin manually, browser will ignore the value and send the real origin always
+
+    return { ...finalInit, headers, body: finalBody }
+  }
+
+
   /**
    * Call api GET method w/ intellisense
    * @param path - As defined @ `new API()`
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    */
-  async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<GETPath2Api<T_Path>>, searchParams?: Api2SearchParams<GETPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<GETPath2Api<T_Path>>> {
-    return this._fetch<Api2Data<GETPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'GET', bitKey: options?.bitKey })
+  async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<GETPath2Api<T_Path>>, searchParams?: Api2SearchParams<GETPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<GETPath2Api<T_Path>>> {
+    const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.GET })
+    
+    return this.fetch<Api2Data<GETPath2Api<T_Path>>>({
+      requestInit,
+      bitKey: options?.bitKey,
+      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}),
+    })
   }
 
 
@@ -156,8 +183,14 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async POST<T_Path extends POSTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<POSTPath2Api<T_Path>>, searchParams?: Api2SearchParams<POSTPath2Api<T_Path>>, body?: Api2Body<POSTPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<POSTPath2Api<T_Path>>> {
-    return this._fetch<Api2Data<POSTPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'POST', bitKey: options?.bitKey, body: options?.body })
+  async POST<T_Path extends POSTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<POSTPath2Api<T_Path>>, searchParams?: Api2SearchParams<POSTPath2Api<T_Path>>, body?: Api2Body<POSTPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<POSTPath2Api<T_Path>>> {
+    const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.POST }, options?.body)
+
+    return this.fetch<Api2Data<POSTPath2Api<T_Path>>>({
+      requestInit,
+      bitKey: options?.bitKey,
+      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+    })
   }
 
 
@@ -168,8 +201,14 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async PUT<T_Path extends PUTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<PUTPath2Api<T_Path>>, searchParams?: Api2SearchParams<PUTPath2Api<T_Path>>, body?: Api2Body<PUTPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<PUTPath2Api<T_Path>>> {
-    return this._fetch<Api2Data<PUTPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'PUT', bitKey: options?.bitKey, body: options?.body })
+  async PUT<T_Path extends PUTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<PUTPath2Api<T_Path>>, searchParams?: Api2SearchParams<PUTPath2Api<T_Path>>, body?: Api2Body<PUTPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<PUTPath2Api<T_Path>>> {
+    const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.PUT }, options?.body)
+
+    return this.fetch<Api2Data<PUTPath2Api<T_Path>>>({
+      requestInit,
+      bitKey: options?.bitKey,
+      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+    })
   }
 
 
@@ -180,18 +219,31 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.params - Path params
    * @param options.body - Request body
    */
-  async DELETE<T_Path extends DELETEPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<DELETEPath2Api<T_Path>>, searchParams?: Api2SearchParams<DELETEPath2Api<T_Path>>, body?: Api2Body<DELETEPath2Api<T_Path>>, bitKey?: string }): Promise<Api2Data<DELETEPath2Api<T_Path>>> {
-    return this._fetch<Api2Data<DELETEPath2Api<T_Path>>>(buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}), {method: 'DELETE', bitKey: options?.bitKey, body: options?.body })
+  async DELETE<T_Path extends DELETEPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<DELETEPath2Api<T_Path>>, searchParams?: Api2SearchParams<DELETEPath2Api<T_Path>>, body?: Api2Body<DELETEPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<DELETEPath2Api<T_Path>>> {
+    const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.DELETE }, options?.body)
+
+    return this.fetch<Api2Data<DELETEPath2Api<T_Path>>>({
+      requestInit,
+      bitKey: options?.bitKey,
+      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+    })
   }
 
 
-  protected async _fetch<T>(url: string, { method, body, bitKey }: { method: ApiMethods; body?: any; bitKey?: string }): Promise<T> {
+  async fetch<T_Response>({url, requestInit, bitKey}: {url: string, requestInit: RequestInit, bitKey?: string}): Promise<T_Response> {
     if (bitKey) this.bits.set(bitKey, true)
 
-    let res
+    let res: T_Response
 
     try {
-      res = await feFetch<T>(url, method, body)
+      const response = await fetch(url, requestInit)
+
+      const goUrl = getGoUrl(response)
+
+      if (goUrl) throw window.location.href = goUrl
+
+      res = await parseResponse<T_Response>(response)
+
       this.messages.align(res)
     } catch(e) {
       throw e

@@ -236,7 +236,7 @@ export type Api2Function<T_API extends API<any, any, any, any, any>> = RequiredK
  * - The props (arguments) that are sent to an api function
  * - BitKey is optional
 */
-export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string }
+export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string, requestInit?: Partial<RequestInit> }
 
 
 /** Utility to extract the *required* keys of some object */
