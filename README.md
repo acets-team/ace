@@ -116,10 +116,10 @@ export default new Route404()
   export default new Route('/smooth')
     .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps /smooth
     .component((fe) => {
-      const air = load(() => apiCharacter({ pathParams: {element: 'air'}}), '💨')
-      const fire = load(() => apiCharacter({pathParams: {element: 'fire'}}), '🔥')
-      const earth = load(() => apiCharacter({pathParams: {element: 'earth'}}), '🌎')
-      const water = load(() => apiCharacter({pathParams: {element: 'water'}}), '💦')
+      const air = load({ key: '💨', fn: () => apiCharacter({ pathParams: {element: 'air'}}) })
+      const fire = load({ key: '🔥', fn: () => apiCharacter({ pathParams: {element: 'fire'}}) })
+      const water = load({ key: '💦', fn: () => apiCharacter({ pathParams: {element: 'water'}}) })
+      const earth = load({ key: '🌎', fn: () => apiCharacter({ pathParams: {element: 'earth'}}) })
 
       return <>
         <h1>🚨 This element / all elements outside the Suspense below, render immediately!</h1>

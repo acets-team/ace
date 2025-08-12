@@ -66,10 +66,6 @@ async function fsCopy({ dirWrite, srcFileName, aimFileName, build }: { dirWrite:
 
 
 function renderEnv(build: Build) {
-  const renderSet = typeof build.config.origins[build.env] === 'string'
-    ? 'new Set([config.origins[env]])'
-    : 'new Set(config.origins[env])'
-
   return `/**
 * 🧚‍♀️ How to access:
 *     - import { env, origins } from '@ace/env'
@@ -79,7 +75,10 @@ import { config } from 'ace.config'
 
 export const env: string = '${build.env}'
 
-export const origins: Set<string> = ${renderSet}
+export const origins: Set<string> = typeof config.origins[env] === 'string'
+  ? new Set([config.origins[env]])
+  : new Set(config.origins[env])
+
 `
 }
 
