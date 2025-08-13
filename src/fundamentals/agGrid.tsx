@@ -1,13 +1,13 @@
 /**
  * 🧚‍♀️ How to use:
- *   import { AgGrid, defaultStyle } from '@ace/agGrid'
+ *   import { AgGrid, defaultStyle, agWidth, defaultColDef } from '@ace/agGrid'
  *   import type { AgGridProps } from '@ace/agGrid'
  */
 
 
 import { feComponent } from './feComponent'
 import { onMount, type JSX } from 'solid-js'
-import type { GridApi, GridOptions } from 'ag-grid-community'
+import type { ColDef, GridApi, GridOptions } from 'ag-grid-community'
 
 
 /**
@@ -27,21 +27,20 @@ import type { GridApi, GridOptions } from 'ag-grid-community'
   <Show when={users()?.length}>
     <AgGrid gridOptions={{
       rowData: users(),
-      defaultColDef: { flex: 1, resizable: true, filter: false  },
+      defaultColDef,
       columnDefs: [
-        { field: 'id', filter: 'agNumberColumnFilter', maxWidth: 72, cellStyle: { flex: 0 } },
+        { field: 'id', filter: 'agNumberColumnFilter', ...agWidth(72),
         { field: 'name', filter: 'agTextColumnFilter' },
         { field: 'email', filter: 'agTextColumnFilter', flex: 2 },
         {
           field: 'hasMadeAmsterdamDeposit',
           editable: true,
-          maxWidth: 140,
-          cellStyle: { flex: 0 },
+          ...agWidth(140),
           headerName: 'Made Deposit',
-          cellEditor: "agCheckboxCellEditor",
-          cellRenderer: "agCheckboxCellRenderer",
+          cellEditor: 'agCheckboxCellEditor',
+          cellRenderer: 'agCheckboxCellRenderer',
         },
-        { field: 'isNewsletterSubscriber', headerName: 'Newsletter Subscriber', maxWidth: 200, cellStyle: { flex: 0 } },
+        { field: 'isNewsletterSubscriber', headerName: 'Newsletter Subscriber', ...agWidth(200),
       ],
       async onCellValueChanged  (event) {
         if (event.column.getColId() !== 'hasMadeAmsterdamDeposit' || event.oldValue === event.newValue) return
@@ -76,6 +75,18 @@ function Component<T_Data>({ gridOptions, divProps = {style: defaultStyle} }: Ag
 
 
 export const defaultStyle: JSX.CSSProperties = { height: '45rem', width: '100%', 'margin-bottom': '2.1rem' }
+
+
+export function agWidth(value: number): Partial<ColDef<any, any>> {
+  return {
+    width: value,
+    minWidth: value,
+    maxWidth: value,
+    cellStyle: { flex: 0 }
+  }
+}
+
+export const defaultColDef: Partial<ColDef<any, any>> = { flex: 1, resizable: true, filter: false }
 
 
 export type AgGridProps<T_Data extends any> = {
