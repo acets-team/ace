@@ -25,7 +25,13 @@ import type { AnyValue, Parser } from './types'
   ```
  * @param parser - A parser function validates and optionally parses an input
  * @param input - The input you'd love to validate & optionally parse
+ * @param onCatch - Set if you'd love for anything to happen onCatch
  */
-export function kParse<T>(parser: Parser<T>, input: AnyValue<T>) {
-  return parser(input)
+export function kParse<T>(parser: Parser<T>, input: AnyValue<T>, onCatch?: (e: any) => any) {
+  try {
+    return parser(input)
+  } catch (e) {
+    if (onCatch) onCatch(e)
+    throw e
+  }
 }

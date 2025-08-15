@@ -19,7 +19,7 @@ import { date, pipe, string, number, union, transform, nonNullish, type BaseIssu
  * @param param.includeIsoTime - Optional, defaults to `true`, when true => `2025-08-01T00:50:28.809Z` when false => `2025-08-01`
  * @returns 
  */
-export function vDate<T_To extends 'date' | 'ms' | 'sec' | 'iso' = 'iso'>({to = 'iso' as T_To, includeIsoTime = true, errorMessage }: { to?: T_To; includeIsoTime?: boolean, errorMessage?: string } = {}): GenericSchema<string | number | Date, vDateOutput<T_To>, BaseIssue<unknown>> {
+export function vDate<T_To extends 'date' | 'ms' | 'sec' | 'iso' = 'iso'>({to = 'iso' as T_To, includeIsoTime = true, error: errorMessage }: { to?: T_To; includeIsoTime?: boolean, error?: string } = {}): GenericSchema<string | number | Date, vDateOutput<T_To>, BaseIssue<unknown>> {
   const base = nonNullish(
     union([string(), number(), date()], errorMessage), // start w/ either a string, number or Date
     errorMessage

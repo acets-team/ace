@@ -36,11 +36,13 @@ import { dateFromInput } from './dateFromInput'
  * 
  * ---
  * 
- * @param callback - Async function to call on submit
- * @param callback.fd - The 1st param provided to `callback()`. `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />` 🚨 If the input type is a date the value will be the local iso string
- * @param callback.event - The 2nd param provided to `callback()`. The `event`, of type `SubmitEvent`, is typically used when `fd()` is not low level enough
+ * @param onSubmit - Async function to call on submit
+ * @param onSubmit.fd - The 1st param provided to `onSubmit()`. `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />` 🚨 If the input type is a `date` OR `datetime-local` the value will be the local iso string
+ * @param onSubmit.event - The 2nd param provided to `onSubmit()`. The `event`, of type `SubmitEvent`, is typically used when `fd()` is not low level enough
+ * @param onError - Optional, `scope.messages.align(e)` alwaays happens on default but feel free to pass an async or not async function on error
+ * @param onError.error - The error that was thrown
  */
-export function createOnSubmit(callback: OnSubmitCallback) {
+export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCallback) {
   return async function (event: SubmitEvent) {
     try {
       event.preventDefault()
@@ -63,13 +65,13 @@ export function createOnSubmit(callback: OnSubmitCallback) {
         return value
       }
 
-      await callback(fd, { ...event, currentTarget: event.currentTarget })
+      await onSubmit(fd, { ...event, currentTarget: event.currentTarget })
     } catch (e) {
       scope.messages.align(e)
+      if (onError) onError(e)
     }
   }
 }
-
 
 
 /**
@@ -77,6 +79,11 @@ export function createOnSubmit(callback: OnSubmitCallback) {
  */
 export type OnSubmitCallback = (fd: FormDataFunction, event: SubmitEvent & { currentTarget: HTMLFormElement }) => Promise<any>
 
+
+/**
+ * - When an error happens, `OnErrorCallback` happens after `scope.messages.align(e)` by default
+ */
+export type OnErrorCallback = (error: any) => Promise<any> | any
 
 
 /**

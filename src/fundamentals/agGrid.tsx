@@ -65,7 +65,7 @@ function Component<T_Data>({ gridOptions, divProps = {style: defaultStyle} }: Ag
   let grid: undefined | HTMLDivElement
 
   onMount(() => {
-    if (grid) window.agGrid.createGrid(grid, gridOptions)
+    if (grid && window.agGrid) window.agGrid.createGrid(grid, gridOptions)
   })
 
   return <>

@@ -113,6 +113,7 @@ export const fundamentals = new Map([
   ['vBool', new Fundamental('ts', 'valibot', 'copy')],
   ['vDate', new Fundamental('ts', 'valibot', 'copy')],
   ['vEmail', new Fundamental('ts', 'valibot', 'copy')],
+  ['vEnums', new Fundamental('ts', 'valibot', 'copy')],
   ['vNum', new Fundamental('ts', 'valibot', 'copy')],
   ['vString', new Fundamental('ts', 'valibot', 'copy')],
   ['vParse', new Fundamental('ts', 'valibot', 'copy')],
