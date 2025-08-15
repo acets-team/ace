@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to use:
- *   import { AgGrid, defaultStyle, agWidth, defaultColDef } from '@ace/agGrid'
+ *   import { AgGrid, defaultStyle } from '@ace/agGrid'
  *   import type { AgGridProps } from '@ace/agGrid'
  */
 
@@ -75,18 +75,6 @@ function Component<T_Data>({ gridOptions, divProps = {style: defaultStyle} }: Ag
 
 
 export const defaultStyle: JSX.CSSProperties = { height: '45rem', width: '100%', 'margin-bottom': '2.1rem' }
-
-
-export function agWidth(value: number): Partial<ColDef<any, any>> {
-  return {
-    width: value,
-    minWidth: value,
-    maxWidth: value,
-    cellStyle: { flex: 0 }
-  }
-}
-
-export const defaultColDef: Partial<ColDef<any, any>> = { flex: 1, resizable: true, filter: false }
 
 
 export type AgGridProps<T_Data extends any> = {

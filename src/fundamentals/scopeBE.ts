@@ -1,4 +1,3 @@
-import { config } from 'ace.config'
 import { env, origins } from './env'
 import { AceError } from './aceError'
 import { buildUrl } from '../buildUrl'
@@ -34,19 +33,14 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
 
 
   /**
-   * - On the `fe` if we'd love to get the current origin we can do `window.location.origin`, ex: `https://example.com`
-   * - This is the `be` equivalent
-   * - On same site requests origin header is not sent so we fallback to the referer
-   * - To truly lock the api down set a same site cookie
+   * - On the `FE` if we'd love to get the current origin we can do `window.location.origin`, ex: `https://example.com`
+   * - This is the `BE` equivalent
+   * - From a `BE` perspective there are 2 different types of origins
+   *     1) Server origin, what this is, let's you know the origin url for your server / api
+   *     2) User origin, **NOT** what this is, lets you know where this request came from, to get that: `this.event.request.headers.get('origin')`
    */
   get origin(): string {
-    const origin = this.event.request.headers.get('origin')
-    if (origin) return origin
-
-    const referer = this.event.request.headers.get('referer')
-    if (referer) try { return new URL(referer).origin } catch { }
-
-    throw new Error('Cannot determine origin b/c missing both Origin and Referer headers')
+    return new URL(this.event.request.url).origin
   }
 
 
