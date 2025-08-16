@@ -44,29 +44,29 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
   }
 
 
-/** Local testing example: curl -H "Origin: http://localhost:5173" -v http://localhost:3000/api/ */
-#getCorsHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {'Referrer-Policy': 'strict-origin-when-cross-origin'}
+  /** Local testing example: curl -H "Origin: http://localhost:5173" -v http://localhost:3000/api/ */
+  #getCorsHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {'Referrer-Policy': 'strict-origin-when-cross-origin'}
 
-  // let origins = config.origins[env]
-  if (!origins.size) throw new Error(`!config.origins.${env} - set origins in ace.config.js, to a string or an array of strings`)
-  
-  if (origins.has('*')) {
-    if (origins.size > 1) throw new Error(`config.origins.${env} has a wildcard AND multiple values set which is not allowed from an http spec perspective`)
-    else { // no allow credentials header when doing * b/c http spec
-      headers['Access-Control-Allow-Origin'] = '*'
+    // let origins = config.origins[env]
+    if (!origins.size) throw new Error(`!config.origins.${env} - set origins in ace.config.js, to a string or an array of strings`)
+    
+    if (origins.has('*')) {
+      if (origins.size > 1) throw new Error(`config.origins.${env} has a wildcard AND multiple values set which is not allowed from an http spec perspective`)
+      else { // no allow credentials header when doing * b/c http spec
+        headers['Access-Control-Allow-Origin'] = '*'
+        return headers
+      }
+    }
+
+    if (!origins.has(this.origin)) throw new Error(origins.size === 1 ? `Your origin is "${this.origin}" but the allowed origin is "${origins.values().next().value}"` : `Your origin is "${this.origin}" but the allowed origins are "${Array.from(origins).join(', ')}"`)
+    else { // if request origin in allow list => echo it back
+      headers.Vary = 'Origin'
+      headers['Access-Control-Allow-Origin'] = this.origin
+      headers['Access-Control-Allow-Credentials'] = 'true'
       return headers
     }
   }
-
-  if (!origins.has(this.origin)) throw new Error(origins.size === 1 ? `Your origin is "${this.origin}" but the allowed origin is "${origins.values().next().value}"` : `Your origin is "${this.origin}" but the allowed origins are "${Array.from(origins).join(', ')}"`)
-  else { // if request origin in allow list => echo it back
-    headers.Vary = 'Origin'
-    headers['Access-Control-Allow-Origin'] = this.origin
-    headers['Access-Control-Allow-Credentials'] = 'true'
-    return headers
-  }
-}
 
 
 
