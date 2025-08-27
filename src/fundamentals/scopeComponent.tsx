@@ -233,23 +233,24 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   async fetch<T_Response>({url, requestInit, bitKey}: {url: string, requestInit: RequestInit, bitKey?: string}): Promise<T_Response> {
     if (bitKey) this.bits.set(bitKey, true)
 
-    let res: T_Response
+    let res = null
+    let goUrl = null
 
     try {
-      const response = await fetch(url, requestInit)
+      res = await fetch(url, requestInit)
 
-      const goUrl = getGoUrl(response)
-
-      if (goUrl) throw window.location.href = goUrl
-
-      res = await parseResponse<T_Response>(response)
-
-      this.messages.align(res)
+      if (goUrl) goUrl = getGoUrl(res)
     } catch(e) {
-      throw e
-    } finally {
-      if (bitKey) this.bits.set(bitKey, false)
+      res = await parseResponse<T_Response>(e)
     }
+    
+    if (goUrl) throw window.location.href = goUrl
+
+    if (bitKey) this.bits.set(bitKey, false)
+
+    res = await parseResponse<T_Response>(res)
+
+    this.messages.align(res)
 
     return res
   }

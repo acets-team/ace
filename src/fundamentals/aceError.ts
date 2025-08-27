@@ -68,7 +68,7 @@ export class AceError {
         else console.trace()
       }
 
-      return new Response(JSON.stringify(res), { status: 400 })
+      return new Response(JSON.stringify(res), { status: 400, headers: {'content-type': 'application/json'} })
     }
   }
 
