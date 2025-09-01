@@ -51,6 +51,7 @@ export const fundamentals = new Map([
   ['createRouteUrl', new Fundamental('ts', 'solid', 'copy')],
   ['date2Epoch', new Fundamental('ts', 'solid', 'copy')],
   ['date2English', new Fundamental('ts', 'solid', 'copy')],
+  ['date2Input', new Fundamental('ts', 'solid', 'copy')],
   ['date2Iso', new Fundamental('ts', 'solid', 'copy')],
   ['dateFromInput', new Fundamental('ts', 'solid', 'copy')],
   ['dateLike2Date', new Fundamental('ts', 'solid', 'copy')],
