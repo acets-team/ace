@@ -10,6 +10,7 @@ import { clientOnly } from '@solidjs/start'
 
 /**
  * ### Creates a frontend (fe) only component!
+ * - To ensure your build places no fe imports into server side bundle => place export into its own file
  * 
  * @example
  * 
