@@ -70,7 +70,6 @@ import { dateLike2Date } from './dateLike2Date'
  * @link https://orm.drizzle.team/docs/guides/timestamp-default-value
  */
 export function date2Input(dateLike: DateLike, type: 'date-local' | 'datetime-local' | 'date-utc' | 'datetime-utc'): string {
-  debugger
   if (!dateLike) return ''
 
   switch (type) {
