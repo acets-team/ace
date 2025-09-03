@@ -1,9 +1,9 @@
 import type { AceConfig } from 'acets'
-import { fileURLToPath } from 'node:url'
 import { buildRead } from './buildRead.js'
 import { buildWrite } from './buildWrite.js'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { sep, join, relative, resolve, dirname } from 'node:path'
 import { Enums, type InferEnums } from '../../fundamentals/enums.js'
 import { pathnameToPattern } from '../../fundamentals/pathnameToPattern.js'
@@ -33,8 +33,8 @@ export class Build {
   config: AceConfig
   dirWriteRoot: string
   fsSolidTypes?: string
+  dirWriteFundamentals: string
   static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
-  static dirWriteFundamentals: string
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
@@ -93,7 +93,7 @@ export class Build {
 
     this.dirWriteRoot = join(cwd, '.ace')
     this.dirRead = dirname(fileURLToPath(import.meta.url))
-    Build.dirWriteFundamentals = join(cwd, '.ace/fundamentals')
+    this.dirWriteFundamentals = join(cwd, '.ace/fundamentals')
 
     if (this.commandOptions.has('--verbose')) console.log(`✅ Read: ${configPath}`)
   }
@@ -109,7 +109,7 @@ export class Build {
   /** The config defined at `./ace.config` */
   static async #getConfig(cwd: string) {
     const fsConfigPath = resolve(cwd, 'ace.config.js')
-    const relativeConfigPath = this.fsPath2Relative(fsConfigPath, cwd)
+    const relativeConfigPath = pathToFileURL(fsConfigPath).href
     const module = await import(relativeConfigPath)
     const config = module?.config ? module.config : null
 
@@ -120,7 +120,7 @@ export class Build {
 
 
   /** On windows we can't `await import(fsPath)` so this converts the `fsPath` to a `relativePath` */
-  static fsPath2Relative(fsPath: string, baseDir = Build.dirWriteFundamentals) {
+  fsPath2Relative(fsPath: string, baseDir = this.dirWriteFundamentals) {
     let rel = relative(baseDir, fsPath) // get relative path
 
     rel = rel.split(sep).join('/') // windows uses backslashes, vite errors w/ backslashes, this replaces backslashes w/ forward slashes
@@ -129,12 +129,12 @@ export class Build {
   }
 
 
-  static getImportEnry({ star, moduleName, fsPath, addType }: { star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
-    return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from ${Build.fsPath2Relative(fsPath)}\n`
+  getImportEnry({ star, moduleName, fsPath, addType }: { star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
+    return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from ${this.fsPath2Relative(fsPath)}\n`
   }
 
 
-  static getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
+  getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
     if (pathIsKey && fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
       return `  '${urlPath}': regexApiNames.${fnName},\n`
     } else if (fnName) { // regexApiNames
@@ -145,7 +145,7 @@ export class Build {
     } else { // regexRoutes
       return `  '${urlPath}': {
       pattern: ${pathnameToPattern(urlPath)},
-      loader: () => import(${Build.fsPath2Relative(fsPath)}).then((m) => m.${moduleName})
+      loader: () => import(${this.fsPath2Relative(fsPath)}).then((m) => m.${moduleName})
     },\n`
     }
   }
