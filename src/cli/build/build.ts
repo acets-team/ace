@@ -2,9 +2,9 @@ import type { AceConfig } from 'acets'
 import { fileURLToPath } from 'node:url'
 import { buildRead } from './buildRead.js'
 import { buildWrite } from './buildWrite.js'
-import { join, resolve, dirname } from 'node:path'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
+import { sep, join, relative, resolve, dirname } from 'node:path'
 import { Enums, type InferEnums } from '../../fundamentals/enums.js'
 import { pathnameToPattern } from '../../fundamentals/pathnameToPattern.js'
 
@@ -34,8 +34,7 @@ export class Build {
   dirWriteRoot: string
   fsSolidTypes?: string
   static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
-  
-  dirWriteFundamentals: string
+  static dirWriteFundamentals: string
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
@@ -62,6 +61,7 @@ export class Build {
    */
   static async Create(cwd: string) {
     const env = Build.#getEnv()
+
     const {config, configPath} = await Build.#getConfig(cwd)
 
     /** 
@@ -92,8 +92,8 @@ export class Build {
     this.config = this.whiteList.populate(config)
 
     this.dirWriteRoot = join(cwd, '.ace')
-    this.dirWriteFundamentals = join(cwd, '.ace/fundamentals')
     this.dirRead = dirname(fileURLToPath(import.meta.url))
+    Build.dirWriteFundamentals = join(cwd, '.ace/fundamentals')
 
     if (this.commandOptions.has('--verbose')) console.log(`✅ Read: ${configPath}`)
   }
@@ -108,13 +108,46 @@ export class Build {
 
   /** The config defined at `./ace.config` */
   static async #getConfig(cwd: string) {
-    const configPath = resolve(cwd, 'ace.config.js')
-    const module = await import(configPath)
+    const fsConfigPath = resolve(cwd, 'ace.config.js')
+    const relativeConfigPath = this.fsPath2Relative(fsConfigPath, cwd)
+    const module = await import(relativeConfigPath)
     const config = module?.config ? module.config : null
 
     if (!config) throw new Error(errors.noConfig)
 
-    return { config, configPath }
+    return { config, configPath: fsConfigPath }
+  }
+
+
+  /** On windows we can't `await import(fsPath)` so this converts the `fsPath` to a `relativePath` */
+  static fsPath2Relative(fsPath: string, baseDir = Build.dirWriteFundamentals) {
+    let rel = relative(baseDir, fsPath) // get relative path
+
+    rel = rel.split(sep).join('/') // windows uses backslashes, vite errors w/ backslashes, this replaces backslashes w/ forward slashes
+
+    return rel.replace(/\.(tsx|ts|jsx|js)$/, '') // strip supported extensions (vite doesen't need em)
+  }
+
+
+  static getImportEnry({ star, moduleName, fsPath, addType }: { star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
+    return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from ${Build.fsPath2Relative(fsPath)}\n`
+  }
+
+
+  static getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
+    if (pathIsKey && fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
+      return `  '${urlPath}': regexApiNames.${fnName},\n`
+    } else if (fnName) { // regexApiNames
+      return `  '${fnName}': {
+      pattern: ${pathnameToPattern(urlPath)},
+      loader: apiLoaders.${fnName}Loader
+    },\n`
+    } else { // regexRoutes
+      return `  '${urlPath}': {
+      pattern: ${pathnameToPattern(urlPath)},
+      loader: () => import(${Build.fsPath2Relative(fsPath)}).then((m) => m.${moduleName})
+    },\n`
+    }
   }
 }
 
@@ -182,53 +215,6 @@ export type Writes = {
   constRoutes: string,
   constApiName: string,
   apiFunctions: string,
-}
-
-
-/**
- * 
- * @example
-  ```ts
-  export const regexRoutes = {
-    '/a': {
-      pattern: /^\/a\/?$/,
-      path: '/Users/chriscarrington/ace/src/app/a.tsx'
-    },
-    '/b': {
-      pattern: /^\/b\/?$/,
-      path: '/Users/chriscarrington/ace/src/app/c.tsx'
-    },
-    '/c:id': {
-      pattern: /^\/c:id\/?$/,
-      path: '/Users/chriscarrington/ace/src/app/b.tsx'
-    },
-  }
-  ```
-*/
-export const getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
-  if (pathIsKey && fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
-    return `  '${urlPath}': regexApiNames.${fnName},\n`
-  } else if (fnName) { // regexApiNames
-    return `  '${fnName}': {
-    pattern: ${pathnameToPattern(urlPath)},
-    loader: apiLoaders.${fnName}Loader
-  },\n`
-  } else { // regexRoutes
-    return `  '${urlPath}': {
-    pattern: ${pathnameToPattern(urlPath)},
-    loader: () => import(${getImportFsPath(fsPath)}).then((m) => m.${moduleName})
-  },\n`
-  }
-}
-
-
-export function getImportEnry({star, moduleName, fsPath, addType }: {star?: boolean, moduleName: string, fsPath: string, addType?: boolean }) {
-  return `import${addType ? ' type' : ''}${star ? ' * as' : ''} ${moduleName} from ${getImportFsPath(fsPath)}\n`
-}
-
-
-export function getImportFsPath(fsPath: string) {
-  return `'${fsPath.replace('.tsx', '').replace('.ts', '')}'`
 }
 
 

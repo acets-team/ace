@@ -3,10 +3,14 @@
 
 
 ### 🧚‍♀️ Create Ace App!
+- Mac / Linux
 ```bash
 nvm use 24 && npx create-ace-app@latest
 ```
-
+- Windows
+```bash
+nvm use 24 && npx.cmd create-ace-app@latest
+```
 
 
 ### 🚨 When a dev restart is necessary?
