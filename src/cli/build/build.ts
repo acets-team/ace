@@ -125,7 +125,9 @@ export class Build {
 
     rel = rel.split(sep).join('/') // windows uses backslashes, vite errors w/ backslashes, this replaces backslashes w/ forward slashes
 
-    return rel.replace(/\.(tsx|ts|jsx|js)$/, '') // strip supported extensions (vite doesen't need em)
+    rel = rel.replace(/\.(tsx|ts|jsx|js)$/, '') // strip supported extensions (vite doesen't need em)
+
+    return `"${rel}"` // surround w/ quotes so it's a string whereever it's placed
   }
 
 
