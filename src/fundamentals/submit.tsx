@@ -6,7 +6,7 @@
 
 
 import { scope } from './scopeComponent'
-import { Show, type JSX } from 'solid-js'
+import { type Accessor, Show, type JSX } from 'solid-js'
 import { Loading, type LoadingProps } from './loading'
 
 
@@ -26,7 +26,7 @@ export const Submit = ({ label, bitKey, buttonProps, loadingProps }: SubmitProps
 
   return <>
     <button type="submit" disabled={isLoading()} aria-busy={isLoading()} {...buttonProps} >
-      <Show when={isLoading()} fallback={label}>
+      <Show when={isLoading()} fallback={typeof label === 'function' ? label() : label}>
         <span role="status" aria-live="polite">
           <Loading {...loadingProps} />
         </span>
@@ -38,7 +38,7 @@ export const Submit = ({ label, bitKey, buttonProps, loadingProps }: SubmitProps
 
 export type SubmitProps = {
   /** Button text */
-  label: string
+  label: string | Accessor<string>
   /** Bits have a signal to determine if they are `1` or `0` and a `bitKey` to identify them w/in a `Map` */
   bitKey: string
   /** Optional, additional props for button dom element */

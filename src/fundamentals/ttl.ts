@@ -1,14 +1,32 @@
-/** How many seconds in a minute */
-export const ttlMinute = 60
+/**
+ * - 🚨 Important:
+ *     - `new Date(ms)`
+ *     - `Date.now()` is now in `ms`
+ *     - `Set-Cookie: name=value; Max-Age=seconds`
+ *     - `const jwtPayload = { exp: seconds }`
+ * 
+ * - 🚨 Recommendation:
+ *    - Store dates in db as `ms`, example: `integer('expiration', { mode: 'timestamp_ms' }).notNull()`
+ */
 
-/** How many seconds in an hour */
-export const ttlHour = 60 * ttlMinute
 
-/** How many seconds in a day */
-export const ttlDay = 24 * ttlHour
 
-/** How many seconds in a week */
-export const ttlWeek = 7 * ttlDay
+/** How many ms in a second */
+export const ttlSecond = 1000
+
+/** How many ms in a minute */
+export const ttlMinute = ttlSecond * 60
+
+/** How many ms in an hour */
+export const ttlHour = ttlMinute * 60
+
+/** How many ms in a day */
+export const ttlDay = ttlHour * 24
+
+/** How many ms in a week */
+export const ttlWeek = ttlDay * 7
+
+
 
 /**
  * @example
@@ -19,7 +37,7 @@ export const ttlWeek = 7 * ttlDay
     .values({ userId, expiration: nowPlus(ttl) })
     .returning({ sessionId: sessions.id })
   ```
- * @param ttl - Amount of time in seconds in the future
+ * @param ttlMs - Amount of time in `ms` in the future
  * @returns Date object of future time
  */
-export const nowPlus = (ttl: number) => new Date(Date.now() + ttl * 1000)
+export const nowPlus = (ttlMs: number) => new Date(Date.now() + ttlMs)

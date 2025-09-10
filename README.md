@@ -161,7 +161,7 @@ export default new Route404()
 - ✅ FE & BE Validation uses the same schema
 - ✅ No BE request is made unless FE validation passes
 - ✅ Error messages for each input show up next to that input
-- ✅ Start typing an error messages go away for that input
+- ✅ IF input has error(s) AND start typing in input THEN clear that inputs error(s)
   ```tsx
   import { vNum } from '@ace/vNum'
   import { clear } from '@ace/clear'

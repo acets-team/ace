@@ -6,8 +6,8 @@
 
 
 import { feComponent } from './feComponent'
-import { onMount, type JSX } from 'solid-js'
-import type { ColDef, GridApi, GridOptions } from 'ag-grid-community'
+import { onMount, type JSX, type Setter } from 'solid-js'
+import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community'
 
 
 /**
@@ -22,38 +22,21 @@ import type { ColDef, GridApi, GridOptions } from 'ag-grid-community'
  * @link https://www.ag-grid.com/
  * @example
   ```tsx
-  // users = [ { "id": 3, "name": "Christopher Carrington", "email": "chris@gmail.com", "hasMadeAmsterdamDeposit": true, "isNewsletterSubscriber": true } ]
+  import type { GridApi } from 'ag-grid-community'
 
-  <Show when={users()?.length}>
-    <AgGrid gridOptions={{
+  const [usersGridApi, setUsersGridApi] = createSignal<GridApi<any>>()
+
+  <AgGrid 
+    setGridApi={setUsersGridApi}
+    gridOptions={{
       rowData: users(),
-      defaultColDef,
       columnDefs: [
-        { field: 'id', filter: 'agNumberColumnFilter', ...agWidth(72),
-        { field: 'name', filter: 'agTextColumnFilter' },
-        { field: 'email', filter: 'agTextColumnFilter', flex: 2 },
-        {
-          field: 'hasMadeAmsterdamDeposit',
-          editable: true,
-          ...agWidth(140),
-          headerName: 'Made Deposit',
-          cellEditor: 'agCheckboxCellEditor',
-          cellRenderer: 'agCheckboxCellRenderer',
-        },
-        { field: 'isNewsletterSubscriber', headerName: 'Newsletter Subscriber', ...agWidth(200),
+        { field: 'id', filter: 'agNumberColumnFilter', width: 72 },
+        { field: 'name', filter: 'agTextColumnFilter', width: 210 },
+        ...agShowColumn<ApiName2Data<'apiGetUsers'>>(props.source === 'admin', { field: 'isNewsletterSubscriber', headerName: 'Email Subscriber', width: 170 }),
       ],
-      async onCellValueChanged  (event) {
-        if (event.column.getColId() !== 'hasMadeAmsterdamDeposit' || event.oldValue === event.newValue) return
-
-        const { error } = await apiUpdateHasMadeAmsterdamDeposit({ body: { id: event.data.id, hasMadeAmsterdamDeposit: event.newValue } })
-
-        if (!error?.message) showToast({ type: 'success', value: 'Success!' })
-        else {
-          showToast({ type: 'danger', value: error.message })
-          event.api.getRowNode(String(event.data.id))?.setDataValue('hasMadeAmsterdamDeposit', event.oldValue)
-        }
-      }
-    }} />
+    }}
+  />
   ```
  * @param props.gridOptions - Passed to `window.agGrid.createGrid(grid, gridOptions)`
  * @param props.divProps - Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div
@@ -61,11 +44,15 @@ import type { ColDef, GridApi, GridOptions } from 'ag-grid-community'
 export const AgGrid = feComponent(Component)
 
 
-function Component<T_Data>({ gridOptions, divProps = {style: defaultStyle} }: AgGridProps<T_Data>) {
+function Component<T_Data>({ setGridApi, gridOptions, divProps = {style: defaultStyle} }: AgGridProps<T_Data>) {
   let grid: undefined | HTMLDivElement
 
   onMount(() => {
-    if (grid && window.agGrid) window.agGrid.createGrid(grid, gridOptions)
+    if (grid && window.agGrid) {
+      const gridApi = window.agGrid.createGrid(grid, gridOptions)
+      
+      if (setGridApi) setGridApi(gridApi)
+    }
   })
 
   return <>
@@ -82,6 +69,8 @@ export type AgGridProps<T_Data extends any> = {
   gridOptions: GridOptions<T_Data>
   /** Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div */
   divProps?: JSX.HTMLAttributes<HTMLDivElement>
+  /** Provide setter if you'd like to work w/ gridApi */
+  setGridApi?: Setter<GridApi<any> | undefined>
 }
 
 
@@ -92,3 +81,7 @@ declare global {
     }
   }
 }
+
+
+
+export type AgParams<TArr extends readonly any[]> = ICellRendererParams<TArr[number]>

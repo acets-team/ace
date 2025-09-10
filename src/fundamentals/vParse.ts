@@ -15,6 +15,11 @@ import { flatten, safeParse, type GenericSchema, type InferOutput, type Config, 
  * 1. Safely parses the entire input
  * 2. On success, returns the validated output
  * 3. On failure, throws an AceError with flattened messages
+  @example
+  ```
+  export const GET = new API('/api/get-amsterdam-registration/:userId?', 'apiGetAmterdamRegistration')
+    .pathParams(vParse(object({ userId: optional(vNum()) })))
+  ```
  * @param schema - Schema the input should look like
  * @param config - Config to pass to safeParse via `safeParse(schema, input, config)`
  */
