@@ -175,11 +175,11 @@ class FundamentalWhiteList {
    * @returns Unaltered `config`
    */
   populate(config: AceConfig) {
-    fundamentals.forEach((f, name) => {
+    for (const [name, f] of fundamentals) {
       if (config.plugins[f.pluginName]) { // IF this fundamentals plugin is `true` @ `./ace.config.js`
         this.set.add(name) // add this fundamental to the whitelist, b/c this is a fundamental that lives in a requested plugin
       }
-    })
+    }
 
     return config
   }

@@ -79,8 +79,8 @@ export type PluginsConfig = {
    *     - `ag-grid-community` (🚨 Only used for types)
    * - Requires the following cdn script:
    *     - @ entry-server.tsx > below {scripts} > `<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>`
-   *     - Users download it once and then it's cdn from their
-   *     - Avoids big script in fe or be build
+   *     - Customers download it once
+   *     - Avoids big script in build
    * @link https://www.ag-grid.com/
    */
   agGrid?: boolean
@@ -97,4 +97,18 @@ export type PluginsConfig = {
    * @link https://www.cloudflare.com/en-gb/ips/
    */
   brevo?: boolean
+
+  /**
+   * Enables **Markdown** fundamentals (helpful modules @ `./ace`)
+   * 
+   * - Requires the following npm dev imports:
+   *     - `markdown-it` (🚨 Only used for types)
+   * - Requires the following cdn script:
+   *     - @ entry-server.tsx > below {scripts} > `<script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>`
+   *     - Customers download it once
+   *     - Avoids big script in build
+   *
+   * @link https://www.npmjs.com/package/markdown-it
+   */
+  markdownIt?: boolean
 }

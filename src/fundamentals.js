@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid' | 'brevo'} pluginName - Name of plugin
+   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid' | 'markdownIt' | 'brevo'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -43,7 +43,8 @@ export const fundamentals = new Map([
   ['createAPIFunction', new Fundamental('ts', 'solid', 'helper')],
   ['cuteLog', new Fundamental('ts', 'solid', 'copy')],
   ['clear', new Fundamental('ts', 'solid', 'copy')],
-  ['cms', new Fundamental('ts', 'turso', 'copy')],
+  ['cmsComponent', new Fundamental('tsx', 'markdownIt', 'copy')],
+  ['cmsInstance', new Fundamental('ts', 'turso', 'copy')],
   ['cmsApi', new Fundamental('ts', 'turso', 'copy')],
   ['cmsSchema', new Fundamental('ts', 'turso', 'copy')],
   ['cmsSQL', new Fundamental('ts', 'turso', 'copy')],
@@ -81,6 +82,7 @@ export const fundamentals = new Map([
   ['loading', new Fundamental('tsx', 'solid', 'copy')],
   ['loading.styles', new Fundamental('css', 'solid', 'copy')],
   ['lorem', new Fundamental('ts', 'solid', 'copy')],
+  ['markdown', new Fundamental('tsx', 'markdownIt', 'copy')],
   ['modal', new Fundamental('tsx', 'solid', 'copy')],
   ['modal.styles', new Fundamental('css', 'solid', 'copy')],
   ['messages', new Fundamental('tsx', 'solid', 'copy')],
