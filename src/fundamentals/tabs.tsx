@@ -354,8 +354,8 @@ export class HashTab {
 /** Used when the mode is `content` */
 export class ContentTab {
   label: string
-  content: Accessor<JSX.Element>
   isInitiallyActive: boolean
+  content: Accessor<JSX.Element>
 
   constructor(label: string, content: Accessor<JSX.Element>, isInitiallyActive = false) {
     this.label = label
