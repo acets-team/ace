@@ -9,8 +9,8 @@ import { buildUrl } from '../buildUrl'
 import { regexRoutes } from './regexRoutes'
 import { useLocation } from '@solidjs/router'
 import { pathnameToMatch } from '../pathnameToMatch'
-import { createSignal, createEffect, onMount, For, Show, type JSX } from 'solid-js'
 import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
+import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor } from 'solid-js'
 
 
 /**
@@ -69,7 +69,7 @@ import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './typ
  * @param props.scrollMargin - If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
  * @param props.tabsProps - Set if you'd love to add your own props to the tabs html div element like class, style or id
  */
-export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, tabsProps }: TabsProps) {
+export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, tabsProps }: TabsProps<Routes>) {
   const location = useLocation()
 
   const pathToTabIndex = new Map<Routes, number>()
@@ -78,7 +78,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   let initialContentIndex = 0
   let foundContentInitial = false
 
-  tabs.forEach((tab, i) => {
+  tabs()?.forEach((tab: any, i: number) => {
     if (tab instanceof RouteTab) pathToTabIndex.set(tab.path, i)
     else if (tab instanceof HashTab) hashToTabIndex.set(tab.hash, i)
     else if (tab instanceof ContentTab && tab.isInitiallyActive && !foundContentInitial) {
@@ -101,8 +101,8 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
     if (!match) return
     const tabIndex = pathToTabIndex.get(match.handler.values.path as Routes)
 
-    if (tabIndex === undefined || !tabs[tabIndex]) return
-    onTabClick(tabIndex, tabs[tabIndex])
+    if (tabIndex === undefined || !tabs()[tabIndex]) return
+    onTabClick(tabIndex, tabs()[tabIndex] as ContentTab)
   })
 
   let divTabs: HTMLDivElement | undefined
@@ -198,16 +198,16 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
   onMount(() => {
     if (name) {
-      indexToOnTabClick.set(name, i => onTabClick(i, tabs[i]!))
+      indexToOnTabClick.set(name, i => onTabClick(i, tabs()[i]!))
 
       pathToOnTabClick.set(name, r => {
         const i = pathToTabIndex.get(r)
-        if (i != null) onTabClick(i, tabs[i]!)
+        if (i != null) onTabClick(i, tabs()[i]!)
       })
 
       hashToOnTabClick.set(name, h => {
         const i = hashToTabIndex.get(h)
-        if (i != null) onTabClick(i, tabs[i]!)
+        if (i != null) onTabClick(i, tabs()[i]!)
       })
     }
 
@@ -216,7 +216,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
     window.addEventListener('resize', positionIndicator)
 
     if (mode === 'scroll') {
-      tabs.forEach((tab, i) => {
+      tabs()?.forEach((tab: any, i: number) => {
         if (tab instanceof HashTab) {
           const el = document.querySelector<HTMLElement>(tab.hash)
           if (el) hashCache.set(tab.hash, { el, idx: i })
@@ -253,7 +253,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   return <>
     <div class={`ace-tabs ${variant}`}>
       <div class="tabs" ref={divTabs} {...accessibilityProps} {...tabsProps}>
-        <For each={tabs}>
+        <For each={tabs()}>
           {(tab, i) => {
             const isActive = () => i() === active()
 
@@ -272,12 +272,14 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
       <Show when={mode === 'content'}>
         <div class="tab-contents">
-          <For each={tabs}>
+          <For each={tabs()}>
             {(tab, i) => {
               return <>
-                <div id={`tab-content-${i()}`} classList={{ 'tab-content': true, active: i() === active() }} role="tabpanel" aria-labelledby={`tab-${i()}`} hidden={active() !== i()}>
-                  {tab instanceof ContentTab ? tab.content : null}
-                </div>
+                <Show when={i() === active()}>
+                  <div id={`tab-content-${i()}`} classList={{ 'tab-content': true, active: i() === active() }} role="tabpanel" aria-labelledby={`tab-${i()}`} hidden={active() !== i()}>
+                    {tab instanceof ContentTab ? tab.content() : null}
+                  </div>
+                </Show>
               </>
             }}
           </For>
@@ -352,10 +354,10 @@ export class HashTab {
 /** Used when the mode is `content` */
 export class ContentTab {
   label: string
-  content: JSX.Element
+  content: Accessor<JSX.Element>
   isInitiallyActive: boolean
 
-  constructor(label: string, content: JSX.Element, isInitiallyActive = false) {
+  constructor(label: string, content: Accessor<JSX.Element>, isInitiallyActive = false) {
     this.label = label
     this.content = content
     this.isInitiallyActive = isInitiallyActive
@@ -363,9 +365,9 @@ export class ContentTab {
 }
 
 
-export type TabsProps = {
+export type TabsProps<T_Path extends Routes> = {
   /** An array of `RouteTab`, `HashTab` or `ContentTab` objects. Place the Tabs component in a layout when using a mode of `route` to keep the animation smooth between routes */
-  tabs: Tabs
+  tabs: Accessor<RouteTab<T_Path>[] | HashTab[] | ContentTab[]>
   /** Name is helpful when you have multiple tabs on the same page and want to use `setActiveByTabIndex()`, `setActiveByPath()` or `setActiveByHash()` */
   name?: string
   /** `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected. */
@@ -379,4 +381,4 @@ export type TabsProps = {
 }
 
 
-export type Tabs = RouteTab<any>[] | HashTab[] | ContentTab[]
+export type Tabs = TabsProps<Routes>['tabs']
