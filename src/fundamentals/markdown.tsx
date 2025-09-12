@@ -26,7 +26,7 @@ export function Markdown({ setMD, content, divProps, options = defaultMarkdownOp
   onMount(() => {
     if (!window.markdownit) throw new Error('!window.markdownit --- markdown-it not provided via CDN')
 
-    const o = {...defaultMarkdownOptions, ...options}
+    const o: MarkdownItOptions = {...defaultMarkdownOptions, ...options}
 
     const md = window.markdownit(o)
 
@@ -44,10 +44,21 @@ export function Markdown({ setMD, content, divProps, options = defaultMarkdownOp
 }
 
 
-const defaultMarkdownOptions = {
+const defaultMarkdownOptions: MarkdownItOptions = {
   html: true,
   linkify: true,
   typographer: true,
+  highlight (str: string, lang: string) {
+    let response = ''
+
+    if ((window as any).hljs && (window as any).hljs.getLanguage(lang)) {
+      response = (window as any).hljs.highlight(str, { language: lang ?? 'auto' }).value 
+
+      if (response) response = `<pre class="hljs"><code>${response}</code></pre>`
+    }
+
+    return response ?? '' 
+  },
 }
 
 

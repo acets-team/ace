@@ -10,13 +10,13 @@ import type { ScopeBE } from './scopeBE'
 import type { apiMethods } from './vars'
 import type { InferEnums } from './enums'
 import type { Route404 } from './route404'
-import type { JSX, Accessor } from 'solid-js'
 import type { AceErrorProps } from './aceError'
 import type { regexRoutes } from './regexRoutes'
 import type { regexApiPuts } from './regexApiPuts'
 import type { regexApiGets } from './regexApiGets'
 import type { regexApiNames } from './regexApiNames'
 import type { regexApiPosts } from './regexApiPosts'
+import type { JSX, Signal, Accessor } from 'solid-js'
 import type { ScopeComponent } from './scopeComponent'
 import type { regexApiDeletes } from './regexApiDeletes'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
@@ -407,7 +407,7 @@ export type CMSItem = {
   isMarkdown: number
 }
 
-export type CMSMap = Map<number, CMSItem>
+export type CMSMap = Map<number, Signal<CMSItem | undefined>>
 
 
 export type JWTValidateSuccess<T_JWTPayload extends BaseJWTPayload = {}> = {
