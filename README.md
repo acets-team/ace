@@ -1,4 +1,7 @@
-![Ace, the typesafetiest framework!](https://i.imgur.com/qoibppy.png)
+
+
+
+
 
 
 
@@ -101,58 +104,62 @@ export default new Route404()
 
 
 ### 💫 Route w/ Async Data!
-- Async data requests (seen below @ `load()`) run simultaneously and populate in app once resolved!
-- If this page is refreshed, data begins gathering on the server
-- If this page is navigated to via a link w/in the app (SPA navigation), then the data request starts from the browser
-- Each `load()` request does not wait for all to finish loading & is added to the DOM once the individual request is ready
+- Ace allows us to call our API's w/ a function as seen here!
+- When loading data for a component we recommed using solid's `query()` function and this is set w/ the `queryType` property! `query()` helps w/ deduplication, caching & makes it easy to query endpoints again!
   ```tsx
-  import { load } from '@ace/load'
+  import './Home.css'
   import { Route } from '@ace/route'
-  import { reload } from '@ace/reload'
+  import { Title } from '@solidjs/meta'
   import { Loading } from '@ace/loading'
-  import { apiCharacter } from '@ace/apis'
-  import { Show, Suspense } from 'solid-js'
+  import { Markdown } from '@ace/markdown'
+  import { useStore } from '@src/store/store'
   import RootLayout from '@src/app/RootLayout'
-  import GuestLayout from '@src/app/GuestLayout'
-  import type { ApiName2LoadResponse } from '@ace/types'
+  import { apiGetFinances, apiGetBuildStats } from '@ace/apis'
+  import type { FinanceSummary, Transaction } from '@src/lib/types'
 
 
-  export default new Route('/smooth')
-    .layouts([RootLayout, GuestLayout]) // Root wraps Guest & Guest wraps /smooth
-    .component((fe) => {
-      const air = load({ key: '💨', fn: () => apiCharacter({ pathParams: {element: 'air'}}) })
-      const fire = load({ key: '🔥', fn: () => apiCharacter({ pathParams: {element: 'fire'}}) })
-      const water = load({ key: '💦', fn: () => apiCharacter({ pathParams: {element: 'water'}}) })
-      const earth = load({ key: '🌎', fn: () => apiCharacter({ pathParams: {element: 'earth'}}) })
+  export default new Route('/')
+    .layouts([RootLayout])
+    .component(() => {
+      const {set, sync, store} = useStore()
+
+      apiGetBuildStats({
+        queryType: 'stream',
+        onData: (d) => set('buildStats', d)
+      })
+
+      apiGetFinances({
+        queryType: 'stream',
+        onData (d) {
+          sync('cashFlow', d.cashFlow)
+          sync('transactions', d.transactions)
+          sync('financeCategories', d.categories)
+        }
+      })
 
       return <>
-        <h1>🚨 This element / all elements outside the Suspense below, render immediately!</h1>
+        <Title>🏡 Home</Title>
 
-        <button onClick={() => reload('🔁', ['💨', '🔥', '🌎', '💦'])} type="button" disabled={fe.bits.isOn('🔁')}>
-          <Show when={fe.bits.isOn('🔁')} fallback="🔥 Get Fresh Data!">
-            <Loading />
+        <main class="home">
+          <Welcome />
+
+          <section class="summaries">
+            <Summary key="balance" label="💸 Total Balance"  />
+            <Summary key="monthlyExpenses" label="📉 Monthly Expenses" />
+            <Summary key="monthlyIncome" label="📈 Monthly Income" />
+          </section>
+
+          <section class="vizs">
+            <Categories />
+            <Transactions/>
+          </section>
+
+          <Show when={store.buildStats} fallback={<MarkdownIncoming />}>
+            <Markdown content={() => store.buildStats} $div={{class: 'markdown'}} />
           </Show>
-        </button>
-
-        <div class="characters">
-          <Character element={fire} />
-          <Character element={water} />
-          <Character element={earth} />
-          <Character element={air} />
-        </div>
+        </main>
       </>
     })
-
-
-  function Character({ element }: { element: ApiName2LoadResponse<'apiCharacter'> }) { // once a load has finished the character will render
-    return <>
-      <div class="character">
-        <Suspense fallback={<div class="ace-shimmer"></div>}>
-          {element()?.error?.message || element()?.data}
-        </Suspense>
-      </div>
-    </>
-  }
   ```
 
 
@@ -200,7 +207,7 @@ export default new Route404()
           <Messages name="password" />
 
           <div class="footer">
-            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses scope.bits.isOn('signUp') to show a loading indicator! 🏋️‍♂️ */}
+            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses scope.bits.get('signUp') to show a loading indicator! 🏋️‍♂️ */}
           </div>
         </form>
       </>
@@ -271,12 +278,12 @@ export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api end
 ```tsx
 import { API } from '@ace/api'
 import { object } from 'valibot'
+import { vNum } from '@ace/vNum'
 import { vParse } from '@ace/vParse'
-import { valibotString2Number } from '@ace/valibotString2Number'
 
 
 export const GET = new API('/api/fortune/:id', 'apiFortune')
-  .pathParams(vParse(object({ id: valibotString2Number() })))
+  .pathParams(vParse(object({ id: vNum() })))
   .resolve(async (scope) => {
     return scope.pathParams.id < 0 || scope.pathParams.id > 2
       ? scope.error('🐛') // call scope.Error() to send custom headers :)

@@ -5,9 +5,11 @@
  */
 
 
+import { getEnv } from '../getEnv'
+
 
 /**
- * ### Create a template in Brevo & then send it, requires: `process.env.BREVO_API_KEY`
+ * ### Create a template in Brevo & then send it, requires: `process.env.BREVO_API_KEY` or props.apiKey
  * @link https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys
  * @link https://developers.brevo.com/docs/send-a-transactional-email
  * @link https://developers.brevo.com/docs/how-it-works
@@ -15,16 +17,17 @@
  * @param props.templateId - Template id to send, listed here: https://app.brevo.com/templates/listing
  * @param props.to.email - Must be a contact registered in Brevo and assigned to a contact list. That contact should have the attributes FIRSTNAME, LASTNAME, EMAIL, DELIVERYADDRESS defined.
  * @param props.to.name - The name that will be attached to the email recipient. It will appear in the email headers/metadata and not in the email body.
- * @param params - ex: `{"ORDER": 12345, "DATE": "12/06/2019"}`
+ * @param props.params - ex: `{"ORDER": 12345, "DATE": "12/06/2019"}`
+ * @param props.apiKey - Optional, defaults to process.env.BREVO_API_KEY
  * @returns - A success response is a JSON body giving you the id of the message sent. ex: `{"messageId":"<201906041124.44340027797@smtp-relay.mailin.fr>"}`. An error json will have an error message and error code: https://developers.brevo.com/docs/how-it-works#section-error-codes
  */
 export async function sendBrevoTemplate<T_Data extends BrevoData>(props: SendBrevoTemplateProps): Promise<SendBrevoTemplateResponse<T_Data>> {
-  if (!process.env.BREVO_API_KEY) throw new Error('!process.env.BREVO_API_KEY');
+  const apiKey = getEnv('BREVO_API_KEY', props.apiKey)
 
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     body: JSON.stringify(props),
-    headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': process.env.BREVO_API_KEY, },
+    headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
   })
 
   let parsed: unknown
@@ -65,6 +68,7 @@ export type SendBrevoTemplateProps = {
   templateId: number,
   to: { email: string, name: string }[]
   params?: Record<string, string | number | boolean>
+  apiKey?: string
 }
 
 export type SendBrevoTemplateResponse<T extends BrevoData> = BrevoSuccessResponse<T> | BrevoErrorResponse

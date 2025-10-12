@@ -10,6 +10,7 @@ import { setCookie, getCookie, deleteCookie } from 'h3'
 import type { ApiBody, ApiResponse, UrlSearchParams, UrlPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals } from './types'
 
 
+
 /** Base scope for both API and middleware scopes */
 export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSearchParams = {}, T_Body extends ApiBody = {}, T_Locals extends BaseEventLocals = {}> {
   readonly body: T_Body
@@ -122,7 +123,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @param status - Optional, HTTP Response Status, Defaults to `200`
    * @returns - An API Response of type `AceResponse<T_Data>`
    */
-  success<T_Data>(data: T_Data, status = 200): AceResponse<T_Data> {
+  success<T_Data>(data?: T_Data, status = 200): AceResponse<T_Data> {
     return this.respond({ data, status })
   }
 
@@ -153,11 +154,11 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
   /** 
    * @example
     ```ts
-    import { ttlWeek } from '@ace/ttl'
+    import { msWeek } from '@ace/ms'
     import { jwtCreate } from '@ace/jwtCreate'
     import { jwtCookieName } from '@src/lib/vars'
 
-    scope.setCookie(jwtCookieName, await jwtCreate({ ttl: ttlWeek, payload }), { maxAge: ttlWeek })
+    scope.setCookie(jwtCookieName, await jwtCreate({ ttl: msWeek, payload }), { maxAge: msWeek })
     ```
    * @param name - Cookie name
    * @param value - Cookie value

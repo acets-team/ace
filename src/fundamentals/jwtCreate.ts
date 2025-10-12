@@ -5,6 +5,7 @@
  */
 
 
+import { getEnv } from '../getEnv'
 import type { BaseJWTPayload } from './types'
 import { base64UrlEncode } from './base64UrlEncode'
 
@@ -16,7 +17,7 @@ import { base64UrlEncode } from './base64UrlEncode'
  * @example
   ```ts
   // ./src/lib/types.d.ts
-  export type JWTPayload = { sessionId: string }
+  export type JWTPayload = { sessionId: number }
 
 
   // be code
@@ -27,11 +28,10 @@ import { base64UrlEncode } from './base64UrlEncode'
   ```
  * @param props.payload - The JSON-serializable payload for the jwt token
  * @param props.ttl - Time-to-live in seconds
+ * @param props.secret - Optional, default is `process.env.JWT_SECRET`, the password/secret string required to create jwt's
  * @returns A signed JWT string using HS512
  */
-export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payload, ttl }: JwtCreateProps<T_JWTPayload>): Promise<string> {
-  if (!process.env.JWT_SECRET) throw new Error('!process.env.JWT_SECRET')
-
+export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payload, ttl, secret }: JwtCreateProps<T_JWTPayload>): Promise<string> {
   if (ttl <= 0)  throw new Error('Please include a TTL > 0')
 
   const encoder = new TextEncoder()
@@ -49,7 +49,7 @@ export async function jwtCreate<T_JWTPayload extends BaseJWTPayload = {}>({ payl
 
   const headerBodyBinary = encoder.encode(`${headerB64}.${bodyB64}`) // will be signed soon
 
-  const secretBinary = encoder.encode(process.env.JWT_SECRET) // will turn this into a key
+  const secretBinary = encoder.encode(getEnv('JWT_SECRET', secret)) // will turn this into a key
   const cryptoKey = await crypto.subtle.importKey('raw', secretBinary, { name: 'HMAC', hash: 'SHA-512' }, false, ['sign'])    
 
   const sigBinary = await crypto.subtle.sign('HMAC', cryptoKey, headerBodyBinary)
@@ -65,4 +65,6 @@ export type JwtCreateProps<T_JWTPayload extends BaseJWTPayload = {}> = {
   payload: T_JWTPayload
   /** Time-to-live in seconds */
   ttl: number
+  /** Optional, default is `process.env.JWT_SECRET`, the password/secret string required to create jwt's */
+  secret?: string
 }

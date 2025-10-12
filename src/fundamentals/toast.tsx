@@ -6,7 +6,7 @@
 
 
 import { isServer, render } from 'solid-js/web'
-import { createSignal, onMount, createEffect, For, Show, type Component, type JSX } from 'solid-js'
+import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, type Component} from 'solid-js'
 
 
 
@@ -24,9 +24,10 @@ if (!isServer) {
     </>
   }
 
-  onMount(() => {
-    const container = document.createElement('div')
-    document.body.appendChild(container)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+
+  createRoot(() => {
     render(() => <ToastWrapper />, container)
   })
 }
@@ -129,19 +130,29 @@ export const showToast: ShowToast = ({ type, value, ms = 9000, icon, toastProps,
 
     setToasts(prev => [...prev, toast]) // add toast to toasts signal
 
-    const timeoutSmooth = setTimeout( () => smoothHide(document.getElementById(toast.id)), ms) // 
+    if (ms !== Infinity) {
+      const timeoutSmooth = setTimeout( () => smoothHide(document.getElementById(toast.id)), ms) // 
 
-    const timeoutSignal = setTimeout( () => removeToastFromSignal(toast.id), ms + animationSpeed )
+      const timeoutSignal = setTimeout( () => removeToastFromSignal(toast.id), ms + animationSpeed )
+
+      innerRemove = () => {
+        clearTimeout(timeoutSmooth)
+        clearTimeout(timeoutSignal)
+        smoothHide(document.getElementById(toast.id))
+        setTimeout(() => removeToastFromSignal(toast.id), animationSpeed)
+      }
+    }
 
     innerRemove = () => {
-      clearTimeout(timeoutSmooth)
-      clearTimeout(timeoutSignal)
       smoothHide(document.getElementById(toast.id))
-      setTimeout(() => removeToastFromSignal(toast.id), animationSpeed)
     }
   })
 
   return { id, remove: () => innerRemove() }
+}
+
+export function showErrorToast(value: string) {
+  return showToast({type: 'danger', value, ms: Infinity})
 }
 
 function removeToastFromSignal (id: string) {

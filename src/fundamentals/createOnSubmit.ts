@@ -21,7 +21,7 @@ import { dateFromInput } from './dateFromInput'
  * 
  * @example
  ```ts
-  const onSubmit = createOnSubmit(async (fd, event) => {
+  const onSubmit = createOnSubmit(async ({ fd, event }) => {
     const body = kParse(signUpParser, { email: fd('email') })
 
     const res = await apiSignUp({ body, bitKey: 'save' }) // a bit is a boolean signal
@@ -65,7 +65,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
         return value
       }
 
-      await onSubmit(fd, { ...event, currentTarget: event.currentTarget })
+      await onSubmit({ fd, event: { ...event, currentTarget: event.currentTarget } })
     } catch (e) {
       scope.messages.align(e)
       if (onError) onError(e)
@@ -77,7 +77,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
 /**
  * - When a form onSubmit happens, `OnSubmitCallback` happens
  */
-export type OnSubmitCallback = (fd: FormDataFunction, event: SubmitEvent & { currentTarget: HTMLFormElement }) => Promise<any>
+export type OnSubmitCallback = (props: { fd: FormDataFunction, event: SubmitEvent & { currentTarget: HTMLFormElement } }) => Promise<any> | any
 
 
 /**

@@ -29,10 +29,10 @@ export class Bits {
   
   /**
    * - Get the current loading value by `bitKey`
-   * - If there is not a signal already @ this `bitKey` THEN `isOn()` will create one & default it to false
+   * - If there is not a signal already @ this `bitKey` THEN `get()` will create one & default it to false
    * @param bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    */
-  isOn(bitKey: string): boolean {
+  get(bitKey: string): boolean {
     const signal$ = this.#bits.get(bitKey) 
 
     if (signal$) return signal$[0]() // if signal in map => return it's current value

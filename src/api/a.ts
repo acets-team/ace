@@ -38,20 +38,6 @@ export const PUT = new API('/api/a/:id', 'apiPutA')
 
 
 export const DELETE = new API('/api/a/:id', 'apiDeleteA')
-  .pathParams(zParse(z.object({
-    id: z.preprocess(
-      (val) => { // coercion function: if it’s a string, convert to Number; otherwise pass through
-        if (typeof val === 'string') {
-          const n = Number(val)
-          if (Number.isNaN(n)) throw new Error('id must be numeric')
-          return n
-        }
-
-        return val
-      },
-      
-      z.number({ required_error: 'id is required', invalid_type_error: 'id must be a number' }) // final validator: must be a number
-    )
-  })))
+  .pathParams(vParse(object({ id: vNum() })))
   .body(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
   .resolve(async (scope) => scope.success({ id: scope.pathParams.id, email: scope.body.email }))

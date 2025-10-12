@@ -1,5 +1,7 @@
 .ace-tooltip {
-  --ace-tooltip-bg-color: rgba(0, 0, 0, 0.81);
+  --ace-tooltip-bg: linear-gradient(to bottom right,
+    rgba(25, 32, 54, 0.9),
+    rgba(10, 10, 20, 0.9));
   position: absolute;
   z-index: 9999;
   color: white;
@@ -78,11 +80,11 @@
     width: 0.6rem;
     height: 0.6rem;
     z-index: -1;
-    background-color: var(--ace-tooltip-bg-color);
+    background: var(--ace-tooltip-bg);
   }
 
   .content {
-    background-color: var(--ace-tooltip-bg-color);
+    background: var(--ace-tooltip-bg);
     padding: 0.9rem 1.2rem;
     border-radius: 0.6rem;
   }

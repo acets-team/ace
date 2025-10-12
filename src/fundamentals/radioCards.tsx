@@ -5,8 +5,8 @@
  */
 
 
-import { clear } from './clear'
-import { For, Show, createSignal, createUniqueId, type JSX } from 'solid-js'
+import { refClear } from './refClear'
+import { For, Show, createMemo, createSignal, createUniqueId, type JSX } from 'solid-js'
 
 
 /**
@@ -56,11 +56,11 @@ export function RadioCards({ label, radios, name, value, onChange, activeStyle =
     <div class="ace-radio-cards" role="radiogroup" aria-labelledby={labelId}>
       <For each={radios}>{
         (radio) => {
-          const isSelected = () => selectedValue() === radio.value
+          const isSelected = createMemo(() => selectedValue() === radio.value)
 
           return <>
             <div class="ace-radio-card">
-              <input type="radio" use:clear name={name} id={radio.id} value={radio.value} checked={isSelected()} disabled={radio.disabled} onChange={() => handleChange(radio.value)} />
+              <input ref={refClear()} type="radio" name={name} id={radio.id} value={radio.value} checked={isSelected()} disabled={radio.disabled} onChange={() => handleChange(radio.value)} />
               <label role="radio" for={radio.id} style={activeStyle} classList={{disabled: radio.disabled}} aria-checked={isSelected()} tabIndex={isSelected() ? 0 : -1}>
                 <Show when={radio.slot}>
                   {radio.slot}

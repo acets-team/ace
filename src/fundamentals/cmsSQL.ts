@@ -6,7 +6,9 @@ import type { SQLiteSelectPrepare } from 'drizzle-orm/sqlite-core'
 
 
 
-function getAllBase(db: LibSQLDatabase = tursoConnect()) {
+function getAllBase(db?: LibSQLDatabase<Record<string, unknown>>) {
+  if (!db) db = (tursoConnect()).db
+
   return db
     .select({
       id: cmsContent.id,
@@ -41,7 +43,9 @@ export function getAll(db?: LibSQLDatabase): SQLiteSelectPrepare<any> {
   const byId = await getByPageId.all({ id: 1 })
   ```
 */
-export function getByPageId(db: LibSQLDatabase = tursoConnect()): SQLiteSelectPrepare<any> {
+export function getByPageId(db?: LibSQLDatabase<Record<string, unknown>>): SQLiteSelectPrepare<any> {
+  if (!db) db = (tursoConnect()).db
+
   return getAllBase(db)
     .where(eq(cmsPage.id, sql.placeholder('id')))
     .prepare()
@@ -55,7 +59,9 @@ export function getByPageId(db: LibSQLDatabase = tursoConnect()): SQLiteSelectPr
   const byName = await getByPageName.all({ name: 'about' })
   ```
 */
-export function getByPageName(db: LibSQLDatabase = tursoConnect()): SQLiteSelectPrepare<any> {
+export function getByPageName(db?: LibSQLDatabase<Record<string, unknown>>): SQLiteSelectPrepare<any> {
+  if (!db) db = (tursoConnect()).db
+
   return getAllBase(db)
     .where(eq(cmsPage.name, sql.placeholder('name')))
     .prepare()
@@ -71,7 +77,9 @@ export const insertPage = {
     await insertPage.run({ name: 'about' })
     ```
   */
- async ts(name: string, db: LibSQLDatabase = tursoConnect()): Promise<number> {
+ async ts(name: string, db?: LibSQLDatabase<Record<string, unknown>>): Promise<number> {
+    if (!db) db = (tursoConnect()).db
+
     const statement = db.insert(cmsPage)
       .values({ name: sql.placeholder('name') })
       .returning({ id: cmsPage.id })
@@ -94,7 +102,9 @@ export const insertContent = {
     INSERT INTO cmsPageContent (pageId, contentId)
     VALUES (0, last_insert_rowid())
   `,
-  async ts (label: string, content: string, pageId: number, isMarkdown: number = 0, db: LibSQLDatabase = tursoConnect()): Promise<{ contentId: number, pageId: number }> {
+  async ts (label: string, content: string, pageId: number, isMarkdown: number = 0, db?: LibSQLDatabase<Record<string, unknown>>): Promise<{ contentId: number, pageId: number }> {
+    if (!db) db = (tursoConnect()).db
+
     const insertContentRow = db.insert(cmsContent)
       .values({
         label: sql.placeholder('label'),
@@ -135,7 +145,9 @@ export const updateContent = {
     await updateContent.ts({ id: 1, content: 'New value', isMarkdown: 1 })
     ```
   */
-   async ts(values: { id: number; content: string; isMarkdown?: number }, db: LibSQLDatabase = tursoConnect()): Promise<void> {
+   async ts(values: { id: number; content: string; isMarkdown?: number }, db?: LibSQLDatabase<Record<string, unknown>>): Promise<void> {
+    if (!db) db = (tursoConnect()).db
+
     const update = db.update(cmsContent)
       .set({
         content: values.content,

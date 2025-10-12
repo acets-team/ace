@@ -28,6 +28,7 @@ export async function hashValidate({ password, hash }: HashValidateProps): Promi
   if (algorithm !== 'PBKDF2') return error('INVALID_ALGORITHM', `Unsupported algorithm: ${algorithm}`)
   if (!saltB64) return error('FALSY_SALT', 'Salt in hash must be truthy')
   if (!reqHashB64) return error('FALSY_HASH_FN', 'Hash Function in hash must be truthy')
+  if (!hashFn) return error('FALSY_HASH_FN', 'Hash function name in hash must be truthy')
 
   const iterations = parseInt(iterationsString ?? '', 10)
   if (isNaN(iterations) || iterations <= 0) return error('INVALID_ITERATIONS', `Invalid iterations in hash, current: ${iterationsString}`)
@@ -35,8 +36,8 @@ export async function hashValidate({ password, hash }: HashValidateProps): Promi
   const encoder = new TextEncoder()
 
   const passwordBinary = encoder.encode(password)
-
-  const salt = base64UrlDecodeToBinary(saltB64)
+console.log('.buffer salt')
+  const salt = base64UrlDecodeToBinary(saltB64).buffer as ArrayBuffer
 
   const cryptoKey = await crypto.subtle.importKey( 'raw', passwordBinary, 'PBKDF2', false, ['deriveBits'] )
 

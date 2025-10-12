@@ -33,7 +33,6 @@ function getPromises(build: Build) {
   if (build.config.plugins.solid) {
     promises.push(
       fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsSolidTypes || '', fileName: 'types.d.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApis(build), fileName: 'apis.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderCreateApp(build), fileName: 'createApp.tsx' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexRoute(build), fileName: 'regexRoutes.ts' }),
@@ -45,6 +44,10 @@ function getPromises(build: Build) {
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApiLoaders(build), fileName: 'apiLoaders.ts' }),
     )
   }
+
+  promises.push(
+    fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' })
+  )
 
   return promises
 }
@@ -86,7 +89,7 @@ export const origins: Set<string> = typeof config.origins[env] === 'string'
 
 function renderApis(build: Build) {
   return `import * as apiLoaders from './apiLoaders'
-import { createAPIFunction } from '../createAPIFunction' 
+import { createApiFn } from '../createApiFn' 
 
 ${build.writes.apiFunctions}`
 }

@@ -79,7 +79,7 @@ async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
 
       build.writes.constApiName += build.getConstEntry(false, apiPath, fsPath, apiMethod, fnName)
 
-      build.writes.apiFunctions += `export const ${fnName} = createAPIFunction('${apiPath}', '${apiMethod}', apiLoaders.${fnName}Loader)\n`
+      build.writes.apiFunctions += `export const ${fnName} = createApiFn('${fnName}', '${apiPath}', '${apiMethod}', apiLoaders.${fnName}Loader)\n`
     
       build.writes.apiLoaders += `export async function ${fnName}Loader() {
   'use server'

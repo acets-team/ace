@@ -5,12 +5,12 @@
 
 
 import type { API } from './api'
+import type { Atom } from './atom'
 import type { Route } from './route'
+import type { IndexDB } from './indexDB'
 import type { ScopeBE } from './scopeBE'
-import type { apiMethods } from './vars'
 import type { InferEnums } from './enums'
 import type { Route404 } from './route404'
-import type { AceErrorProps } from './aceError'
 import type { regexRoutes } from './regexRoutes'
 import type { regexApiPuts } from './regexApiPuts'
 import type { regexApiGets } from './regexApiGets'
@@ -19,8 +19,10 @@ import type { regexApiPosts } from './regexApiPosts'
 import type { JSX, Signal, Accessor } from 'solid-js'
 import type { ScopeComponent } from './scopeComponent'
 import type { regexApiDeletes } from './regexApiDeletes'
+import type { AceError, AceErrorProps } from './aceError'
+import type { apiMethods, atomIs, atomPersit, queryType } from './vars'
+import type { reconcile as solidReconcile, Store as SolidStore, SetStoreFunction } from 'solid-js/store'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
-
 
 /** { 'apiPostA' | 'apiGetA' | 'apiPostB' } */
 export type ApiNames = keyof typeof regexApiNames
@@ -185,6 +187,15 @@ export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name]
   : never
 
 
+/** 
+ * - Receives: API Function Name
+ * - Gives: API Type
+*/
+export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+  ? T_API
+  : never
+
+
 /**
  * - Receives: API Function Name, so => `apiExample`
  * - Gives: The type for the `load()` response
@@ -231,12 +242,51 @@ export type Api2Function<T_API extends API<any, any, any, any, any>> = RequiredK
   ? (options?: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
   : (options: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
 
-
+  
 /** 
- * - The props (arguments) that are sent to an api function
- * - BitKey is optional
+ * - The props (arguments / options) that are sent to an api function
 */
-export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & { bitKey?: string, requestInit?: Partial<RequestInit> }
+export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & {
+  /** 
+   * - Optional, bits are boolean signals, we identify them by bitKey, lovely for loading indicators
+   * - IF `bitKey` = `undefined` AND `onLoadChange` = `undefined` THEN `bitKey` <- `apiName`
+   */
+  bitKey?: string
+  /** Optional, if queryType set AND queryKey undefined THEN queryKey <- apiName */
+  queryKey?: QueryKey
+  /**
+   * - Let's this api function know that we wanna use Solid's `query()` function! There are several different ways we can use `query()` and that is what this variable helps decide
+   * - 🚨 When using Solid's `query()` a queryKey is required, we have it optional here b/c if a `queryType` is set & a `querKey` is `undefined` THEN the `queryKey` is set to the `apiName`
+   * - Stream: Best when:
+   *     - This API is called before page render (before the `return <></>` part in the `.component()`)
+   *     - We'd love this API call to happen simultaneously to any other pre render call
+   * - May Set Cookies:
+   *     - Server cookies are set on the `fe` w/ a `Set-Cookie` server `Response` header
+   *     - Once streaming starts we **may not** update the `Set-Cookie` header b/c the browser already has the Response
+   *     - If an API may set cookies it's safest to ensure this request starts & ends on the `fe` (typical spa style) & we don't stream, that way the browser receives any potential Set-Cookie headers
+   *     - This option is less performant then streaming, b/c streaming has the oportunity to start getting api data on the server so to do this maySetCookies option less we recommend example: IF realize someone is unAuth & we wanna clear cookies THEN redirect to a `/sign-out` **Route** that has a call to `apiSignOut({ queryType: 'maySetCookies' })` so redirect first, and set cokies 2nd, so we can stream the og api :)
+   * - Direct: Best when goal is to:
+   *     - Go out and do a solid start query() and then give the result back
+   *     - Not happening pre render like streaming so not during page transition
+   *     - Wanna ensure request is cached, deduped and/or can be queried again simply later
+   */
+  queryType?: QueryType,
+  /** Optional, to send w/ `fetch()` */
+  requestInit?: Partial<RequestInit>,
+  /** Optional, default is `if (error?.message) showErrorToast(error.message), Provide if you'd love a specific onError() happening, callback is provided the error  */
+  onError?: (error: AceErrorProps | AceError) => void
+  /** Optional, what you'd love to happen when response.data is truthy, callback is provided response.data */
+  onData?: (data: Api2Data<T_API>) => void
+  /** Helpful when your api returned something you'd love for us not to parse and check for data or error and just to give to ya fresh, also called if there is an error w/ an unparsed error object */
+  onResponse?: (response: any) => void
+  /** - Helpful when an api does not return data & you'd love to know the api responded & did not return an error */
+  onGood?: (response?: any) => void
+  /** Optional, set if you'd love a callback on load change by this api */
+  onLoadChange?: (value: boolean) => void
+}
+
+
+export type QueryKey = string | (string | number)[]
 
 
 /** Utility to extract the *required* keys of some object */
@@ -487,3 +537,270 @@ export type ApiMethods = InferEnums<typeof apiMethods>
  * @link https://orm.drizzle.team/docs/guides/timestamp-default-value
  */
 export type DateLike = string | Date | number
+
+
+/** 
+ * - Atom's in Ace = frontend data that can be persisted to all the locations mentioned here:
+ * - **idb** is Index Db: `~ hundreds of MBs` - Persists post page refresh, across all tabs & through browser refreh (best @ home, they trust this device a lot & got tons of space)
+ * - **ls** is Local Storage: `~5 MB` - Persists post page refresh, across all tabs & through browser refreh (good @ home, they trust this device a lot & got some space)
+ * - **ss** is Session Storage: `~5 MB` - Persists post page refresh, across all tabs but not through browser refreh, (best @ library, when I close the browser my data is gone)
+ * - **m** is Memory: `available RAM` - Not shared between tabs, and not persisted after any refresh, (best for ephemeral or private data that can exist on the sceen and that's it)
+ */
+export type AtomSaveLocations = InferEnums<typeof atomPersit>
+
+
+/** 
+ * - Atom's in Ace = frontend data that can be persisted to all the locations mentioned @ `AtomSaveLocations`
+ * - `AtomIs` helps us ensure that we serialize and deserialize to and from persistance correctly
+ */
+export type AtomIs = InferEnums<typeof atomIs>
+
+
+export type RefFn = (el: HTMLElement | null) => void
+ 
+
+export type Atoms = Record<string, Atom<any>>
+
+
+/** 
+ * - Receives: An Atom type (ex: Atom<string>)
+ * - Gives: The type of the Atom, string
+ */
+export type InferAtom<T> = T extends Atom<infer U> ? U : never
+
+
+/** 
+ * - Receives: An Atom type (ex: Atom<string>)
+ * - Gives: The type of the 'is' property (e.g., 'string' | 'number' | ...).
+ */
+export type Atom2Is<T> = T extends { is: infer I } ? I : never
+
+
+/**
+ * - Receives: Atoms
+ * - Gives: Store (Infer each atom)
+*/
+export type Atoms2Store<T_Atoms extends Atoms> = {
+  [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>
+}
+
+/**
+ * - Receives: Atoms
+ * - Gives: A union of all the keys (string literals) present in the store's schema.
+*/
+export type Atoms2Keys<T_Atoms extends Atoms> = keyof T_Atoms
+
+
+/**
+ * - Strict, key-aware overloads up to 8 levels deep
+ * - Each call returns a RefFn suitable for `ref` attribute
+ */
+export type StoreRefBind<T extends Atoms> = {
+  <K1 extends keyof T>(k1: K1): RefFn
+
+  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>>(
+    k1: K1, k2: K2 ): RefFn
+
+  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>, K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>>(
+    k1: K1, k2: K2, k3: K3 ): RefFn
+
+  <K1 extends keyof T,
+   K2 extends keyof InferAtom<T[K1]>,
+   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
+  >( k1: K1, k2: K2, k3: K3, k4: K4 ): RefFn
+
+  <K1 extends keyof T,
+   K2 extends keyof InferAtom<T[K1]>,
+   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
+  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5 ): RefFn
+
+  <K1 extends keyof T,
+   K2 extends keyof InferAtom<T[K1]>,
+   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+   K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
+  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6 ): RefFn
+
+  <K1 extends keyof T,
+   K2 extends keyof InferAtom<T[K1]>,
+   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+   K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+   K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
+  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7 ): RefFn
+
+  <K1 extends keyof T,
+   K2 extends keyof InferAtom<T[K1]>,
+   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+   K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+   K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
+   K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
+  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8 ): RefFn
+}
+
+
+export type StoreSync<T extends Atoms> = {
+  <
+    K1 extends keyof T
+  >(k1: K1, value: InferAtom<T[K1]>, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>
+  >(k1: K1, k2: K2, value: InferAtom<InferAtom<T[K1]>[K2]>, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>
+  >(k1: K1, k2: K2, k3: K3, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
+
+  <
+    K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
+    K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
+}
+
+
+export type StoreCopy<T> = {
+  <K1 extends keyof T>(
+    k1: K1,
+    fn: (draft: InferAtom<T[K1]>) => void
+  ): void
+
+  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>>(
+    k1: K1,
+    k2: K2,
+    fn: (draft: InferAtom<InferAtom<T[K1]>[K2]>) => void
+  ): void
+
+  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>, K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>>(
+    k1: K1,
+    k2: K2,
+    k3: K3,
+    fn: (draft: any) => void
+  ): void
+
+  <K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, fn: (draft: any) => void): void
+
+  <K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, fn: (draft: any) => void): void
+
+  <K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, fn: (draft: any) => void): void
+
+  <K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, fn: (draft: any) => void): void
+
+  <K1 extends keyof T,
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
+    K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8, fn: (draft: any) => void): void
+}
+
+
+export type BaseStoreContext<T_Atoms extends Atoms> = {
+  /** Provided by Solid - https://docs.solidjs.com/concepts/stores */
+  store: SolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+
+  /** Provided by Solid - https://docs.solidjs.com/concepts/stores */
+  setStore: SetStoreFunction<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+
+  /** Does: setStore() + save() - https://docs.solidjs.com/concepts/stores */
+  set: SetStoreFunction<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+
+  /** Your own index db instance that you can read and write too like a document db :) */
+  idb: IndexDB,
+
+  /** Readonly, the init atoms sent to createStore() */
+  atoms: Readonly<T_Atoms>,
+
+  /** Inspired by AngularJS ngModel, 2 way data binding between a variable in a store and an input, textarea or select */
+  refBind: StoreRefBind<T_Atoms>,
+
+  /** Does: setStore() + produce() + save() - https://docs.solidjs.com/concepts/stores */
+  copy: StoreCopy<T_Atoms>,
+
+  /** 
+   * - Does: `setStore()` + `reconcile()` + `save()` - https://docs.solidjs.com/concepts/stores
+   * - `reconcile()` performs a diff between current array state and requested array state and preserves existing DOM nodes b/c it does not update the entire array reference like `set()`
+   */
+  sync: StoreSync<T_Atoms>,
+
+  /** Persist Atom by key */
+  save: (key: keyof T_Atoms) => void,
+}
+
+
+export type QueryType = InferEnums<typeof queryType>

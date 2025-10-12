@@ -6,7 +6,7 @@
 
 
 import { feComponent } from './feComponent'
-import { onMount, type JSX, type Setter } from 'solid-js'
+import { Accessor, createEffect, onMount, type JSX, type Setter } from 'solid-js'
 import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community'
 
 
@@ -28,36 +28,39 @@ import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-communit
 
   <AgGrid 
     setGridApi={setUsersGridApi}
-    gridOptions={{
+    gridOptions={() => ({
       rowData: users(),
       columnDefs: [
         { field: 'id', filter: 'agNumberColumnFilter', width: 72 },
         { field: 'name', filter: 'agTextColumnFilter', width: 210 },
         ...agShowColumn<ApiName2Data<'apiGetUsers'>>(props.source === 'admin', { field: 'isNewsletterSubscriber', headerName: 'Email Subscriber', width: 170 }),
       ],
-    }}
+    })}
   />
   ```
  * @param props.gridOptions - Passed to `window.agGrid.createGrid(grid, gridOptions)`
- * @param props.divProps - Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div
+ * @param props.$div - Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div
  */
 export const AgGrid = feComponent(Component)
 
 
-function Component<T_Data>({ setGridApi, gridOptions, divProps = {style: defaultStyle} }: AgGridProps<T_Data>) {
-  let grid: undefined | HTMLDivElement
+function Component<T_Data>({ setGridApi, gridOptions, $div = {style: defaultStyle} }: AgGridProps<T_Data>) {
+  let gridDiv: undefined | HTMLDivElement
+  let gridApi: GridApi<T_Data> | undefined
 
-  onMount(() => {
-    if (grid && window.agGrid) {
-      const gridApi = window.agGrid.createGrid(grid, gridOptions)
-      
-      if (setGridApi) setGridApi(gridApi)
+  createEffect(() => {
+    const opts = gridOptions()
+
+    if (!opts || !gridDiv || !window.agGrid) return
+    
+    if (gridApi) gridApi.updateGridOptions(opts) // grid already exists — update it
+    else { // frirst time — create the grid
+        gridApi = window.agGrid.createGrid(gridDiv, opts)
+        if (setGridApi) setGridApi(gridApi)
     }
   })
 
-  return <>
-    <div ref={grid} {...divProps}></div>
-  </>
+  return <div ref={gridDiv} {...$div}></div>
 }
 
 
@@ -66,9 +69,9 @@ export const defaultStyle: JSX.CSSProperties = { height: '45rem', width: '100%',
 
 export type AgGridProps<T_Data extends any> = {
   /** Passed to `window.agGrid.createGrid(grid, gridOptions)` */
-  gridOptions: GridOptions<T_Data>
+  gridOptions: Accessor<GridOptions<T_Data>>
   /** Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div */
-  divProps?: JSX.HTMLAttributes<HTMLDivElement>
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
   /** Provide setter if you'd like to work w/ gridApi */
   setGridApi?: Setter<GridApi<any> | undefined>
 }

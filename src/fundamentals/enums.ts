@@ -17,8 +17,8 @@
   ```ts
   const enums = new Enums([
     'admin',
-    { enum: 'mod', value: 'Moderator 🛡️' },
-    { enum: 'user', value: 'User 👤' },
+    { key: 'mod', value: 'Moderator 🛡️' },
+    { key: 'user', value: 'User 👤' },
   ])
 
   type Users = InferEnums<typeof enums> // 'admin' | 'mod' | 'user'
@@ -41,14 +41,17 @@
    */
 export class Enums<const T_Entries extends readonly EnumEntry[]> {
   #reqEntries: T_Entries
-  #set: Set<string>
   readonly keys: MappedKeys<T_Entries>
   readonly values: MappedValues<T_Entries>
+  readonly set: Set<keyof MappedValues<T_Entries>>
   readonly entries: ReadonlyArray<[keyof MappedValues<T_Entries>, MappedValues<T_Entries>[keyof MappedValues<T_Entries>]]>
 
   constructor(reqEntries: T_Entries) {
     this.#reqEntries = reqEntries
-    this.#set = new Set(reqEntries.map(e => typeof e === 'string' ? e : e.key))
+  
+    this.set = new Set(
+      reqEntries.map(e => typeof e === 'string' ? e : e.key)
+    ) as Set<keyof MappedValues<T_Entries>>
 
     const keys: any = {}
     const values: any = {}
@@ -76,7 +79,7 @@ export class Enums<const T_Entries extends readonly EnumEntry[]> {
    * @returns Boolean, Is the potential enum valid or not
    */
   has(potentialEnum: unknown): potentialEnum is keyof MappedValues<T_Entries> {
-    return typeof potentialEnum === 'string' && this.#set.has(potentialEnum)
+    return typeof potentialEnum === 'string' && this.set.has(potentialEnum as any)
   }
 
 
@@ -108,7 +111,7 @@ export type InferEnums<T_Enums extends Enums<readonly EnumEntry[]>> = T_Enums ex
 /**
  * - What get's passed to the Enums constructor
  */
-export type EnumEntry = string | { key: string; value: string }
+export type EnumEntry = string | { key: string; value: string } | { key: string; value: number }
 
 
 

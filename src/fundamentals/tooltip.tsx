@@ -1,13 +1,13 @@
 /**
  * 🧚‍♀️ How to access:
  *     - import '@ace/tooltip.styles.css'
- *     - import { tooltip } from '@ace/tooltip'
- *     - import type { TooltipOptions, TooltipPosition } from '@ace/tooltip'
+ *     - import { refTooltip } from '@ace/refTooltip'
+ *     - import type { RefTooltipProps, TooltipPosition } from '@ace/refTooltip'
  */
 
 
 import { render } from 'solid-js/web'
-import { createSignal, onCleanup, JSX, Accessor, createUniqueId, createMemo, createEffect } from 'solid-js'
+import { createSignal, onMount, onCleanup, createUniqueId, createMemo, createEffect, type JSX, type Accessor } from 'solid-js'
 
 
 /**
@@ -18,55 +18,64 @@ import { createSignal, onCleanup, JSX, Accessor, createUniqueId, createMemo, cre
  * - Updating the background color of the `tooltip` & the `arrow` can be done as seen in the example below
  * @example
   ```tsx
-  <div
-    class="info"
-    use:tooltip={{
-      content: <>{example()}</>,
-      tooltipProps: { id: 'playbookTooltip', style: "--ace-tooltip-bg-color: white; color: black;" },
-    }}>?</div>
+  <div class="info" ref={refTooltip(() => { content: 'Aloha!' })}>?</div>
   ```
  */
-export function tooltip(aimElement: HTMLElement, options: Accessor<TooltipOptions>) {
-  const id = 'ace-tooltip-' + createUniqueId()
+export function refTooltip<T extends HTMLElement>(props: Accessor<{
+  /** String OR JSX content inside the tooltip */
+  content: JSX.Element
+  /** Optional, default is `topCenter`, position relative to the element the ref is on */
+  position?: TooltipPosition
+  /** Extra HTML props (`class`, `style`, etc.) - 🚨 `style` must be set as an `object` and not a `string` for prop merging to work */
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
+}>) {
+  return (aimElement: T | null) => {
+    if (!aimElement) return
 
-  aimElement.setAttribute('aria-describedby', id)
-  aimElement.setAttribute('aria-expanded', 'false')
+    onMount(() => {
+      const id = 'ace-tooltip-' + createUniqueId()
 
-  const mountableElement = document.createElement('div')
+      aimElement.setAttribute('aria-describedby', id)
+      aimElement.setAttribute('aria-expanded', 'false')
 
-  document.body.appendChild(mountableElement)
+      const mountableElement = document.createElement('div')
 
-  // render the tooltip component in the mountable element
-  const cleanupRender = render(() => <TooltipComponent id={id} options={options} aimElement={aimElement} />, mountableElement)
+      document.body.appendChild(mountableElement)
 
-  // the tooltip component listens to mouseenter & mouseleave events
-  const show = () => mountableElement.firstChild?.dispatchEvent(new Event('mouseenter'))
-  const hide = () => mountableElement.firstChild?.dispatchEvent(new Event('mouseleave'))
+      // render the tooltip component in the mountable element
+      const cleanupRender = render(() => <TooltipComponent id={id} refProps={props} aimElement={aimElement} />, mountableElement)
 
-  // when we toggle hover on the aim element, toggle hover on the tooltip component
-  aimElement.addEventListener('mouseenter', show)
-  aimElement.addEventListener('mouseleave', hide)
+      // the tooltip component listens to mouseenter & mouseleave events
+      const show = () => mountableElement.firstChild?.dispatchEvent(new Event('mouseenter'))
+      const hide = () => mountableElement.firstChild?.dispatchEvent(new Event('mouseleave'))
 
-  onCleanup(() => { // solid’s directive lifecycle runs cleanup before removing the element from the DOM
-    aimElement.removeEventListener('mouseenter', show)
-    aimElement.removeEventListener('mouseleave', hide)
-    cleanupRender()
-    document.body.removeChild(mountableElement)
-    aimElement.removeAttribute('aria-describedby')
-  })
+      // when we toggle hover on the aim element, toggle hover on the tooltip component
+      aimElement.addEventListener('mouseenter', show)
+      aimElement.addEventListener('mouseleave', hide)
+
+      onCleanup(() => { // solid’s directive lifecycle runs cleanup before removing the element from the DOM
+        aimElement.removeEventListener('mouseenter', show)
+        aimElement.removeEventListener('mouseleave', hide)
+        cleanupRender()
+        document.body.removeChild(mountableElement)
+        aimElement.removeAttribute('aria-describedby')
+      })
+    })
+  }
 }
 
 
 
-function TooltipComponent({ id, options, aimElement }: TooltipComponentProps) {
+function TooltipComponent(componentProps: {
+  id: string,
+  refProps: RefTooltipProps,
+  aimElement: HTMLElement
+}) {
   let hideTimeout: number
   let tooltipElement: HTMLDivElement | undefined
 
   const [visible, setVisible] = createSignal(false)
-  const content  = createMemo(() => options().content)
-  const tooltipProps = createMemo(() => options().tooltipProps ?? {})
-  const position = createMemo(() => options().position ?? 'bottomCenter')
-
+  const position = createMemo(() => componentProps.refProps().position ?? 'topCenter')
 
   createEffect(() => {
     if (visible()) positionTooltip()
@@ -76,23 +85,21 @@ function TooltipComponent({ id, options, aimElement }: TooltipComponentProps) {
     if (!tooltipElement) return
     clearTimeout(hideTimeout) // always start fresh
     setVisible(true)
-    aimElement.setAttribute('aria-expanded', 'true')
+    componentProps.aimElement.setAttribute('aria-expanded', 'true')
   }
-
 
   const hide = () => {
     hideTimeout = window.setTimeout(() => {
       setVisible(false)
-      aimElement.setAttribute('aria-expanded', 'false')
+      componentProps.aimElement.setAttribute('aria-expanded', 'false')
     }, 100)
   }
 
-
-  function positionTooltip() {
+  const positionTooltip = () => {
     if (!tooltipElement) return
 
     let top = 0, left = 0
-    const aimElementRect = aimElement.getBoundingClientRect()
+    const aimElementRect = componentProps.aimElement.getBoundingClientRect()
     const tooltipRect = tooltipElement.getBoundingClientRect()
 
     switch (position()) {
@@ -127,51 +134,29 @@ function TooltipComponent({ id, options, aimElement }: TooltipComponentProps) {
     tooltipElement.style.left = `${left + window.scrollX}px`
   }
 
+  const mergedClass = createMemo(() => `ace-tooltip position-${position()} ${componentProps.refProps().$div?.class || ''}`)
 
   return <>
     <div
-      id={id}
+      id={componentProps.id}
       role="tooltip"
       ref={tooltipElement!}
       onMouseEnter={show}
       onMouseLeave={hide}
       aria-hidden={!visible()}
       classList={{visible: visible()}}
-      class={`ace-tooltip position-${position()}`}
-      {...tooltipProps()}
+      {...componentProps.refProps().$div}
+      class={mergedClass()}
     >
       <div class="arrow" />
-      <div class="content">{content()}</div>
+      <div class="content">{componentProps.refProps().content}</div>
     </div>
   </>
 }
 
 
 
-export type TooltipOptions = {
-  /** JSX content inside the tooltip */
-  content: JSX.Element
-  /** Position relative to the anchor; default is `bottomCenter` */
-  position?: TooltipPosition
-  /** Extra HTML props (`class`, `style`, etc.) - 🚨 `style` must be set as an `object` and not a `string` for prop merging to work */
-  tooltipProps?: JSX.HTMLAttributes<HTMLDivElement>
-}
+export type RefTooltipProps = Parameters<typeof refTooltip>[0]
 
 
 export type TooltipPosition = 'topCenter' | 'bottomCenter' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'
-
-
-type TooltipComponentProps = {
-  id: string,
-  options: Accessor<TooltipOptions>,
-  aimElement: HTMLElement
-}
-
-
-declare module 'solid-js' {
-  namespace JSX {
-    interface Directives {
-      tooltip: TooltipOptions
-    }
-  }
-}

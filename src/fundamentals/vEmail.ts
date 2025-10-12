@@ -4,16 +4,20 @@
  */
 
 
-import { pipe, email, string, nonEmpty, nonNullish } from 'valibot'
+import { pipe, email, string, nonNullish } from 'valibot'
+
 
 
 /**
  * - Email validation
- * @param errorMessage Optional, default is whataver valibot says for a specific case
+ * @param errorMessage Optional, default is whatever valibot says for a specific case
  */
 export function vEmail(errorMessage?: string) {
   return nonNullish(
-    pipe(string(errorMessage), nonEmpty(errorMessage), email(errorMessage)),
+    pipe(
+      string(),
+      email(errorMessage)
+    ),
     errorMessage
-  )
+  );
 }

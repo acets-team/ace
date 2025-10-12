@@ -21,7 +21,7 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
   <Tabs
     mode="route"
     variant="pill"
-    tabs={[
+    tabs={() => [
       new RouteTab('Home', '/'),
       new RouteTab('About', '/about'),
       new RouteTab('Members', '/members'),
@@ -35,7 +35,7 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
     mode="scroll"
     variant="underline"
     scrollMargin={74}
-    tabs={[
+    tabs={() => [
       new HashTab('Home', '#banner'),
       new HashTab('Offerings', '#carousel'),
       new HashTab('Spiritual Retreats', '#retreats'),
@@ -47,7 +47,7 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
   <Tabs
     mode="content"
     variant="classic"
-    tabs={[
+    tabs={() => [
       new ContentTab('Tab 1', <>Tab 1</>),
       new ContentTab('Tab 2', <>Tab 2</>),
       new ContentTab('Tab 3', <>Tab 3</>),
@@ -67,9 +67,9 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
  * @param props.mode - `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected.
  * @param props.variant - `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons
  * @param props.scrollMargin - If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
- * @param props.tabsProps - Set if you'd love to add your own props to the tabs html div element like class, style or id
+ * @param props.$div - Set if you'd love to add your own props to the tabs html div element like class, style or id
  */
-export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, tabsProps }: TabsProps<Routes>) {
+export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, $div: $div }: TabsProps<Routes>) {
   const location = useLocation()
 
   const pathToTabIndex = new Map<Routes, number>()
@@ -252,7 +252,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
   return <>
     <div class={`ace-tabs ${variant}`}>
-      <div class="tabs" ref={divTabs} {...accessibilityProps} {...tabsProps}>
+      <div class="tabs" ref={divTabs} {...accessibilityProps} {...$div}>
         <For each={tabs()}>
           {(tab, i) => {
             const isActive = () => i() === active()
@@ -376,8 +376,8 @@ export type TabsProps<T_Path extends Routes> = {
   variant: 'underline' | 'pill' | 'classic'
   /** If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item */
   scrollMargin?: number
-  /** Set if you'd love to add your own props to the tabs html div element like class, style or id */
-  tabsProps?: JSX.HTMLAttributes<HTMLDivElement>
+  /** Optional, set to add props in wrapper `<div />` w/in `<Tabs/>` */
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
 }
 
 

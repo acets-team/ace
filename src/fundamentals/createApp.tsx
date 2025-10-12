@@ -13,8 +13,8 @@ import { FileRoutes } from '@solidjs/start/router'
 import { MessagesCleanup } from '../messagesCleanup'
 import { setScopeComponentChildren } from '../scopeComponentChildren'
 import { scope, ScopeComponentContextProvider } from './scopeComponent'
+import { createMemo, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
 import { Route, Router, useLocation, useParams, type RouteSectionProps } from '@solidjs/router'
-import { createEffect, createMemo, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
 
 
 
@@ -32,7 +32,6 @@ import { AuthProvider } from '@src/AuthProvider/AuthProvider'
 
 
 export default createApp([AuthProvider])
-
 ```
  */
 export function createApp(requestedParentComponents: ParentComponentEntry<any>[] = []) {

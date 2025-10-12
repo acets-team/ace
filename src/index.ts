@@ -30,7 +30,7 @@ export type AceConfig = {
   plugins: PluginsConfig,
   /** Default is `tsconfig.json` */
   tsConfigPath?: string,
-  /** The key is based on the env which is set w/ the build command, ex: `ace build local`, so in that example the key is `local`. The value is a string or array of strings which are the allowed origins to request your api. Helpful for API Response Headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin 🚨 If your origin is '*' cookies won't work, not an Ace limitation, that's just how HTTP work :) */
+  /** The `key` is the `env` which is set w/ the build command, ex: `ace build local`, in this example the key is `local`. The value is a `string` or `array` of `strings` which are the allowed origins to request your api. Helpful for API Response Headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin 🚨 If your origin is '*' cookies won't work, not an Ace limitation, that's just how HTTP work :) */
   origins: Record<string, string | string[]>
 }
 
@@ -111,4 +111,27 @@ export type PluginsConfig = {
    * @link https://www.npmjs.com/package/markdown-it
    */
   markdownIt?: boolean
+
+  /**
+   * Enables **Markdown** fundamentals (helpful modules @ `./ace`)
+   * 
+   * - Requires the following npm dev imports:
+   *     - `wrangler` (🚨 Only used for types)
+   *     - `@cloudflare/workers-types` (🚨 Only used for types)
+   * - Bash prerequisites:
+   *     - `wrangler types`
+   *
+   * @link https://developers.cloudflare.com/durable-objects/
+   */
+  cf?: boolean
+
+  /**
+   * Enables **Chart.js** fundamentals (helpful modules @ `./ace`)
+   * 
+   * - Requires the following npm dev imports:
+   *     - `chart.js` (🚨 Only used for types)
+   *
+   * @link https://developers.cloudflare.com/durable-objects/
+   */
+  chartjs?: boolean
 }

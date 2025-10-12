@@ -13,19 +13,23 @@ import { For, Show, type JSX } from 'solid-js'
 
 
 /**
- * Messages are `string[]` so arrays of strings
- * Messages are grouped by name: Record<string, string[]>
- * On the fe each group of messages is a Signal: Signal<string[]>
- * This component will show the messages for one group
+ * - Messages are: `string[]`
+ * - Messages are grouped by name: `Record<string, Signal<string[]>>`
+ * - This component will show the messages for one group
  * @param options.name -  Messages are grouped by name
- * @param options.divProps -  Props to put on the wrapper div that already has the class `ace-messages`
+ * @param options.$div -  Props to put on the wrapper div that already has the class `ace-messages`
  */
-export const Messages = feComponent(({ name = defaultMessageName, divProps }: MessagesProps) => {
+export const Messages = feComponent(({ name = defaultMessageName, $div }: {
+  /** Messages are grouped by name */
+  name?: string
+  /** Props to put on the wrapper div that already has the class `ace-messages` */
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
+}) => {
   const [messages] = scope.messages.get(name)
 
   return <>
     <Show when={ messages()?.length }>
-      <div class="ace-messages" {...divProps}>
+      <div class="ace-messages" {...$div}>
         <Show when={ messages().length > 1 } fallback={messages()[0]}>
           <ul>
             <For each={messages()}>{ (msg) => <li>{msg}</li> }</For>
@@ -38,9 +42,4 @@ export const Messages = feComponent(({ name = defaultMessageName, divProps }: Me
 })
 
 
-export type MessagesProps = {
-  /** Messages are grouped by name */
-  name?: string
-  /** Props to put on the wrapper div that already has the class `ace-messages` */
-  divProps?: JSX.HTMLAttributes<HTMLDivElement>
-}
+export type MessagesProps = Parameters<typeof Messages>[0]

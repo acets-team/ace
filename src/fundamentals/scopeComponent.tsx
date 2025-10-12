@@ -15,10 +15,10 @@ import { parseResponse } from '../parseResponse'
 import { destructureReady } from './destructureReady'
 import { getScopeComponentChildren } from '../scopeComponentChildren'
 import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
-import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, ApiMethods, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data } from './types'
+import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, ApiMethods, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data, ApiNames } from './types'
 
 
-export let scope!: ScopeComponent // the "!" tells ts: we'll assign this before it’s used but, ex: if a scope.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error 
+export let scope!: ScopeComponent // the "!" tells ts: we'll assign this before it’s used but, ex: if a scope.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error
 
 
 export const ScopeComponentContext = createContext<ScopeComponent | null>(null)
@@ -237,9 +237,10 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
     let goUrl = null
 
     try {
-      res = await fetch(url, requestInit)
+      const resFetch = await fetch(url, requestInit)
+      res = await parseResponse<T_Response>(resFetch)
 
-      if (goUrl) goUrl = getGoUrl(res)
+      if (res instanceof Response) goUrl = getGoUrl(res)
     } catch(e) {
       res = await parseResponse<T_Response>(e)
     }

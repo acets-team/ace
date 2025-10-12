@@ -25,20 +25,21 @@
     "postbuild": "chmod +x dist/src/cli/cli.js || true"
   },
   "devDependencies": {
-    "@libsql/client": "^0.15.8",
+    "@libsql/client": "^0.15.15",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.3",
-    "@solidjs/start": "^1.1.4",
+    "@solidjs/start": "^1.2.0",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.15.30",
     "ag-grid-community": "^34.1.0",
-    "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.44.2",
-    "esbuild": "^0.25.5",
-    "solid-js": "^1.9.7",
-    "typescript": "^5.8.3",
+    "chart.js": "^4.5.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.6",
+    "esbuild": "^0.25.10",
+    "solid-js": "^1.9.9",
+    "typescript": "^5.9.3",
     "valibot": "^1.1.0",
-    "zod": "^3.25.74"
+    "zod": "^4.1.12"
   },
   "dependencies": {
     "tsconfck": "^3.1.6"

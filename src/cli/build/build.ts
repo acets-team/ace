@@ -141,13 +141,14 @@ export class Build {
       return `  '${urlPath}': regexApiNames.${fnName},\n`
     } else if (fnName) { // regexApiNames
       return `  '${fnName}': {
+      path: '${urlPath}',
       pattern: ${pathnameToPattern(urlPath)},
-      loader: apiLoaders.${fnName}Loader
+      loader: apiLoaders.${fnName}Loader,
     },\n`
     } else { // regexRoutes
       return `  '${urlPath}': {
       pattern: ${pathnameToPattern(urlPath)},
-      loader: () => import(${this.fsPath2Relative(fsPath)}).then((m) => m.${moduleName})
+      loader: () => import(${this.fsPath2Relative(fsPath)}).then((m) => m.${moduleName}),
     },\n`
     }
   }
@@ -176,7 +177,7 @@ class FundamentalWhiteList {
    */
   populate(config: AceConfig) {
     for (const [name, f] of fundamentals) {
-      if (config.plugins[f.pluginName]) { // IF this fundamentals plugin is `true` @ `./ace.config.js`
+      if (f.pluginName === 'vanilla' || config.plugins[f.pluginName]) { // IF this fundamentals plugin is `true` @ `./ace.config.js`
         this.set.add(name) // add this fundamental to the whitelist, b/c this is a fundamental that lives in a requested plugin
       }
     }

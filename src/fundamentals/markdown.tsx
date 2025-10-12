@@ -7,19 +7,22 @@
 
 
 import type MarkdownIt from 'markdown-it'
+import { feComponent } from './feComponent'
 import type { Options as MarkdownItOptions } from 'markdown-it'
-import { createSignal, onMount, createEffect, type JSX, type Setter } from 'solid-js'
+import { createSignal, onMount, createEffect, type JSX, type Setter, type Accessor } from 'solid-js'
 
 
-/**
- * - Render html in the browser, Update markdown w/ `content` prop or `md()?.render('**example**')`
- * - 🚨 Prerequisite, add to entry-server below `{scripts}`:
- *     - `<script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>`
- * @param content - Content to render from markdown to html, can also pass content later by updating the passed in content prop or md()?.render()
- * @param setMD - in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD`
- * @param options - Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge
- */
-export function Markdown({ setMD, content, divProps, options = defaultMarkdownOptions }: MarkdownProps) {
+
+function Component({ setMD, content, $div, options = defaultMarkdownOptions }: {
+  /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
+  content?: Accessor<string | undefined>
+  /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
+  setMD?: Setter<MarkdownIt | undefined>
+  /** Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge */
+  options?: MarkdownItOptions
+  /** Optional, props passed to inner wrapper div */
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
+}) {
   const [html, setHtml] = createSignal<string>('')
   const [_md, _setMD] = createSignal<undefined | MarkdownIt>()
 
@@ -30,18 +33,34 @@ export function Markdown({ setMD, content, divProps, options = defaultMarkdownOp
 
     const md = window.markdownit(o)
 
+    const _content = content?.()
+
     _setMD(md)
 
     if (setMD) setMD(md)
-    if (content) setHtml(md.render(content))
+    if (_content) setHtml(md.render(_content))
   })
 
   createEffect(() => { // setHtml on props.content change
-    if (_md() && content) setHtml(_md()!.render(content))
+    const _content = content?.()
+    if (_md() && _content) setHtml(_md()!.render(_content))
   })
 
-  return <div {...divProps} innerHTML={html()} />
+  return <div {...$div} innerHTML={html()} />
 }
+
+
+
+/**
+ * - Render html in the browser, Update markdown w/ `content` prop or `md()?.render('**example**')`
+ * - 🚨 Prerequisite, add to entry-server below `{scripts}`:
+ *     - `<script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>`
+ * @param content - Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()`
+ * @param setMD - in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD`
+ * @param options - Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge
+ * @param $div - Optional, props passed to inner wrapper div
+ */
+export const Markdown = feComponent(Component)
 
 
 const defaultMarkdownOptions: MarkdownItOptions = {
@@ -62,17 +81,7 @@ const defaultMarkdownOptions: MarkdownItOptions = {
 }
 
 
-export type MarkdownProps = {
-  /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or md()?.render() */
-  content?: string
-  /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
-  setMD?: Setter<MarkdownIt | undefined>
-  /** Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge*/
-  options?: MarkdownItOptions
-  /** Optional, passed to wrapper div */
-  divProps?: JSX.HTMLAttributes<HTMLDivElement>
-}
-
+export type MarkdownProps = Parameters<typeof Markdown>[0]
 
 
 export type { MarkdownIt, MarkdownItOptions } // re-export

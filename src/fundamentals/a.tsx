@@ -16,13 +16,16 @@ import type { Routes, RoutePath2PathParams, RoutePath2SearchParams, OptionalIfNo
  * - When anchor path matches the current route an "active" class is added to the generated anchor
  * - When anchor path does not match the current route an "inactive" class is added to the generated anchor
  * - Use the SolidJS `end` prop if the match is too greedy: https://docs.solidjs.com/solid-router/reference/components/a
- * - Allows all props from SolidJS anchor component, except for `href`, b/c Ace sets the `href` based on your `path` & `props`
+ * - Allows all props from SolidJS anchor component, except for `href`, b/c Ace sets the `href` based on your `path`, `pathParams` & `searchParams`
  * @param props.path - Path to navigate to, as defined @ `new Route()`
- * @param props.params - Optional object of params to send to route
+ * @param props.pathParams - Route path params
+ * @param props.searchParams - Route search params
+ * @param props.children - Required
+ * @param props.$a - Add props to `<SolidA />` or the html dom `<a />` w/in this `<A />` component
  */
-export function A<T extends Routes>({ path, pathParams, searchParams, children, solidAProps }: AProps<T>) {
+export function A<T extends Routes>({ path, pathParams, searchParams, children, $a }: AProps<T>) {
   return <>
-    <SolidA href={buildUrl(path, {pathParams: pathParams, searchParams: searchParams})} {...solidAProps}>
+    <SolidA href={buildUrl(path, {pathParams: pathParams, searchParams: searchParams})} {...$a}>
       {children}
     </SolidA>
   </>
@@ -30,9 +33,12 @@ export function A<T extends Routes>({ path, pathParams, searchParams, children, 
 
 
 export type AProps<T extends Routes> = {
+  /** Path to navigate to, as defined @ `new Route()` */
   path: T
+  /** Required */
   children: JSX.Element
-  solidAProps?: SolidAProps
+  /** Add props to `<SolidA />` or the html dom `<a />` w/in this `<A />` component */
+  $a?: SolidAProps
 } & OptionalIfNoRequired<'pathParams', RoutePath2PathParams<T>> & OptionalIfNoRequired<'searchParams', RoutePath2SearchParams<T>>
 
 
