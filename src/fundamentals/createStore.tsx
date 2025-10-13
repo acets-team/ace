@@ -6,12 +6,12 @@ import { createStoreProduce } from './createStoreProduce'
 import { createStoreReconcile } from './createStoreReconcile'
 import { idbDefaultDbName, idbDefaultStoreName } from './vars'
 import type { Atoms, BaseStoreContext, InferAtom } from './types'
-import { createContext, onMount, useContext,  type JSX } from 'solid-js'
+import { createContext, onMount, useContext, type JSX } from 'solid-js'
 import { unwrap, createStore as createSolidStore, SetStoreFunction as SetSolidStore } from 'solid-js/store'
 
 
 
-export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string } ) {
+export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string }) {
   const idb = new IndexDB()
   const StoreContext = createContext<BaseStoreContext<T_Atoms>>()
   const idbOpts: IDBOptions = { dbName: createStoreProps.idbDbName ?? idbDefaultDbName, storeName: createStoreProps.idbStoreName ?? idbDefaultStoreName }
@@ -34,7 +34,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
     const set: typeof setStore = (...args: any[]) => {
       // Forward all arguments to the original setStore function.
       // The type of setStore is complex and overloaded, so this is the safest way.
-      ;(setStore as Function)(...args)
+      ; (setStore as Function)(...args)
       const key = args[0]
       // Automatically persist if the first argument is a string and a valid key.
       // This handles calls like `set('myKey', newValue)` or `set('myKey', 'nested', newValue)`.
@@ -56,7 +56,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
       sync: createStoreReconcile(setStore, save),
     }
 
-    onMount(() => loadStore(createStoreProps.atoms, setStore, idb))
+    onMount(() => loadStore({ idb, set, store, atoms: createStoreProps.atoms }))
 
     return <>
       <StoreContext.Provider value={context}>
@@ -88,14 +88,19 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
 }
 
 
-async function loadStore<T_Atoms extends Atoms>( atoms: T_Atoms, set: SetSolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>, idb: IndexDB ) {
+async function loadStore<T_Atoms extends Atoms>(props: {
+  idb: IndexDB,
+  atoms: T_Atoms,
+  store: { [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>; },
+  set: SetSolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+}) {
   if (isServer) return
 
   queueMicrotask(async () => {
     const idbKeys: string[] = []
     const syncUpdates: { key: string, val: any }[] = []
 
-    for (const [key, atom] of Object.entries(atoms)) {
+    for (const [key, atom] of Object.entries(props.atoms)) {
       if (atom.save === 'm') continue
       if (atom.save === 'idb') idbKeys.push(key)
       else {
@@ -108,18 +113,28 @@ async function loadStore<T_Atoms extends Atoms>( atoms: T_Atoms, set: SetSolidSt
       }
     }
 
+    // here we are settig values from fe persistance
+    // issue is be persitance may have already spoken
+    // so if the current value equals the init value (be setting has not happened) then set
+
     for (const update of syncUpdates) {
       const { key, val } = update
-      set(key as any, val)
+
+      if (props.store[key] === props.atoms[key]!.init) { // if the current value equals the init value (be setting has not happened) then set
+        props.set(key as any, val)
+      }
     }
 
     if (idbKeys.length > 0) {
-      const idbResults = await idb.get(idbKeys)
+      const idbResults = await props.idb.get(idbKeys)
 
-      for (const [key, raw] of Object.entries(idbResults)) {
-        if (raw != null && atoms[key]) {
-          const val = deserialize(atoms[key], raw as string)
-          if (val !== undefined) set(key as any, val as any)
+      for (const [key, idbRawValue] of Object.entries(idbResults)) {
+        if (idbRawValue != null && props.atoms[key]) { // gotta value in idb
+
+          if (props.store[key] === props.atoms[key]!.init) {  // if the current value equals the init value (be setting has not happened) then set
+            const idbParsedValue = deserialize(props.atoms[key], idbRawValue as string)
+            props.set(key as any, idbParsedValue as any)
+          }
         }
       }
     }

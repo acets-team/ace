@@ -15,7 +15,7 @@ import type { AnyValue, Parser } from './types'
  * - The parser will do the exact validations and `kParse()` will just steer us in the right direction telling us what keys need to be sent based on the parsers schema
  * @example
   ```ts
-  const onSubmit = createOnSubmit(async (fd) => {
+  const onSubmit = createOnSubmit(async ({fd}) => {
     const body = kParse(signInParser, { email: fd('email'), password: fd('password') })
     const {error} = await apiSignIn({ body, bitKey: 'signIn' })
 
