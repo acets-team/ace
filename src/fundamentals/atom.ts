@@ -1,3 +1,10 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - Plugin: `solid`
+ *     - import { Atom } from '@ace/atom'
+ */
+
+
 import type { AtomIs, AtomSaveLocations } from './types'
 
 

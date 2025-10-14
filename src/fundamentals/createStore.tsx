@@ -120,7 +120,7 @@ async function loadStore<T_Atoms extends Atoms>(props: {
     for (const update of syncUpdates) {
       const { key, val } = update
 
-      if (props.store[key] === props.atoms[key]!.init) { // if the current value equals the init value (be setting has not happened) then set
+      if (unwrap(props.store[key]) === props.atoms[key]?.init) { // if the current value equals the init value (be setting has not happened) then set
         props.set(key as any, val)
       }
     }
@@ -131,7 +131,7 @@ async function loadStore<T_Atoms extends Atoms>(props: {
       for (const [key, idbRawValue] of Object.entries(idbResults)) {
         if (idbRawValue != null && props.atoms[key]) { // gotta value in idb
 
-          if (props.store[key] === props.atoms[key]!.init) {  // if the current value equals the init value (be setting has not happened) then set
+          if (unwrap(props.store[key]) === props.atoms[key]?.init) {  // if the current value equals the init value (be setting has not happened) then set
             const idbParsedValue = deserialize(props.atoms[key], idbRawValue as string)
             props.set(key as any, idbParsedValue as any)
           }
