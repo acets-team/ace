@@ -5,7 +5,7 @@
 
 
 
-### 🧚‍♀️ Create Ace App!
+### Create Ace App!
 - Mac / Linux
 ```bash
 nvm use 24 && npx create-ace-app@latest
@@ -16,27 +16,399 @@ nvm use 24 && npx.cmd create-ace-app@latest
 ```
 
 
+### 🪷 The Ace Stack
+    Ace is built with Solid Start. Solid is a lovely library that at its essence, is all about signals (functions that let us update the DOM optimally and subscribe to variable updates) 🙌
+    
+    Thanks to Solid’s beautiful API, Ace integrates simply & powefully  with evergreen vanilla JS projects. For example w/ Ace you may add components w/ signals into AgGrid table cells or you can update Chart.js charts by just pushing an object to an array (that's a signal) 🙏
+
+    Extending Ace projects via CDN w/ Types or via NPM w/ Vite is easy 💚
+    
+    So Ace is built w/ Solid but what is Ace exactly? Ace is a set of functions, classes, and types (fundamentals) to aid web developers. We’ve grouped these fundamentals into plugins. When a plugin is set to true in your Ace config, that plugin's corresponding fundamentals are added into your .ace folder (at the root of your project). Each plugin is opt-in, and the only Ace fundamentals that will be in your build, are the ones you import and use! Standard Ace plugins include:
+1. **[Solid](https://docs.solidjs.com/)**
+    - Save fe state to memory, session storage, local storage or indexdb
+      ```ts
+      import { Atom } from '@ace/atom'
+      import type { ApiName2Data } from '@ace/types'
+      import type { ChartData, FinanceSummary, Transaction, ChatMessage } from '@src/lib/types'
+
+
+      export const atoms = {
+        count: new Atom({ save: 'idb', is: 'number', init: 0 }),
+        buildStats: new Atom({ save: 'idb', is: 'string', init: '' }),
+        chatMessage: new Atom({ save: 'idb', is: 'string', init: '' }),
+        cashFlow: new Atom<ChartData[]>({ save: 'idb', is: 'json', init: [] }),
+        chatMessages: new Atom<ChatMessage[]>({ save: 'idb', is: 'json', init: [] }),
+        transactions: new Atom<Transaction[]>({ save: 'idb', is: 'json', init: [] }),
+        financeCategories: new Atom<ChartData[]>({ save: 'idb', is: 'json', init: [] }),
+        financeSummary: new Atom<undefined | FinanceSummary>({ save: 'idb', is: 'json' }),
+        fortunes: new Atom<ApiName2Data<'apiGetFortune'>[]>({ save: 'idb', is: 'json', init: [] }),
+      }
+
+      // atoms are saved whever you want, options include memory, session storage, local storage (5mb) and indexdb (hundreds of mb's)
+      // atoms are available in any fe function or component w/ useStore()
+      // on first read atoms init their value from their save location & updating their value is easy & efficient!
+      ```
+    - Typesafe anchor component
+      ```ts
+      <A path="/about" $a={{class:'brand'}}>Learn More</A>
+      ```
+    - Call API's as typesafe functions
+      ```ts
+      function UpdateEmail() {
+        // store provides access to atoms
+        // refBind() provides 2 way data binding between inputs, textareas & selects and stores (so data stored on refresh is easy)
+        const {store, refBind} = useStore() 
+
+        const onSubmit = createOnSubmit(({ event }) => { // createOnSubmit() wraps our callback in a try catch for us + default error handling we can set
+          // In Ace a parser is a function that validates & also potentially parses data
+          // kParse() is helpful when you wanna use a parser and get autocomplete for what keys this parser requires
+          // So w/ this example our ide will error till email is a prop on the input object to kParse()
+          // The parser will check the particulars of the input object but kParse will just enforce at compile time all the keys the parser requires are present which is helpful when building objects for api's
+          const body = kParse(updateEmailParser, { email: store.newsletterForm.email }) 
+
+          apiUpdateEmail({
+            body,
+            onGood() {
+              event.currentTarget.reset()
+              showToast({ type: 'success', value: 'Updated!' })
+            }
+          })
+        })
+
+        return <>
+          <form ref={refFormReset()} onSubmit={onSubmit}>
+            <div class="flex">
+              <input ref={refBind('newsletterForm', 'email')} name="email" type="email" placeholder="Please enter email" />
+              <Messages name="email" />
+              <Submit label="Update" bitKey="apiUpdateEmail" $button={{ class: 'brand' }} />
+            </div>
+          </form>
+        </>
+      }
+      ```
+1. **[AgGrid](https://www.ag-grid.com/)**
+    - The `AgGrid` component syncs w/ their CDN so your build stays light
+    - All Options are typesafe
+    - On options or data change the table is updated 
+      ```ts
+      function Transactions() {
+        const {sync, store} = useStore()
+        const defaultTransactionsCount = 15
+
+        const addTransaction = () => {
+          sync('transactions', [ // sync() is great for arrays, by default it does a reconcile() by id so only this new item will be updated in the DOM
+            ...store.transactions, 
+            { id: store.transactions.length, date: date2Iso(new Date()), description: randomArrayItem(emojis), amount: randomBetween(-6000, 9000) }
+          ])
+        }
+
+        const refreshTransactions = () => {
+          sync('transactions', store.transactions.slice(0, defaultTransactionsCount))
+        }
+
+        return <>
+          <div class="viz">
+            <div class="head">
+              <h2>📆 Transactions</h2>
+              <div class="buttons">
+                <Show when={store.transactions.length > defaultTransactionsCount}>
+                  <Refresh onClick={refreshTransactions} tooltipContent="Refresh Transactions" />
+                </Show>
+                <button class="brand" onClick={addTransaction}>Add Transaction</button>
+              </div>
+            </div>
+
+            <div class="body">
+              <AgGrid 
+                gridOptions={() => ({
+                  rowData: store.transactions,
+                  defaultColDef: { flex: 1, sortable: true, resizable: true },
+                  columnDefs: [
+                    {
+                      field: 'date',
+                      filter: 'agDateColumnFilter',
+                      sort: 'desc',
+                      cellRenderer (params: AgParams<Transaction[]>) {
+                        return params.data?.date ? dateRead({ date: params.data.date }) : 'Unknown'
+                      }
+                    },
+                    { field: 'description', filter: 'agTextColumnFilter', },
+                    {
+                      field: 'amount',
+                      cellStyle: { textAlign: 'right' },
+                      sortable: false,
+                      cellRenderer (params: AgParams<Transaction[]>) {
+                        const amount = () => (params.data?.amount ?? 0)
+
+                        return <>
+                          <div classList={{ up: amount() > 0 }} class="table-amount">
+                            { formatter.format(Math.abs(amount())) }
+                          </div>
+                        </>
+                      }
+                    },
+                  ],
+                })}
+              />
+            </div>
+          </div>
+        </>
+      }
+      ```
+1. **[Drizzle](https://orm.drizzle.team/) + [Turso](https://turso.tech/)**
+    - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
+      ```ts
+      import { API } from '@ace/api'
+      import { eq } from 'drizzle-orm'
+      import { vNum } from '@ace/vNum'
+      import { vParse } from '@ace/vParse'
+      import { object, optional } from 'valibot'
+      import { sessionB4 } from '@src/auth/authB4'
+      import { db, users, amsterdamRegistrations, voiceParts, roommateOptions } from '@src/lib/db'
+
+
+      export const GET = new API('/api/get-amsterdam-registration/:registrationId?', 'apiGetAmterdamRegistration') // define desired method, path, path params & function name for this api :)
+        .b4([sessionB4])
+        .pathParams(vParse(object({ registrationId: optional(vNum()) })))
+        .resolve(async (scope) => {
+          const where = scope.pathParams.registrationId
+            ? eq(amsterdamRegistrations.id, scope.pathParams.registrationId)
+            : eq(amsterdamRegistrations.userId, scope.event.locals.session.userId)
+
+          const [registration] = await db
+            .select({
+              id: amsterdamRegistrations.id,
+              email: users.email, 
+              phone: amsterdamRegistrations.phone,
+              gender: amsterdamRegistrations.gender,
+              voicePart: voiceParts.name,
+              emergencyContact: amsterdamRegistrations.emergencyContact,
+              physicalLimitations: amsterdamRegistrations.physicalLimitations,
+              dietaryLimitations: amsterdamRegistrations.dietaryLimitations,
+
+              roommateOption: roommateOptions.name,
+              roommateName: amsterdamRegistrations.roommateName,
+              singleAgree: amsterdamRegistrations.roommateSingleAgree,
+
+              nameOnPassport: amsterdamRegistrations.name,
+              passportNumber: amsterdamRegistrations.passportNumber,
+              passportIssuedDate: amsterdamRegistrations.passportIssuedDate,
+              passportExpiredDate: amsterdamRegistrations.passportExpiredDate,
+              passportAuthority: amsterdamRegistrations.passportAuthority,
+              nationality: amsterdamRegistrations.nationality,
+            })
+            .from(amsterdamRegistrations)
+            .leftJoin(voiceParts, eq(amsterdamRegistrations.voicePartId, voiceParts.id))
+            .leftJoin(roommateOptions, eq(amsterdamRegistrations.roommateOptionId, roommateOptions.id))
+            .leftJoin(users, eq(users.id, amsterdamRegistrations.userId))
+            .where(where)
+            .limit(1)
+
+          return scope.success(registration)
+        })
+      ```
+1. **[Charts.js](https://www.chartjs.org/)**
+    - The `ChartsJS` component syncs w/ their CDN so your build stays light
+    - All Options are typesafe
+    - On options or data change the chart is updated 
+      ```ts
+      function Categories() {
+        const {sync, store} = useStore()
+        const defaultCategoriesCount = 4
+        const colors = ['#38bdf8', '#8e7cfb', '#3b82f6', '#4ade80',  '#ffb8d2', '#facc15', '#0284c7', '#b43c02']
+
+        const chart = createMemo(() => { // computed property example
+          const data: number[] = []
+          const labels: string[] = []
+
+          for (const c of store.financeCategories) {
+            labels.push(c.id)
+            data.push(c.amount)
+          }
+
+          return { data, labels }
+        })
+
+        const addCategory = () => {
+          sync('financeCategories', [
+            ...store.financeCategories,
+            {
+              id: randomArrayItem(emojis),
+              amount: (chart().data.at(-1) ?? 0) + 38
+            }
+          ])
+        }
+
+        const refreshCategories = () => {
+          sync('financeCategories', store.financeCategories.slice(0, defaultCategoriesCount))
+        }
+
+        return <>
+          <div class="viz">
+            <div class="head">
+              <h2>🍰 Categories</h2>
+              <div class="buttons">
+                <Show when={store.financeCategories.length > defaultCategoriesCount}>
+                  <Refresh onClick={refreshCategories} tooltipContent="Refresh Categories" />
+                </Show>
+                
+                <button class="brand" onClick={addCategory}>Add Category</button>
+              </div>
+            </div>
+
+            <div class="body">
+              <ChartJS
+                $canvas={{class: 'doughnut'}}
+                config={() => ({
+                  type: 'doughnut',
+                  data: {
+                    labels: chart().labels,
+                    datasets: [{
+                      borderWidth: 0,
+                      hoverOffset: 8,
+                      data: chart().data,
+                      backgroundColor: colors,
+                    }]
+                  },
+                  options: {
+                    plugins: {
+                      legend: {
+                        labels: { color: '#f0f0f0' }
+                      },
+                      title: {
+                        display: false,
+                      }
+                    }
+                  }
+                })}
+              />
+
+              <div class="charts">
+                <ChartJS
+                  config={() => ({
+                    type: 'line',
+                    data: {
+                      labels: chart().labels,
+                      datasets: [{
+                        tension: 0.3,
+                        label: 'Expenses',
+                        data: chart().data,
+                        backgroundColor: colors,
+                        borderColor: 'rgba(255, 255, 255, 0.6)',
+                      }]
+                    },
+                    options: {
+                      plugins: { legend: { display: false } },
+                      scales: {
+                        x: { ticks: { color: '#cfd8e3' } },
+                        y: { ticks: { color: '#cfd8e3' } }
+                      }
+                    }
+                  })}
+                />
+
+                <ChartJS
+                  config={() => ({
+                    type: 'bar',
+                    data: {
+                      labels: chart().labels,
+                      datasets: [{
+                        label: 'Expenses',
+                        data: chart().data,
+                        backgroundColor: colors,
+                      }]
+                    },
+                    options: {
+                      plugins: { legend: { display: false } },
+                      scales: {
+                        x: { ticks: { color: '#cfd8e3' } },
+                        y: { ticks: { color: '#cfd8e3' } }
+                      }
+                    }
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      }
+      ```
+1. **[Cloudflare](https://www.cloudflare.com/)**
+    - DDOS protection, 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/), and deployment is as simple as [git push](#-deploy)!
+1. **[Valibot](https://valibot.dev/)**
+    - To validate a simple sign in form, Zod requires 13.5 kB whereas Valibot require only 1.37 kB. That's a [90% reduction in bundle size](https://valibot.dev/guides/comparison/).
+1. **[Brevo](https://www.brevo.com/)**
+    - Email templates editor
+    - 300 marketing and/or API emails a day for [free](https://wsearchParamssearchParamsww.brevo.com/pricing/)
+1. **[Markdown-It](https://markdown-it.github.io/markdown-it/)**
+    - The `Markdown` component syncs w/ their CDN so your build stays light
+    - All Options are typesafe
+    - On options or data change the markdown is updated 
+    - Language specific code highlighting available
+      ```ts
+      import './Home.css'
+      import { Route } from '@ace/route'
+      import { Title } from '@solidjs/meta'
+      import { Loading } from '@ace/loading'
+      import { Markdown } from '@ace/markdown'
+      import { useStore } from '@src/store/store'
+      import RootLayout from '@src/app/RootLayout'
+      import { apiGetFinances, apiGetBuildStats } from '@ace/apis'
+      import type { Transaction, FinanceSummary } from '@src/lib/types'
+
+
+      export default new Route('/')
+        .layouts([RootLayout])
+        .component(() => {
+          const {set, sync, store} = useStore()
+
+          apiGetBuildStats({
+            queryType: 'stream',
+            onData: (d) => set('buildStats', d)
+          })
+
+          apiGetFinances({
+            queryType: 'stream',
+            onData (d) {
+              sync('cashFlow', d.cashFlow) // unlike set(), sync() will reconcile() arrays based on a key, default is "id"
+              sync('transactions', d.transactions)
+              sync('financeCategories', d.categories)
+            }
+          })
+
+          return <>
+            <Title>🏡 Home</Title>
+
+            <main class="home">
+              <Welcome />
+
+              <section class="summaries">
+                <Summary key="balance" label="💸 Total Balance"  />
+                <Summary key="monthlyExpenses" label="📉 Monthly Expenses" />
+                <Summary key="monthlyIncome" label="📈 Monthly Income" />
+              </section>
+
+              <section class="vizs">
+                <Categories />
+                <Transactions/>
+              </section>
+
+              <Show when={store.buildStats} fallback={<MarkdownIncoming />}>
+                <Markdown content={() => store.buildStats} $div={{class: 'markdown'}} />
+              </Show>
+            </main>
+          </>
+        })
+      ```
+
+
+
 ### 🚨 When a dev restart is necessary?
 - It only takes 3 seconds, but it's important to restart dev sometimes (in bash `control + c` & then `npm run dev`), b/c HMR updates the majority of types but a restart updates them all, so please restart dev when:
     - An `API` is `created/deleted`
     - A `Route` is `created/deleted`
     - A `Layout` is `created/deleted`
     - A `Layout` is `added/removed` from a `new Route()` or `new Route404()` 
-
-
-
-### 🥳 The Ace Stack
-    👷‍♀️ The following docs show how to create the Ace stack, highlights:
-1. **Ace**
-    - Built w/ [Solid Start](https://docs.solidjs.com/), so we get fine grained reactivity, [aria compliant components](#-aria-compliant-components) & the typesafetiest framework! [Vite](https://vite.dev/) + [Lighning CSS](https://lightningcss.dev/) & [Easy Tailwind setup](#add-tailwind) too btw!
-1. **Brevo**
-    - 300 marketing and/or API emails a day for [free](https://wsearchParamssearchParamsww.brevo.com/pricing/) & a free email inbox w/ your custom domain!
-1. **Cloudflare**
-    - 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/), and deployment is as simple as [git push](#-deploy)!
-1. **Drizzle + Turso**
-    - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
-1. **Valibot**
-    - To validate a simple sign in form, Zod requires 13.5 kB whereas Valibot require only 1.37 kB. That's a [90% reduction in bundle size](https://valibot.dev/guides/comparison/).
 
 
 
@@ -78,7 +450,7 @@ export default new Layout()
 
 ### 😅 404 Route!
 ```tsx
-import './404.css'
+import './Unknown.css'
 import { A } from '@ace/a'
 import { Title } from '@solidjs/meta'
 import { Route404 } from '@ace/route404'
@@ -169,50 +541,40 @@ export default new Route404()
 - ✅ No BE request is made unless FE validation passes
 - ✅ Error messages for each input show up next to that input
 - ✅ IF input has error(s) AND start typing in input THEN clear that inputs error(s)
+- ✅ Save input value on refresh thanks to `refBind()` syncing our store (atom that can persist to indexdb) w/ the input
   ```tsx
-  import { vNum } from '@ace/vNum'
-  import { clear } from '@ace/clear'
-  import { Route } from '@ace/route'
   import { Submit } from '@ace/submit'
   import { kParse } from '@ace/kParse'
-  import { vParse } from '@ace/vParse'
-  import { apiSignUp } from '@ace/apis'
-  import { Title } from '@solidjs/meta'
+  import { apiSignIn } from '@ace/apis'
+  import { showToast } from '@ace/toast'
   import { Messages } from '@ace/messages'
-  import { object, optional } from 'valibot'
+  import { useStore } from '@src/store/store'
   import { createOnSubmit } from '@ace/createOnSubmit'
-  import { signUpParser } from '@src/schemas/signUpParser'
+  import { signInParser } from '@src/parsers/signInParser'
 
 
-  export default new Route('/sign-up/:sourceId?')
-    .pathParams(vParse(object({ sourceId: optional(vNum()) }))) // set path params type here & then this route's params are known app-wide 🙌
-    .component((scope) => {
-      const onSubmit = createOnSubmit(async ({fd}) => { // createOnSubmit() places this async fn() into a try/catch for us & on fe or be catch, <Messages /> get populated below!
-        const body = kParse(signUpParser, { // get parse & validate request body, kParse gives typesafety on fe, it knows the object keys that are necessary (email, password) and ensures the keys are sent to kParse() then the signUpParser() does the runtime validation / parsing
-          email: fd('email'), // fd() is a form data helper
-          password: fd('password')
-        }) 
+  export function SignIn() {
+    const {store, refBind} = useStore()
 
-        await apiSignUp({ body, bitKey: 'signUp' }) // a bit is a boolean signal 💃 & the body has autocomplete!
+    const onSubmit = createOnSubmit(() => {
+      apiSignIn({
+        body: kParse(signInParser, { email: store.signInFormEmail }),
+        onGood: () => showToast({ type: 'success', value: 'Please check email inbox for sign in link!' }),
       })
+    })
 
-      return <>
-        <Title>Sign Up {scope.pathParams.sourceId}</Title>
+    return <>
+      <form onSubmit={onSubmit} style={{'margin-bottom': 'var(--space)'}} >
+        <div class="form-item">
+          <label>Email</label>
+          <input ref={refBind('signInFormEmail')} name="email" type="email" />
+          <Messages name="email" />
+        </div>
 
-        <form onSubmit={onSubmit}>
-          <input placeholder="Email" name="email" type="email" use:clear />
-          <Messages name="email" /> {/* shows messages, from signUpSchema.parse() and/or apiSignUp(), for just the email input! 🚀 */}
-
-          <input placeholder="Password" name="password" type="password" use:clear /> {/* the use:clear directive clears password <Messages /> on fresh interaction w/ this input! */}
-          <Messages name="password" />
-
-          <div class="footer">
-            <Submit label="Sign Up" bitKey="signUp" /> {/* Uses scope.bits.get('signUp') to show a loading indicator! 🏋️‍♂️ */}
-          </div>
-        </form>
-      </>
-    }
-  })
+        <Submit label="Sign In" bitKey="apiSignIn" $button={{ class: 'brand' }} />
+      </form>
+    </>
+  }
   ```
   
 
