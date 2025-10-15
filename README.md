@@ -797,23 +797,6 @@ const clothing = [
 
 
 
-### 💖 GET!
-```tsx
-import { API } from '@ace/api'
-
-export const GET = new API('/api/aloha', 'apiAloha') // now we've got an api endpoint @ the path /api/aloha AND we can call the function apiAloha() on the frontend or backed w/ request & response typesafety!
-  .resolve(async (scope) => scope.success({ aloha: true }))
-```
-- ✅ Props for: `scope.success(data: T_Data, status = 200)`
-    - `data` - Any valid json prop, so string, number, boolean, array or object
-    - `status` - Optional, HTTP Response Status `default: 200`
-- 👷‍♀️ Props for: `scope.Success({ data, status = 200, headers }: { data?: T_Data, status?: number, headers?: HeadersInit })`
-    - `data` -  Type: Any valid json prop, so string, number, boolean, array or object
-    - `status` - Optional, HTTP Response Status `default: 200`
-    - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
-
-
-
 ### 💜 Path Params!
 - Required and/or optional path params available @ `routes` & `apis`!
 ```tsx
@@ -838,13 +821,6 @@ const fortunes = [
   'Your laughter spreads sunshine',
 ]
 ```
-- 🚨 Props for: `scope.error(message: string, status = 400)`
-    - `message` -  Error message
-    - `status` - Optional, HTTP Response Status `default: 400`
-- ‼️ Props for: `scope.Error({ error, status = 400, headers }: { error: AceError, status?: number, headers?: HeadersInit })`
-    - `error` - `AceError` constructor takes `{ status = 400, statusText, message, messages, rawBody }`. Setting a status here too can be helpful when you call a BE API and get an error status from them and wanna relay that and set a different status for this HTTP Response 😅 & `messages` are Valibot / Zod error messages of type `Record<string, string[]>`
-    - `status` - Optional, HTTP Response Status `default: 400`
-    - `headers` - Optional, HTTP Response Headers, `'Content-Type': 'application/json'` added automatically
 
 
 
@@ -863,14 +839,6 @@ export const GET = new API('/api/element/:element', 'apiElement')
       : scope.go('/') // 💫 Typesafe API Redirects
   })
 ```
-- 💨 Props for: `scope.go(path: T, params?: RoutePath2Params<T>)`
-    - `path` -  Path to Route as defined @ `new Route()`
-    - `params` - Optional, Params to route as an object
-- 🏎️ Props for: `scope.Go({ path, params, status = 301, headers }: { path: T, params?: RoutePath2Params<T>, status?: number, headers?: HeadersInit})`
-    - `path` -  Path to Route as defined @ `new Route()`
-    - `params` - Optional, Params to route as an object
-    - `status` - Optional, HTTP Response Status `default: 400`
-    - `headers` - Optional, HTTP Response Headers
 
 
 
