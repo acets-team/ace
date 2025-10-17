@@ -771,6 +771,7 @@ export type StoreCopy<T> = {
 
 
 export type BaseStoreContext<T_Atoms extends Atoms> = {
+  _: BaseStoreContextInternal,
   /** Provided by Solid - https://docs.solidjs.com/concepts/stores */
   store: SolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
 
@@ -803,4 +804,18 @@ export type BaseStoreContext<T_Atoms extends Atoms> = {
 }
 
 
+export type BaseStoreContextInternal = {
+  dontLoad: Set<string>,
+  trackDontLoad: boolean
+}
+
+
 export type QueryType = InferEnums<typeof queryType>
+
+
+export type ChartJsMap = {
+  /** Aligned w/ label[], Good for sync() */
+  id: string
+  /** Aligned w/ data[] */
+  amount: number
+}

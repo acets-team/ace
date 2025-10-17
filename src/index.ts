@@ -32,6 +32,17 @@ export type AceConfig = {
   tsConfigPath?: string,
   /** The `key` is the `env` which is set w/ the build command, ex: `ace build local`, in this example the key is `local`. The value is a `string` or `array` of `strings` which are the allowed origins to request your api. Helpful for API Response Headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin 🚨 If your origin is '*' cookies won't work, not an Ace limitation, that's just how HTTP work :) */
   origins: Record<string, string | string[]>
+  /** 
+   * - When set to true 
+   * - On build => IF `config.sw` = `true` THEN file in `public` directory that starts w/ `sw` and is a `.js` file is renamed to `sw_[package dot json version].js` - Helps maintain alignment between app versions and cache versions
+   * @example
+    ```ts
+    import { createRequire } from 'node:module'
+    const { version } = createRequire(import.meta.url)('./package.json')
+    ```
+   * 
+  */
+  sw?: boolean
 }
 
 

@@ -34,9 +34,10 @@ export class Build {
   dirWriteRoot: string
   fsSolidTypes?: string
   dirWriteFundamentals: string
-  static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
+  packageDotJsonVersion?: string
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
+  static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
   writes: Writes = { types: '', constGET: '', constPOST: '', constPUT: '', constDELETE: '', constRoutes: '', apiFunctions: '', constApiName: '', apiLoaders: '' }
 

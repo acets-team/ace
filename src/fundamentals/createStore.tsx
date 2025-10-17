@@ -5,13 +5,14 @@ import { createStoreRefBind } from './createStoreRefBind'
 import { createStoreProduce } from './createStoreProduce'
 import { createStoreReconcile } from './createStoreReconcile'
 import { idbDefaultDbName, idbDefaultStoreName } from './vars'
-import type { Atoms, BaseStoreContext, InferAtom } from './types'
+import type { Atoms, BaseStoreContext, BaseStoreContextInternal, InferAtom } from './types'
 import { createContext, onMount, useContext, type JSX } from 'solid-js'
 import { unwrap, createStore as createSolidStore, SetStoreFunction as SetSolidStore } from 'solid-js/store'
 
 
 
 export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string }) {
+  let _: BaseStoreContextInternal = { dontLoad: new Set(), trackDontLoad: true }
   const idb = new IndexDB()
   const StoreContext = createContext<BaseStoreContext<T_Atoms>>()
   const idbOpts: IDBOptions = { dbName: createStoreProps.idbDbName ?? idbDefaultDbName, storeName: createStoreProps.idbStoreName ?? idbDefaultStoreName }
@@ -26,7 +27,11 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
     // --- persist function ---
     function save<K extends keyof T_Atoms>(key: K) {
       const atom = createStoreProps.atoms[key]
+
+      if (atom && _.trackDontLoad) _.dontLoad.add(key as string)
+
       if (!atom || atom.save === 'm' || isServer) return
+
       const value = unwrap(store[key])
       persist(key as string, value, atom, idbOpts, idb)
     }
@@ -45,6 +50,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
 
 
     const context: BaseStoreContext<T_Atoms> = {
+      _,
       idb,
       set,
       save,
@@ -56,7 +62,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
       sync: createStoreReconcile(setStore, save),
     }
 
-    onMount(() => loadStore({ idb, set, store, atoms: createStoreProps.atoms }))
+    onMount(() => loadStore({ _, idb, set, store, atoms: createStoreProps.atoms }))
 
     return <>
       <StoreContext.Provider value={context}>
@@ -89,6 +95,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
 
 
 async function loadStore<T_Atoms extends Atoms>(props: {
+  _: BaseStoreContextInternal,
   idb: IndexDB,
   atoms: T_Atoms,
   store: { [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>; },
@@ -96,7 +103,8 @@ async function loadStore<T_Atoms extends Atoms>(props: {
 }) {
   if (isServer) return
 
-  queueMicrotask(async () => {
+  queueMicrotask(async () => { // when here how may we know be already set()
+
     const idbKeys: string[] = []
     const syncUpdates: { key: string, val: any }[] = []
 
@@ -120,7 +128,7 @@ async function loadStore<T_Atoms extends Atoms>(props: {
     for (const update of syncUpdates) {
       const { key, val } = update
 
-      if (unwrap(props.store[key]) === props.atoms[key]?.init) { // if the current value equals the init value (be setting has not happened) then set
+      if (!props._.dontLoad.has(key)) { // if the current value equals the init value (be setting has not happened) then set
         props.set(key as any, val)
       }
     }
@@ -130,14 +138,15 @@ async function loadStore<T_Atoms extends Atoms>(props: {
 
       for (const [key, idbRawValue] of Object.entries(idbResults)) {
         if (idbRawValue != null && props.atoms[key]) { // gotta value in idb
-
-          if (unwrap(props.store[key]) === props.atoms[key]?.init) {  // if the current value equals the init value (be setting has not happened) then set
+          if (!props._.dontLoad.has(key)) {  // if the current value equals the init value (be setting has not happened) then set
             const idbParsedValue = deserialize(props.atoms[key], idbRawValue as string)
             props.set(key as any, idbParsedValue as any)
           }
         }
       }
     }
+
+    props._.trackDontLoad = false
   })
 }
 

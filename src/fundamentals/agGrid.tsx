@@ -6,8 +6,8 @@
 
 
 import { feComponent } from './feComponent'
-import { Accessor, createEffect, onMount, type JSX, type Setter } from 'solid-js'
-import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community'
+import type { GridApi, GridOptions } from 'ag-grid-community'
+import { Accessor, createEffect, type JSX, type Setter } from 'solid-js'
 
 
 /**
@@ -31,12 +31,31 @@ import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-communit
     gridOptions={() => ({
       rowData: users(),
       columnDefs: [
-        { field: 'id', filter: 'agNumberColumnFilter', width: 72 },
-        { field: 'name', filter: 'agTextColumnFilter', width: 210 },
-        ...agShowColumn<ApiName2Data<'apiGetUsers'>>(props.source === 'admin', { field: 'isNewsletterSubscriber', headerName: 'Email Subscriber', width: 170 }),
+        { field: 'id', filter: 'agNumberColumnFilter' },
+        { field: 'name', filter: 'agTextColumnFilter' },
+        ...agShowColumn<ApiName2Data<'apiGetUsers'>>(props.source === 'admin', {
+          field: 'isNewsletterSubscriber',
+          headerName: 'Email Subscriber'
+        }),
+        {
+          field: 'amount',
+          cellStyle: { textAlign: 'right' },
+          cellRenderer: agGridCellRenderer({ component: TableCellAmount }),
+        }
       ],
     })}
   />
+
+
+  const TableCellAmount = agGridComponent<Transaction[]>(params => {
+    const amount = params.data?.amount ?? 0
+
+    return <>
+      <div classList={{ up: amount > 0 }} class="table-amount">
+        {formatter.format(Math.abs(amount))}
+      </div>
+    </>
+  })
   ```
  * @param props.gridOptions - Passed to `window.agGrid.createGrid(grid, gridOptions)`
  * @param props.$div - Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div
@@ -84,7 +103,3 @@ declare global {
     }
   }
 }
-
-
-
-export type AgParams<TArr extends readonly any[]> = ICellRendererParams<TArr[number]>

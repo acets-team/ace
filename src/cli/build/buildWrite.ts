@@ -1,7 +1,9 @@
+// chatgpt please add to this file if build.config.swVersion is defined AND cwd/public/ in here a file starts w/ sw and is a js extension THEN rename that file to sw_[build.config.swVersion].js please ;)
+
 import { join, resolve } from 'node:path'
 import { Build, type TreeNode } from './build.js'
 import { fundamentals } from '../../fundamentals.js'
-import { mkdir, copyFile, writeFile } from 'node:fs/promises'
+import { mkdir, copyFile, writeFile, readdir, rename } from 'node:fs/promises'
 
 
 
@@ -49,6 +51,11 @@ function getPromises(build: Build) {
     fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' })
   )
 
+  if (build.config.sw && build.packageDotJsonVersion) {
+    const publicFolder = resolve(join(build.cwd, 'public'))
+    promises.push(writeServiceWorker(build, publicFolder))
+  }
+
   return promises
 }
 
@@ -68,6 +75,33 @@ async function fsCopy({ dirWrite, srcFileName, aimFileName, build }: { dirWrite:
 
 
 
+async function writeServiceWorker(build: Build, publicFolder: string) {
+  try {
+    await mkdir(publicFolder, { recursive: true })
+
+    const files = await readdir(publicFolder)
+    const swFile = files.find(f => f.startsWith('sw') && f.endsWith('.js'))
+
+    if (swFile) {
+      const oldPath = join(publicFolder, swFile)
+      const filename = `sw_${build.packageDotJsonVersion}.js`
+      const newPath = join(publicFolder, filename)
+
+      await rename(oldPath, newPath)
+
+      if (build.commandOptions.has('--verbose')) {
+        console.log(`✅ Renamed service worker: ${swFile} to ${filename}`)
+      }
+    } else if (build.commandOptions.has('--verbose')) {
+      console.log('⚠️ No sw*.js file found in /public to rename')
+    }
+  } catch (err) {
+    console.error('❌ Error renaming service worker:', err)
+  }
+}
+
+
+
 function renderEnv(build: Build) {
   return `/**
 * 🧚‍♀️ How to access:
@@ -78,10 +112,11 @@ import { config } from 'ace.config'
 
 export const env: string = '${build.env}'
 
+export const packageDotJsonVersion = '${build.packageDotJsonVersion}' // when aceConfig.sw is true then this is also defined
+
 export const origins: Set<string> = typeof config.origins[env] === 'string'
   ? new Set([config.origins[env]])
   : new Set(config.origins[env])
-
 `
 }
 
