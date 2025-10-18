@@ -1,16 +1,28 @@
-import { Chart, ChartConfiguration, ChartTypeRegistry } from "chart.js"
-import { Accessor, createEffect, createSignal, untrack } from "solid-js"
-import { ChartJsMap } from './types'
+/**
+ * 🧚‍♀️ How to use:
+ *   Plugin: chartjs
+ *   import { useChartJs } from '@ace/useChartJs'
+ *   import type { UseChartJsProps } from '@ace/useChartJs'
+ */
 
-export function useChartJs<T extends keyof ChartTypeRegistry>(props: { map: Accessor<ChartJsMap[]>, ref: Accessor<undefined | HTMLCanvasElement>, config: ChartConfiguration<T>, globalFontSize?: number }) {
 
+import type { ChartJsMap, ChartJsRegisterFn } from './types'
+import { createEffect, createSignal, untrack, type Accessor } from 'solid-js'
+import { Chart, type ChartConfiguration, type ChartTypeRegistry } from 'chart.js'
+
+
+export function useChartJs<T extends keyof ChartTypeRegistry>(props: {
+  map: Accessor<ChartJsMap[]>,
+  ref: Accessor<undefined | HTMLCanvasElement>,
+  config: ChartConfiguration<T>,
+  register?: ChartJsRegisterFn
+}) {
   const [chart, setChart] = createSignal<undefined | Chart<T>>()
 
   createEffect(() => {
     if (props.map().length && props.ref()) {
       untrack(() => {
-        if (!window.Chart) throw new Error('!window.Chart — Chart.js not provided via CDN')
-        window.Chart.defaults.font.size = props?.globalFontSize ?? 18
+        if (props.register) props.register()
 
         const _canvas = props.ref()
         if (!_canvas) throw new Error('!_canvas')
@@ -18,9 +30,9 @@ export function useChartJs<T extends keyof ChartTypeRegistry>(props: { map: Acce
         const ctx = _canvas.getContext('2d')
         if (!ctx) throw new Error('!ctx')
 
-        const _chart = chart()
         const data = []
         const labels = []
+        const _chart = chart()
 
         for (const c of props.map()) {
           labels.push(c.id)
@@ -42,7 +54,7 @@ export function useChartJs<T extends keyof ChartTypeRegistry>(props: { map: Acce
           props.config.data.labels = labels
 
           setChart(
-            new window.Chart(ctx, props.config) as Chart<T>
+            new Chart(ctx, props.config) as Chart<T>
           )
         }
       })
@@ -51,3 +63,6 @@ export function useChartJs<T extends keyof ChartTypeRegistry>(props: { map: Acce
 
   return chart
 }
+
+
+export type UseChartJsProps = Parameters<typeof useChartJs>[0]

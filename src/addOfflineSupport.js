@@ -8,23 +8,16 @@
 
   import { addOfflineSupport } from '../.ace/addOfflineSupport'
 
-  addOfflineSupport(import.meta.url, [
-    'https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js',
-    'https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js',
-    'https://cdn.jsdelivr.net/npm/ag-grid-community@34.2.0/dist/ag-grid-community.min.js',
-  ])
+  addOfflineSupport(import.meta.url)
   ```
  * @param {string} url - `import.meta.url`
- * @param {string[]} [cdnAssets=[]] - Optional, defaults to empty array, list of CDN assets to cache
  * @returns {void}
  */
-export const addOfflineSupport = (url, cdnAssets = []) => {
+export const addOfflineSupport = (url) => {
   const cacheKey = getCacheKey(url)
 
   /** @type {ServiceWorkerGlobalScope} */
   const sw = /** @type {any} */ (self)
-
-  sw.addEventListener('install', onInstall(cacheKey, cdnAssets))
 
   sw.addEventListener('fetch', onFetch(cacheKey))
 
@@ -40,22 +33,6 @@ function getCacheKey(url) {
   const CACHE_NAME = new URL(url).pathname.split('/').pop() // "sw_v4.js"
   const CACHE_NAME_NO_EXT = CACHE_NAME?.replace(/\.[^/.]+$/, "") // "sw_v4"
   return CACHE_NAME_NO_EXT ?? ''
-}
-
-
-/**
- * - On install add cdn assets to cache b/c our onFetch() does not see the request to cdn assets
- * @param {string} cacheKey - How we are identifiying this cache versioned assets
- * @param {string[]} CDN_ASSETS
- * @returns {(e: ExtendableEvent) => void}
- */
-export const onInstall = (cacheKey, CDN_ASSETS) => {
-  /** @param {ExtendableEvent} event */
-  return (event) => {
-    event.waitUntil(
-      caches.open(cacheKey).then(cache => cache.addAll(CDN_ASSETS))
-    )
-  }
 }
 
 

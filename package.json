@@ -36,6 +36,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.6",
     "esbuild": "^0.25.10",
+    "highlight.js": "^11.11.1",
     "solid-js": "^1.9.9",
     "typescript": "^5.9.3",
     "valibot": "^1.1.0",

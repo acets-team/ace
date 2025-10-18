@@ -6,8 +6,8 @@
  */
 
 
-import { untrack, type JSX } from 'solid-js'
 import { render } from 'solid-js/web'
+import { untrack, type JSX } from 'solid-js'
 import type { AgGridParams, AgGridComponentProps } from './agGrid.types'
 
 
@@ -61,31 +61,23 @@ export function agGridCellRenderer(props: {
   onDestroy?: () => void,
 }) {
   return class { // this class aligns w/ the class ag grid is expecting for a cell & we're just placing a compiled solid component in it
-    $div?: HTMLDivElement
     dispose?: () => void
-
-    // init(params: AgGridParams<any>) {
-    //   if (this.$div) this.dispose?.() // without this, a new render could be attached on top of the old one, leaving old reactive computations alive (memory leak)
-    //   this.$div = document.createElement('div')
-    //   this.dispose = render(() => <props.component params={ params } />, this.$div)
-    // }
+    $div?: HTMLDivElement
 
     init(params: AgGridParams<any>) {
       if (this.$div) this.dispose?.()
       this.$div = document.createElement('div')
 
-      queueMicrotask(() => {
-        this.dispose = render(() => untrack(() => (
-          <props.component params={params} />
-        )), this.$div!)
-      })
+      this.dispose = render(() => untrack(() => (
+        <props.component params={params} />
+      )), this.$div!)
     }
 
     getGui() {
       return this.$div
     }
 
-    /** Optional - Gets called once by grid after rendering is finished - if your renderer needs to do any cleanup, do it here */
+    /** Gets called once by grid after rendering is finished - if your renderer needs to do any cleanup, do it here */
     destroy() {
       if (this.dispose) this.dispose()
       if (props.onDestroy) props.onDestroy()

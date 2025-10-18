@@ -14,7 +14,7 @@
 class Fundamental {
   /**
    * @param {string} ext - File extension
-   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid' | 'cf' | 'markdownIt' | 'brevo' | 'vanilla' | 'chartjs'} pluginName - Name of plugin
+   * @param {'solid' | 'zod' | 'valibot' | 'turso' | 'agGrid' | 'cf' | 'markdownIt' | 'brevo' | 'vanilla' | 'chartjs' | 'highlightJs'} pluginName - Name of plugin
    * @param {'copy' | 'helper' | 'custom'} type - Type of fundamental
    */
   constructor(ext, pluginName, type) {
@@ -95,6 +95,7 @@ export const fundamentals = new Map([
   ['loading.styles', new Fundamental('css', 'solid', 'copy')],
   ['lorem', new Fundamental('ts', 'solid', 'copy')],
   ['markdown', new Fundamental('tsx', 'markdownIt', 'copy')],
+  ['markdownCodeHighlight', new Fundamental('ts', 'highlightJs', 'copy')],
   ['modal.styles', new Fundamental('css', 'solid', 'copy')],
   ['modal', new Fundamental('tsx', 'solid', 'copy')],
   ['ms', new Fundamental('ts', 'solid', 'copy')],

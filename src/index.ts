@@ -87,11 +87,7 @@ export type PluginsConfig = {
    * Enables **AgGrid** fundamentals (helpful modules @ `./ace`)
    * 
    * - Requires the following npm dev imports:
-   *     - `ag-grid-community` (🚨 Only used for types)
-   * - Requires the following cdn script:
-   *     - @ entry-server.tsx > below {scripts} > `<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>`
-   *     - Customers download it once
-   *     - Avoids big script in build
+   *     - `ag-grid-community`
    * @link https://www.ag-grid.com/
    */
   agGrid?: boolean
@@ -113,24 +109,29 @@ export type PluginsConfig = {
    * Enables **Markdown** fundamentals (helpful modules @ `./ace`)
    * 
    * - Requires the following npm dev imports:
-   *     - `markdown-it` (🚨 Only used for types)
-   * - Requires the following cdn script:
-   *     - @ entry-server.tsx > below {scripts} > `<script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>`
-   *     - Customers download it once
-   *     - Avoids big script in build
+   *     - `markdown-it`
    *
    * @link https://www.npmjs.com/package/markdown-it
    */
   markdownIt?: boolean
 
+
   /**
    * Enables **Markdown** fundamentals (helpful modules @ `./ace`)
    * 
    * - Requires the following npm dev imports:
-   *     - `wrangler` (🚨 Only used for types)
-   *     - `@cloudflare/workers-types` (🚨 Only used for types)
-   * - Bash prerequisites:
-   *     - `wrangler types`
+   *     - `highlight.js`
+   *
+   * @link https://www.npmjs.com/package/markdown-it
+   */
+  highlightJs?: boolean
+
+  /**
+   * Enables **Markdown** fundamentals (helpful modules @ `./ace`)
+   * 
+   * - Requires the following npm dev imports:
+   *     - `wrangler`]
+   *     - `@cloudflare/workers-types`
    *
    * @link https://developers.cloudflare.com/durable-objects/
    */
@@ -140,7 +141,7 @@ export type PluginsConfig = {
    * Enables **Chart.js** fundamentals (helpful modules @ `./ace`)
    * 
    * - Requires the following npm dev imports:
-   *     - `chart.js` (🚨 Only used for types)
+   *     - `chart.js`
    *
    * @link https://developers.cloudflare.com/durable-objects/
    */

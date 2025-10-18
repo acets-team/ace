@@ -771,7 +771,14 @@ export type StoreCopy<T> = {
 
 
 export type BaseStoreContext<T_Atoms extends Atoms> = {
+  /**
+   * - Showing the proper value for each Atom is important and this "_" variable helps us accomplish that
+   * - IF an Atom has an init value we will start by showing that
+   * - IF an Atom has some data saved on the fe locally (ex: index db) that will show over the init value once available
+   * - IF an Atom has some data loaded from an API that will show over the fe local data once available
+   */
   _: BaseStoreContextInternal,
+
   /** Provided by Solid - https://docs.solidjs.com/concepts/stores */
   store: SolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
 
@@ -819,3 +826,9 @@ export type ChartJsMap = {
   /** Aligned w/ data[] */
   amount: number
 }
+
+
+export type ChartJsRegisterFn = () => void
+
+
+export type AgGridRegisterFn = () => void

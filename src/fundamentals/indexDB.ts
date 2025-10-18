@@ -1,24 +1,19 @@
-import { isServer } from 'solid-js/web';
-import { idbDefaultDbName, idbDefaultStoreName } from './vars';
+/**
+ * 🧚‍♀️ How to use:
+ *   Plugin solid
+ *   import { indexDB } from '@ace/indexDB'
+ *   import type { IDBWrite } from '@ace/indexDB'
+ */
 
 
-// --- IndexDB Types ---
+import { isServer } from 'solid-js/web'
+import { idbDefaultDbName, idbDefaultStoreName } from './vars'
 
-export interface IDBOptions {
-  dbName?: string;
-  storeName?: string;
-}
 
-interface IDBWrite extends IDBOptions {
-  key: string;
-  value: unknown;
-}
-
-// --- IndexDB Implementation (Optimized for Bulk Read) ---
-
+/** Optimized for bulk read & write  */
 export class IndexDB {
-  #writeQueue: IDBWrite[] = [];
-  #flushing = false;
+  #flushing = false
+  #writeQueue: IDBWrite[] = []
 
   constructor() {}
 
@@ -29,7 +24,7 @@ export class IndexDB {
 
     if (!this.#flushing) {
       this.#flushing = true
-      queueMicrotask(() => this.#flush())
+      queueMicrotask(() => this.#flush()) // we may call set() 20 times in a second, this will bunch all those set() calls together
     }
   }
 
@@ -38,20 +33,42 @@ export class IndexDB {
     this.#writeQueue = []
     this.#flushing = false
 
+    if (writes.length === 0) return
+
+    const grouped = new Map<string, IDBWrite[]>() // group writes by dbName + storeName
+
     for (const w of writes) {
       const dbName = w.dbName || idbDefaultDbName
       const storeName = w.storeName || idbDefaultStoreName
+      const key = `${dbName}::${storeName}`
+
+      if (!grouped.has(key)) grouped.set(key, [])
+      grouped.get(key)!.push(w)
+    }
+
+    for (const [key, group] of grouped.entries()) { // process each group with one open + transaction
+      const [dbName, storeName] = key.split('::')
       const db = await this.#open({ dbName, storeName })
 
       await new Promise<void>((resolve, reject) => {
+        if (!storeName) return reject('!storeName')
+
         const tx = db.transaction(storeName, 'readwrite')
         const st = tx.objectStore(storeName)
-        const r = st.put(w.value, w.key)
 
-        r.onsuccess = () => resolve()
-        r.onerror = () => reject(r.error)
-        tx.oncomplete = () => db.close()
-      });
+        for (const w of group) {
+          st.put(w.value, w.key)
+        }
+
+        tx.oncomplete = () => {
+          db.close()
+          resolve()
+        }
+        tx.onerror = () => {
+          db.close()
+          reject(tx.error)
+        }
+      })
     }
   }
 
@@ -96,4 +113,15 @@ export class IndexDB {
       req.onerror = () => reject(req.error)
     })
   }
+}
+
+
+export interface IDBOptions {
+  dbName?: string;
+  storeName?: string;
+}
+
+export interface IDBWrite extends IDBOptions {
+  key: string;
+  value: unknown;
 }

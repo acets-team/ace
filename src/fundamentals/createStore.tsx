@@ -1,20 +1,27 @@
+/**
+ * 🧚‍♀️ How to use:
+ *   Plugin solid
+ *   import { createStore } from '@ace/createStore'
+ */
+
+
 import type { Atom } from './atom'
 import { isServer } from 'solid-js/web'
-import { IDBOptions, IndexDB } from './indexDB'
+import { IndexDB, type IDBOptions } from './indexDB'
 import { createStoreRefBind } from './createStoreRefBind'
 import { createStoreProduce } from './createStoreProduce'
 import { createStoreReconcile } from './createStoreReconcile'
 import { idbDefaultDbName, idbDefaultStoreName } from './vars'
-import type { Atoms, BaseStoreContext, BaseStoreContextInternal, InferAtom } from './types'
 import { createContext, onMount, useContext, type JSX } from 'solid-js'
+import type { Atoms, BaseStoreContext, BaseStoreContextInternal, InferAtom } from './types'
 import { unwrap, createStore as createSolidStore, SetStoreFunction as SetSolidStore } from 'solid-js/store'
 
 
 
 export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string }) {
-  let _: BaseStoreContextInternal = { dontLoad: new Set(), trackDontLoad: true }
   const idb = new IndexDB()
   const StoreContext = createContext<BaseStoreContext<T_Atoms>>()
+  let _: BaseStoreContextInternal = { dontLoad: new Set(), trackDontLoad: true }
   const idbOpts: IDBOptions = { dbName: createStoreProps.idbDbName ?? idbDefaultDbName, storeName: createStoreProps.idbStoreName ?? idbDefaultStoreName }
 
   const StoreProvider = (providerProps: { children: JSX.Element }) => {
@@ -103,51 +110,45 @@ async function loadStore<T_Atoms extends Atoms>(props: {
 }) {
   if (isServer) return
 
-  queueMicrotask(async () => { // when here how may we know be already set()
+  const idbKeys: string[] = []
+  const syncUpdates: { key: string, val: any }[] = []
 
-    const idbKeys: string[] = []
-    const syncUpdates: { key: string, val: any }[] = []
+  for (const [key, atom] of Object.entries(props.atoms)) {
+    if (atom.save === 'm') continue
+    if (atom.save === 'idb') idbKeys.push(key)
+    else {
+      const storage = atom.save === 'ls' ? localStorage : sessionStorage
+      const raw = storage.getItem(key)
 
-    for (const [key, atom] of Object.entries(props.atoms)) {
-      if (atom.save === 'm') continue
-      if (atom.save === 'idb') idbKeys.push(key)
-      else {
-        const storage = atom.save === 'ls' ? localStorage : sessionStorage
-        const raw = storage.getItem(key)
-        if (raw != null) {
-          const val = deserialize(atom, raw)
-          if (val !== undefined) syncUpdates.push({ key, val })
+      if (raw != null) {
+        const val = deserialize(atom, raw)
+        if (val !== undefined) syncUpdates.push({ key, val })
+      }
+    }
+  }
+
+  for (const update of syncUpdates) {
+    const { key, val } = update
+
+    if (!props._.dontLoad.has(key)) { // if the current value equals the init value (be setting has not happened) then set
+      props.set(key as any, val)
+    }
+  }
+
+  if (idbKeys.length > 0) {
+    const idbResults = await props.idb.get(idbKeys)
+
+    for (const [key, idbRawValue] of Object.entries(idbResults)) {
+      if (idbRawValue != null && props.atoms[key]) { // gotta value in idb
+        if (!props._.dontLoad.has(key)) {  // if the current value equals the init value (be setting has not happened) then set
+          const idbParsedValue = deserialize(props.atoms[key], idbRawValue as string)
+          props.set(key as any, idbParsedValue as any)
         }
       }
     }
+  }
 
-    // here we are settig values from fe persistance
-    // issue is be persitance may have already spoken
-    // so if the current value equals the init value (be setting has not happened) then set
-
-    for (const update of syncUpdates) {
-      const { key, val } = update
-
-      if (!props._.dontLoad.has(key)) { // if the current value equals the init value (be setting has not happened) then set
-        props.set(key as any, val)
-      }
-    }
-
-    if (idbKeys.length > 0) {
-      const idbResults = await props.idb.get(idbKeys)
-
-      for (const [key, idbRawValue] of Object.entries(idbResults)) {
-        if (idbRawValue != null && props.atoms[key]) { // gotta value in idb
-          if (!props._.dontLoad.has(key)) {  // if the current value equals the init value (be setting has not happened) then set
-            const idbParsedValue = deserialize(props.atoms[key], idbRawValue as string)
-            props.set(key as any, idbParsedValue as any)
-          }
-        }
-      }
-    }
-
-    props._.trackDontLoad = false
-  })
+  props._.trackDontLoad = false
 }
 
 

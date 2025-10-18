@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 ### Create Ace App!
 - Mac / Linux
 ```bash
@@ -17,11 +10,11 @@ nvm use 24 && npx.cmd create-ace-app@latest
 
 
 ### 🪷 What is Ace?
-- Ace is built with Solid. Solid is a lovely library that at its essence, is all about signals (functions that let us update the DOM optimally AND subscribe to variable updates) 🙌
-- Thanks to Solid’s beautiful API, Ace integrates simply & powerfully  with vanilla JS projects. **In the examples below** (that come from create ace app) we add components w/ signals into AgGrid table cells & update Chart.js charts by just pushing an array (that's a signal) 🙏
-- So Ace is built w/ Solid & extending your Ace projects w/ type-safe cdn scripts or npm vite imports is easy 💚 but what is Ace exactly? Ace is a set of functions, classes, and types (fundamentals) to aid web developers. We’ve grouped these fundamentals into plugins. When a plugin is set to true in your Ace config, that plugin's corresponding fundamentals are added into your `.ace` folder (at the root of your project). Each plugin is opt-in, and only the Ace fundamentals you import and use will be included in your build! **Standard Ace plugins include:**
+- Ace is built with Solid. Solid is a lovely library that at its essence, is all about signals. Signals help us alter the DOM optimally, subscribe to variable updates and maintain a smooth UI 🙌
+- Thanks to Solid’s beautiful API, Ace integrates simply & powerfully  with vanilla JS projects. **In the examples below** (that come from `npx create-ace-app@latest`) we add components w/ signals into AgGrid table cells & update Chart.js charts by just pushing an array (that's a signal) 🙏
+- So Ace is built w/ Solid & extending your Ace projects w/ evergreen NPM Vite imports is easy 💚 but what is Ace exactly? Ace is a set of functions, classes, and types (fundamentals) to aid web developers. We’ve grouped these fundamentals into plugins. When a plugin is set to true in your Ace config, that plugin's corresponding fundamentals are added into your `.ace` folder (at the root of your project). Each plugin is opt-in, and only the Ace fundamentals you import and use will be included in your build! **Standard Ace plugins include:**
 1. **[Solid](https://docs.solidjs.com/)**
-    - Save fe (frontend) state
+    - Easilly save `fe` (frontend) state to index db!
       ```ts
       // atoms are saved whever you love
       // save locations include memory, session storage, local storage (5mb) or indexdb (100's of mb's)
@@ -131,7 +124,7 @@ nvm use 24 && npx.cmd create-ace-app@latest
           const {store, refBind} = useStore() 
 
           const onSubmit = createOnSubmit(({ event }) => { 
-            apiUpdateEmail({
+            apiUpdateEmail({ // calling api!
               body: kParse(updateEmailParser, { email: store.newsletterForm.email }),
               onData(d) {
                 event.currentTarget.reset()
@@ -155,7 +148,7 @@ nvm use 24 && npx.cmd create-ace-app@latest
       ```ts
       // In Ace a parser is a function that validates & also potentially parses data
       // & b/c this parser is used by our fe and be (as seen above) we place it into its own module (security)
-      // ex: /src/parsers/updateEmailParser.t
+      // ex: src/parsers/updateEmailParser.ts
 
 
       import { object } from 'valibot'
@@ -207,76 +200,64 @@ nvm use 24 && npx.cmd create-ace-app@latest
       }
       ```
 1. **[AgGrid](https://www.ag-grid.com/)**
-    - The `AgGrid` component syncs w/ their CDN so your build stays light
-    - All options are type-safe
-    - On options or data change the table is updated 
-      ```ts
-      // sync() is great for arrays, by default it does a reconcile() by "id" to keep DOM updates optimal
+    ```ts
+    // sync() is great for arrays, by default it does a reconcile() by "id" to keep DOM updates optimal
 
-      function Transactions() {
-        const {sync, store} = useStore()
-        const defaultTransactionsCount = 15
+    function Transactions() {
+      const {sync, store} = useStore()
+      const defaultTransactionsCount = 15
 
-        const addTransaction = () => {
-          sync('transactions', [
-            ...store.transactions, 
-            { id: store.transactions.length, date: date2Iso(new Date()), description: randomArrayItem(emojis), amount: randomBetween(-6000, 9000) }
-          ])
-        }
+      const addTransaction = () => {
+        sync('transactions', [
+          ...store.transactions, 
+          { id: store.transactions.length, date: date2Iso(new Date()), description: randomArrayItem(emojis), amount: randomBetween(-6000, 9000) }
+        ])
+      }
 
-        const refreshTransactions = () => {
-          sync('transactions', store.transactions.slice(0, defaultTransactionsCount))
-        }
+      const refreshTransactions = () => {
+        sync('transactions', store.transactions.slice(0, defaultTransactionsCount))
+      }
 
-        return <>
-          <div class="viz">
-            <div class="head">
-              <h2>📆 Transactions</h2>
-              <div class="buttons">
-                <Show when={store.transactions.length > defaultTransactionsCount}>
-                  <Refresh onClick={refreshTransactions} tooltipContent="Refresh Transactions" />
-                </Show>
-                <button class="brand" onClick={addTransaction}>Add Transaction</button>
-              </div>
-            </div>
-
-            <div class="body">
-              <AgGrid 
-                gridOptions={() => ({
-                  rowData: store.transactions,
-                  defaultColDef: { flex: 1, sortable: true, resizable: true },
-                  columnDefs: [
-                    {
-                      field: 'date',
-                      filter: 'agDateColumnFilter',
-                      sort: 'desc',
-                      cellRenderer (params: AgParams<Transaction[]>) {
-                        return params.data?.date ? dateRead({ date: params.data.date }) : 'Unknown'
-                      }
-                    },
-                    { field: 'description', filter: 'agTextColumnFilter', },
-                    {
-                      field: 'amount',
-                      cellStyle: { textAlign: 'right' },
-                      sortable: false,
-                      cellRenderer (params: AgParams<Transaction[]>) {
-                        const amount = () => (params.data?.amount ?? 0)
-
-                        return <>
-                          <div classList={{ up: amount() > 0 }} class="table-amount">
-                            { formatter.format(Math.abs(amount())) }
-                          </div>
-                        </>
-                      }
-                    },
-                  ],
-                })}
-              />
+      return <>
+        <div class="viz">
+          <div class="head">
+            <h2>📆 Transactions</h2>
+            <div class="buttons">
+              <Show when={store.transactions.length > defaultTransactionsCount}>
+                <Refresh onClick={refreshTransactions} tooltipContent="Refresh Transactions" />
+              </Show>
+              <button class="brand" onClick={addTransaction}>Add Transaction</button>
             </div>
           </div>
-        </>
-      }
-      ```
+
+          <div class="body">
+            <AgGrid 
+              register={registerAgGrid}
+              gridOptions={() => ({
+                rowData: store.transactions,
+                defaultColDef: { flex: 1, sortable: true, resizable: true },
+                columnDefs: [
+                  {
+                    sort: 'desc',
+                    field: 'date',
+                    filter: 'agDateColumnFilter',
+                    cellRenderer: agGridCellRenderer({ component: TableCellDate }),
+                  },
+                  { field: 'description', filter: 'agTextColumnFilter', },
+                  {
+                    field: 'amount',
+                    sortable: false,
+                    cellStyle: { textAlign: 'right' },
+                    cellRenderer: agGridCellRenderer({ component: TableCellAmount }),
+                  }
+                ],
+              })}
+            />
+          </div>
+        </div>
+      </>
+    }
+    ```
 1. **[Drizzle](https://orm.drizzle.team/) + [Turso](https://turso.tech/)**
     - 5GB SQL Database for [free](https://turso.tech/pricing) w/ a lovely ui, intuitive functions, & database typesafety!
       ```ts
@@ -353,113 +334,103 @@ nvm use 24 && npx.cmd create-ace-app@latest
       }
       ```
 1. **[Charts.js](https://www.chartjs.org/)**
-    - The `ChartsJS` component syncs w/ their CDN so your build stays light
-    - All options are type-safe
-    - On options or data change the chart is updated 
-      ```ts
-      function Categories() {
-        const {sync, store} = useStore()
-        const defaultCategoriesCount = 4
-        const colors = ['#38bdf8', '#8e7cfb', '#3b82f6', '#4ade80',  '#ffb8d2', '#facc15', '#0284c7', '#b43c02']
+    ```ts
+    function Categories() {
+      const defaultCategoriesCount = 4
 
-        const chart = createMemo(() => { // computed property example
-          const data: number[] = []
-          const labels: string[] = []
+      const {sync, store} = useStore()
 
-          for (const c of store.financeCategories) {
-            labels.push(c.id)
-            data.push(c.amount)
+      const colors = ['#38bdf8', '#8e7cfb', '#3b82f6', '#4ade80',  '#ffb8d2', '#facc15', '#0284c7', '#b43c02']
+
+      const addCategory = () => {
+        sync('financeCategories', [
+          ...store.financeCategories,
+          {
+            id: randomArrayItem(emojis),
+            amount: (store.financeCategories.at(-1)?.amount ?? 0) + 38
           }
+        ])
+      }
 
-          return { data, labels }
-        })
+      const refreshCategories = () => {
+        sync('financeCategories', store.financeCategories.slice(0, defaultCategoriesCount))
+      }
 
-        const addCategory = () => {
-          sync('financeCategories', [
-            ...store.financeCategories,
-            {
-              id: randomArrayItem(emojis),
-              amount: (chart().data.at(-1) ?? 0) + 38
-            }
-          ])
-        }
+      return <>
+        <div class="viz">
+          <div class="head">
+            <h2>🍰 Categories</h2>
+            <div class="buttons">
+              <Show when={store.financeCategories.length > defaultCategoriesCount}>
+                <Refresh onClick={refreshCategories} tooltipContent="Refresh Categories" />
+              </Show>
 
-        const refreshCategories = () => {
-          sync('financeCategories', store.financeCategories.slice(0, defaultCategoriesCount))
-        }
-
-        return <>
-          <div class="viz">
-            <div class="head">
-              <h2>🍰 Categories</h2>
-              <div class="buttons">
-                <Show when={store.financeCategories.length > defaultCategoriesCount}>
-                  <Refresh onClick={refreshCategories} tooltipContent="Refresh Categories" />
-                </Show>
-                
-                <button class="brand" onClick={addCategory}>Add Category</button>
-              </div>
+              <button class="brand" onClick={addCategory}>Add Category</button>
             </div>
+          </div>
 
-            <div class="body">
-              <ChartJS
-                $canvas={{class: 'doughnut'}}
-                config={() => ({
-                  type: 'doughnut',
+          <div class="body two-col">
+            <ChartJs
+              register={registerChartJs}
+              $canvas={{ class: 'doughnut' }}
+              map={() => store.financeCategories}
+              config={{
+                type: 'doughnut',
+                data: {
+                  datasets: [{
+                    data: [],
+                    borderWidth: 0,
+                    hoverOffset: 8,
+                    backgroundColor: colors,
+                  }]
+                },
+                options: {
+                  plugins: {
+                    legend: {
+                      labels: { color: '#f0f0f0' }
+                    },
+                    title: {
+                      display: false,
+                    }
+                  }
+                }
+              }} />
+
+            <div class="charts">
+              <ChartJs
+                register={registerChartJs}
+                map={() => store.financeCategories}
+                config={{
+                  type: 'line',
                   data: {
-                    labels: chart().labels,
+                    labels: [],
                     datasets: [{
-                      borderWidth: 0,
-                      hoverOffset: 8,
-                      data: chart().data,
+                      tension: 0.3,
+                      label: 'Expenses',
+                      data: [],
                       backgroundColor: colors,
+                      borderColor: 'rgba(255, 255, 255, 0.6)',
                     }]
                   },
                   options: {
-                    plugins: {
-                      legend: {
-                        labels: { color: '#f0f0f0' }
-                      },
-                      title: {
-                        display: false,
-                      }
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { ticks: { color: '#cfd8e3' } },
+                      y: { ticks: { color: '#cfd8e3' } }
                     }
                   }
-                })}
-              />
+                }} />
 
-              <div class="charts">
-                <ChartJS
-                  config={() => ({
-                    type: 'line',
-                    data: {
-                      labels: chart().labels,
-                      datasets: [{
-                        tension: 0.3,
-                        label: 'Expenses',
-                        data: chart().data,
-                        backgroundColor: colors,
-                        borderColor: 'rgba(255, 255, 255, 0.6)',
-                      }]
-                    },
-                    options: {
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        x: { ticks: { color: '#cfd8e3' } },
-                        y: { ticks: { color: '#cfd8e3' } }
-                      }
-                    }
-                  })}
-                />
-
-                <ChartJS
-                  config={() => ({
+              <ChartJs
+                register={registerChartJs}
+                map={() => store.financeCategories}
+                config={{
                     type: 'bar',
                     data: {
-                      labels: chart().labels,
+                      labels: [],
                       datasets: [{
                         label: 'Expenses',
-                        data: chart().data,
+                        data: [],
                         backgroundColor: colors,
                       }]
                     },
@@ -470,14 +441,13 @@ nvm use 24 && npx.cmd create-ace-app@latest
                         y: { ticks: { color: '#cfd8e3' } }
                       }
                     }
-                  })}
-                />
-              </div>
+                  }} />
             </div>
           </div>
-        </>
-      }
-      ```
+        </div>
+      </>
+    }
+    ```
 1. **[Cloudflare](https://www.cloudflare.com/)**
     - DDOS protection, 100,000 hosting requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/), and deployment is as simple as [git push](#-deploy)!
       ```ts
@@ -593,16 +563,15 @@ nvm use 24 && npx.cmd create-ace-app@latest
           return scope.error('Sign in failed')
         })
       ```
-1. **[Markdown-It](https://markdown-it.github.io/markdown-it/)**
+1. **[Markdown-It](https://markdown-it.github.io/markdown-it/)** & **[Highlight.js](https://github.com/highlightjs/highlight.js)**
       ```ts
-      // The `Markdown` component syncs w/ their CDN so your build stays light
-      // On content prop change, the resulting html is updated 
-      // Language specific code highlighting is available by default
+      // On `Markdown` component content prop change, the resulting html is updated 
+      // Language specific code highlighting is available w/ Highlight.js!
 
       // 🚨 When loading data for a component we recommed using solid's `query()` function and this is set w/ the `queryType` property seen below!
       // `query()` helps w/ deduplication, caching & makes it easy to query endpoints again!
       // Each api call below happens simultaneously
-      // They start on the server on page refresh and they start from the browser on anchor navigation
+      // API calls start on the server on page refresh and start from the browser on anchor navigation
 
       import './Home.css'
       import { Route } from '@ace/route'
