@@ -635,6 +635,37 @@ nvm use 24 && npx.cmd create-ace-app@latest
 
 
 
+### 🚨 IF swapping between multiple Ace projects @ `localhost:3000`
+    To mimic real life locally, when switching projects but not domains...
+    Please ensure localhost:3000 is clean!
+    So no left over local storage, index db or service workers!
+1. Fully wipe fe cache, paste in browser console:
+    ```ts
+    (async () => {
+        // Unregister all service workers
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) await reg.unregister();
+
+        // Delete all caches
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) await caches.delete(name);
+
+        // Clear IndexedDB
+        if (indexedDB.databases) {
+            const dbs = await indexedDB.databases();
+            for (const db of dbs) indexedDB.deleteDatabase(db.name);
+        }
+
+        // Clear local & session storage
+        localStorage.clear();
+        sessionStorage.clear();
+    })();
+    ```
+1. 🚨 Close ALL `localhost:3000` tabs
+1. Open a new tab and visit `chrome://serviceworker-internals/`
+1. On this chrome page, do a browser find for `3000` to ensure `localhost:3000` has no service workers attached, if you see it here click the Stop button and then do the steps once more  to ensure we clean!
+
+
 ### 💞 Layout!
 ```tsx
 import './Guest.css'
