@@ -6,7 +6,7 @@
 
 
 import hljs from 'highlight.js'
-import 'highlight.js/styles/github.css'
+import 'highlight.js/styles/github-dark.css'
 import type { Options as MarkdownItOptions } from 'markdown-it'
 
 

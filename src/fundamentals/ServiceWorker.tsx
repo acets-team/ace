@@ -32,8 +32,10 @@ import { packageDotJsonVersion } from './env'
  */
 export function ServiceWorker() {
  onMount(() => {
-   if (packageDotJsonVersion && 'serviceWorker' in navigator) {
-     navigator.serviceWorker.register(`/sw_${packageDotJsonVersion}.js`, { type: 'module' })
+   if ('serviceWorker' in navigator) {
+     const name = packageDotJsonVersion ? `/sw_${packageDotJsonVersion}.js` : 'sw.js'
+
+     navigator.serviceWorker.register(name, { type: 'module' })
        .catch(err => console.error('SW registration failed:', err));
    }
  })

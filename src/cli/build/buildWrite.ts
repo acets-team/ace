@@ -112,7 +112,7 @@ import { config } from 'ace.config'
 
 export const env: string = '${build.env}'
 
-export const packageDotJsonVersion = '${build.packageDotJsonVersion}' // when aceConfig.sw is true then this is also defined
+export const packageDotJsonVersion = '${build.packageDotJsonVersion ? build.packageDotJsonVersion : ''}' // IF aceConfig.sw is true AND there is a package.json version defined THEN this is also defined
 
 export const origins: Set<string> = typeof config.origins[env] === 'string'
   ? new Set([config.origins[env]])

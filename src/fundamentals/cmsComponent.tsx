@@ -14,7 +14,7 @@ import { Show, Suspense, type JSX } from 'solid-js'
 
 
 
-function Component(props: { item: null | CMSItem, $div?: JSX.HTMLAttributes<HTMLDivElement> }) {
+export const CMS = feComponent((props: { item: null | CMSItem, $div?: JSX.HTMLAttributes<HTMLDivElement> }) => {
   return <>
     <Suspense fallback={<Loading />}>
       <Show when={props.item?.isMarkdown} fallback={<div innerText={props.item?.content} {...props.$div} />}>
@@ -22,10 +22,7 @@ function Component(props: { item: null | CMSItem, $div?: JSX.HTMLAttributes<HTML
       </Show>
     </Suspense>
   </>
-}
-
-
-export const CMS = feComponent(Component)
+})
 
 
 

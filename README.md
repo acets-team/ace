@@ -55,10 +55,6 @@ nvm use 24 && npx.cmd create-ace-app@latest
 
 
       export const { useStore, StoreProvider } = createStore({ atoms })
-
-
-      // computed properties
-      export const isAdmin = (store: Atoms2Store<typeof atoms>) => createMemo(() => store.apiGetSession?.isAdmin)
       ```
     - Typesafe anchor component
       ```html
