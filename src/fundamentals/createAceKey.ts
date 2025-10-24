@@ -4,16 +4,14 @@
  */
 
 
-import type { QueryKey } from './types'
+import type { AceKey } from './types'
 
 
-export function createQueryKey(queryKey: QueryKey): string {
-  let result: string | undefined
+export function createAceKey(queryKey?: AceKey): string {
+  let result = ''
 
   if (typeof queryKey === 'string') result = queryKey
   else if (Array.isArray(queryKey)) result = queryKey.join(':')
-
-  if (!result || typeof result !== 'string') throw new Error('!queryKey created')
 
   return result
 }

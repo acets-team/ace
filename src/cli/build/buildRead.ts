@@ -11,19 +11,15 @@ export async function buildRead(build: Build) {
 
     await setTsconfigPaths(build)
 
-    const [fsApp, fsSolidTypes, fsPackageDotJson] = await Promise.all([
+    const [fsApp, fsSolidTypes] = await Promise.all([
       readFile(join(build.dirRead, '../../../createApp.txt'), 'utf-8'),
       readFile(join(build.dirRead, '../../../types.d.txt'), 'utf-8'),
-      build.config.sw ? readFile(join(build.cwd, 'package.json'), 'utf-8') : Promise.resolve(null),
       readAPIDirectory(resolve(build.cwd, build.config.apiDir), build),
       readAppDirectory(resolve(build.cwd, build.config.appDir), build),
     ])
 
-    const parsed = fsPackageDotJson ? JSON.parse(fsPackageDotJson) : null
-
     build.fsApp = fsApp
     build.fsSolidTypes = fsSolidTypes
-    build.packageDotJsonVersion = parsed ? parsed.version : undefined
   }
 }
 

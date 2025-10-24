@@ -6,14 +6,13 @@
 
 
 import { onMount } from 'solid-js'
-import { packageDotJsonVersion } from './env'
 
 
 /**
  * - Register service worker
  * - Prerequisites:
  *    - /public/sw.js
- *    - In ace.config.js set a swVersion
+ *    - In ace.config.js set "sw" to true
  * @example
   ```ts
   import { Nav } from '../Nav/Nav'
@@ -30,15 +29,13 @@ import { packageDotJsonVersion } from './env'
     })
   ```
  */
-export function ServiceWorker() {
- onMount(() => {
-   if ('serviceWorker' in navigator) {
-     const name = packageDotJsonVersion ? `/sw_${packageDotJsonVersion}.js` : 'sw.js'
+export function ServiceWorker({ filename = '/sw.js' }: { filename?: string }) {
+  onMount(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register(filename, { type: 'module' })
+        .catch(err => console.error('SW registration failed:', err))
+    }
+  })
 
-     navigator.serviceWorker.register(name, { type: 'module' })
-       .catch(err => console.error('SW registration failed:', err));
-   }
- })
-
- return <></>
+  return <></>
 }

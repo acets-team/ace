@@ -1,3 +1,4 @@
+
 /**
  * 🧚‍♀️ How to access:
  *     - import { showToast, successIcon, infoIcon, dangerIcon, closeIcon, toastStyleDark, toastStyleLight, toastIconStyleSuccess, toastIconStyleInfo, toastIconStyleDanger } from '@ace/toast'
@@ -6,31 +7,7 @@
 
 
 import { isServer, render } from 'solid-js/web'
-import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, type Component} from 'solid-js'
-
-
-
-const [toasts, setToasts] = createSignal<ToastItem[]>([])
-
-
-if (!isServer) {
-  const ToastWrapper: Component = () => {
-    return <>
-      <div id="ace-toast-wrapper" aria-live="polite" aria-atomic="false">
-        <For each={toasts()}>{
-          (toast) => <ToastItemComponent toast={toast} onRemove={removeToastFromSignal} />
-        }</For>
-      </div>
-    </>
-  }
-
-  const container = document.createElement('div')
-  document.body.appendChild(container)
-
-  createRoot(() => {
-    render(() => <ToastWrapper />, container)
-  })
-}
+import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, type Component } from 'solid-js'
 
 
 /**
@@ -61,15 +38,15 @@ if (!isServer) {
 
   const toastStyleLavender: JSX.CSSProperties = {
     ...toastStyleLight,
-    '--ace-toast-bg-color': 'rgb(243, 232, 255)',
+    '--ace-toast-bg': 'rgb(243, 232, 255)',
     '--ace-toast-text-color': 'rgb(76, 29, 149)',
     '--ace-toast-border-color': 'rgb(192, 132, 252)',
     '--ace-toast-icon-color': 'rgb(109, 40, 217)',
     '--ace-toast-icon-border': '1px solid rgb(192, 132, 252)',
-    '--ace-toast-icon-bg-color': 'rgb(233, 213, 255)',
+    '--ace-toast-icon-bg': 'rgb(233, 213, 255)',
     '--ace-toast-close-color': 'rgb(139, 92, 246)',
     '--ace-toast-close-hover-border': 'rgb(167, 139, 250)',
-    '--ace-toast-close-hover-bg-color': 'rgba(165, 180, 252, 0.2)',
+    '--ace-toast-close-hover-bg': 'rgba(165, 180, 252, 0.2)',
   }
   ```
  * ### Custom Styles w/ tsx, TSX:
@@ -86,14 +63,14 @@ if (!isServer) {
   ```css
   #ace-toast-wrapper {
     .toast.emerald {
-      --ace-toast-bg-color: rgb(6, 95, 70);
+      --ace-toast-bg: rgb(6, 95, 70);
       --ace-toast-border-color: rgb(16, 185, 129);
       --ace-toast-icon-color: rgb(6, 78, 59);
       --ace-toast-icon-border: 1px solid rgb(16, 185, 129);
-      --ace-toast-icon-bg-color: rgb(209, 250, 229);
+      --ace-toast-icon-bg: rgb(209, 250, 229);
       --ace-toast-close-color: rgb(134, 239, 172);
       --ace-toast-close-hover-border: rgb(52, 211, 153);
-      --ace-toast-close-hover-bg-color: rgba(16, 185, 129, 0.2);
+      --ace-toast-close-hover-bg: rgba(16, 185, 129, 0.2);
     }
   }
   ```
@@ -105,65 +82,69 @@ if (!isServer) {
  * @param props.animationSpeed - How many ms does it take for the toast to hide, defaults to 600 b/c in the css for `.toast` > `transition: var(--ace-toast-transition, all 0.6s ease);`
  * @param props.toastProps - Additonal props you'd love to place on the html div toast like `style` or `class`
  */
-export const showToast: ShowToast = ({ type, value, ms = 9000, icon, toastProps, animationSpeed = 600 }) => {
-  let innerRemove = () => {}
+let showToast!: ShowToast
+let showErrorToast!: (value: string) => void
 
-  const id = typeof toastProps?.id === 'string' ? toastProps.id : 'toast-' + crypto.randomUUID()
 
-  onMount(() => {
-    animationSpeed += 30 // padding
+if (!isServer) {
+  createRoot(() => {
+    const [toasts, setToasts] = createSignal<ToastItem[]>([])
 
-    const toast: ToastItem = { // create toast
-      ms,
-      type,
-      icon: icon ?? defaultIconForType(type),
-      list: Array.isArray(value) ? value : [value],
-      id: typeof toastProps?.id === 'string' ? toastProps.id : 'toast-' + crypto.randomUUID(),
-      toastProps: {
-        ...toastProps,
-        style: {
-          ...defaultStyleForType(type),
-          ...(toastProps?.style && typeof toastProps.style === 'object' ? toastProps.style : {}),
+    const removeToastFromSignal = (id: string) => {
+      setToasts(list => list.filter(t => t.id !== id))
+    }
+
+    const ToastWrapper: Component = () => (
+      <div id="ace-toast-wrapper" aria-live="polite" aria-atomic="false">
+        <For each={toasts()}>
+          {(toast) => <ToastItemComponent toast={toast} onRemove={removeToastFromSignal} />}
+        </For>
+      </div>
+    )
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    render(() => <ToastWrapper />, container)
+
+    showToast = ({ type, value, ms = 9000, icon, toastProps, animationSpeed = 600 }) => {
+      const id = toastProps?.id ?? 'toast-' + crypto.randomUUID()
+      const toast: ToastItem = {
+        id,
+        type,
+        list: Array.isArray(value) ? value : [value],
+        ms,
+        icon: icon ?? defaultIconForType(type),
+        toastProps: {
+          ...toastProps,
+          style: {
+            ...defaultStyleForType(type),
+            ...(toastProps?.style && typeof toastProps.style === 'object' ? toastProps.style : {}),
+          }
         }
       }
-    }
 
-    setToasts(prev => [...prev, toast]) // add toast to toasts signal
+      setToasts(prev => [...prev, toast])
 
-    if (ms !== Infinity) {
-      const timeoutSmooth = setTimeout( () => smoothHide(document.getElementById(toast.id)), ms) // 
+      if (ms !== Infinity) {
+        setTimeout(() => smoothHide(document.getElementById(id)), ms)
+        setTimeout(() => removeToastFromSignal(id), ms + animationSpeed)
+      }
 
-      const timeoutSignal = setTimeout( () => removeToastFromSignal(toast.id), ms + animationSpeed )
-
-      innerRemove = () => {
-        clearTimeout(timeoutSmooth)
-        clearTimeout(timeoutSignal)
-        smoothHide(document.getElementById(toast.id))
-        setTimeout(() => removeToastFromSignal(toast.id), animationSpeed)
+      return {
+        id,
+        remove: () => removeToastFromSignal(id),
       }
     }
 
-    innerRemove = () => {
-      smoothHide(document.getElementById(toast.id))
-    }
-  })
-
-  return { id, remove: () => innerRemove() }
-}
-
-export function showErrorToast(value: string) {
-  return showToast({type: 'danger', value, ms: Infinity})
-}
-
-function removeToastFromSignal (id: string) {
-  setToasts(list => {
-    const idx = list.findIndex(t => t.id === id)
-    if (idx === -1) return list
-    const updated = [...list]
-    updated.splice(idx, 1)
-    return updated
+    showErrorToast = (value: string) =>
+      showToast({ type: 'danger', value, ms: Infinity })
   })
 }
+
+
+export { showToast, showErrorToast }
+
+
 
 const ToastItemComponent: Component<{ toast: ToastItem, onRemove: (id: string) => void }> = (props) => {
   let refToast: HTMLDivElement | undefined
@@ -239,39 +220,39 @@ function defaultStyleForType(type?: ShowToastProps['type']): JSX.CSSProperties {
 export const toastStyleDark: JSX.CSSProperties = {
   '--ace-toast-text-color': 'rgb(214, 217, 223)',
   '--ace-toast-border-color': 'rgb(55, 65, 81)',
-  '--ace-toast-bg-color': 'rgb(31, 41, 55)',
+  '--ace-toast-bg': 'rgb(31, 41, 55)',
 
   '--ace-toast-close-color': 'rgb(156, 163, 175)',
   '--ace-toast-close-hover-border': 'rgb(117, 126, 139)',
-  '--ace-toast-close-hover-bg-color': 'rgb(75, 85, 99)',
+  '--ace-toast-close-hover-bg': 'rgb(75, 85, 99)',
 }
 
 export const toastStyleLight: JSX.CSSProperties = {
   '--ace-toast-text-color': 'rgb(31, 41, 55)',
   '--ace-toast-border-color': 'rgb(203, 213, 225)',
-  '--ace-toast-bg-color': 'rgb(255, 255, 255)',
+  '--ace-toast-bg': 'rgb(255, 255, 255)',
 
   '--ace-toast-close-color': 'rgb(107, 114, 128)',
   '--ace-toast-close-hover-border': 'rgb(156, 163, 175)',
-  '--ace-toast-close-hover-bg-color': 'rgb(229, 231, 235)'
+  '--ace-toast-close-hover-bg': 'rgb(229, 231, 235)'
 }
 
 export const toastIconStyleSuccess: JSX.CSSProperties = {
   '--ace-toast-icon-color': 'rgb(3, 84, 63)',
   '--ace-toast-icon-border': '1px solid rgb(14, 159, 110)',
-  '--ace-toast-icon-bg-color': 'rgb(188, 240, 218)',
+  '--ace-toast-icon-bg': 'rgb(188, 240, 218)',
 }
 
 export const toastIconStyleInfo: JSX.CSSProperties = {
   '--ace-toast-icon-color': 'rgb(30, 66, 159)',
   '--ace-toast-icon-border': '1px solid rgb(63, 131, 248)',
-  '--ace-toast-icon-bg-color': 'rgb(195, 221, 253)',
+  '--ace-toast-icon-bg': 'rgb(195, 221, 253)',
 }
 
 export const toastIconStyleDanger: JSX.CSSProperties = {
   '--ace-toast-icon-color': 'rgb(153, 27, 27)',
   '--ace-toast-icon-border': '1px solid rgb(248, 113, 113)',
-  '--ace-toast-icon-bg-color': 'rgb(254, 202, 202)',
+  '--ace-toast-icon-bg': 'rgb(254, 202, 202)',
 }
 
 

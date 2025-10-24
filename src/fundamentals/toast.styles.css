@@ -26,8 +26,8 @@
     display: flex;
     align-items: center;
     color: var(--ace-toast-text-color);
-    border: 1px solid var(--ace-toast-border-colo);
-    background-color: var(--ace-toast-bg-color);
+    border: 1px solid var(--ace-toast-border-color);
+    background: var(--ace-toast-bg);
     animation: toast-animation 0.9s;
     transition: var(--ace-toast-transition, all 0.6s ease);
     max-width: calc(100vw - 3rem);
@@ -74,7 +74,7 @@
         min-height: 3.6rem;
         color: var(--ace-toast-icon-color);
         border: var(--ace-toast-icon-color);
-        background-color: var(--ace-toast-icon-bg-color);
+        background: var(--ace-toast-icon-bg);
 
         svg {
           flex-grow: 0;
@@ -106,7 +106,7 @@
       &:hover {
         cursor: pointer;
         border-color: var(--ace-toast-close-hover-border);
-        background-color: var(--ace-toast-close-hover-bg-color);
+        background-color: var(--ace-toast-close-hover-bg);
       }
 
       svg {

@@ -7,9 +7,8 @@
 
 import { config } from 'ace.config'
 import { isServer } from 'solid-js/web'
-import { GoResponse } from './goResponse'
+import { defaultError, goHeaderName } from './vars'
 import type { ApiResponse, FlatMessages } from './types'
-import { defaultError, goHeaderName, goStatusCode } from './vars'
 
 
 /**
@@ -40,15 +39,11 @@ export class AceError {
    * @param options `{ error, data, defaultMessage = '❌ Sorry but an error just happened' }`
    */
   static async catch(error: any) {
-    if (error instanceof GoResponse) {
-      if (!isServer) throw window.location.href = error.url
-      else {
-        const headers = new Headers(error.headers)
+    const goUrl = error instanceof Response ? error.headers.get(goHeaderName) : null
 
-        headers.set(goHeaderName, error.url)
-
-        return new Response(null, { status: goStatusCode, headers })
-      }
+    if (goUrl) {
+      if (isServer) return error
+      else if (goUrl !== window.location.href) throw window.location.href = goUrl
     } else {
       let res: ApiResponse<null> | undefined
 
@@ -56,7 +51,7 @@ export class AceError {
         if (error instanceof AceError) res = error.get<null>(null)
         else if (typeof error === 'object' && typeof error.error === 'object' && typeof error.error.message === 'string') res = AceError.simple(error.error.message)
         else if (error instanceof Error || (typeof error === 'object' && error.message)) res = AceError.simple(error.message)
-        else if (typeof error === 'string') res = AceError.simple(error)      
+        else if (typeof error === 'string') res = AceError.simple(error)
       }
 
       if (!res) res = AceError.simple(defaultError)
@@ -68,7 +63,7 @@ export class AceError {
         else console.trace()
       }
 
-      return new Response(JSON.stringify(res), { status: 400, headers: {'content-type': 'application/json'} })
+      return new Response(JSON.stringify(res), { status: 400, headers: { 'content-type': 'application/json' } })
     }
   }
 

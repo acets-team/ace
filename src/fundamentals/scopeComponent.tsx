@@ -11,11 +11,12 @@ import { buildUrl } from '../buildUrl'
 import { isServer } from 'solid-js/web'
 import { FEMessages } from '../feMessages'
 import { useLocation } from '@solidjs/router'
+import { createAceKey } from './createAceKey'
 import { parseResponse } from '../parseResponse'
 import { destructureReady } from './destructureReady'
 import { getScopeComponentChildren } from '../scopeComponentChildren'
 import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
-import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, ApiMethods, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data, ApiNames } from './types'
+import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data, AceKey } from './types'
 
 
 export let scope!: ScopeComponent // the "!" tells ts: we'll assign this before it’s used but, ex: if a scope.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error
@@ -77,7 +78,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
     })
     ```
    */
-  PathParams = (() => {}) as Accessor<T_Path_Params>
+  PathParams = (() => { }) as Accessor<T_Path_Params>
 
 
   /**
@@ -88,7 +89,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
     <>{scope.searchParams.example}</>
     ```
    */
-   searchParams = {} as T_Search_Params
+  searchParams = {} as T_Search_Params
 
 
   /**
@@ -101,7 +102,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
     })
     ```
    */
-  SearchParams = (() => {}) as Accessor<T_Search_Params>
+  SearchParams = (() => { }) as Accessor<T_Search_Params>
 
 
   /** @returns The url location data  */
@@ -141,18 +142,18 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
 
   #getRequestInit(requestInit: Partial<RequestInit>, body?: unknown): RequestInit {
-    const finalInit: RequestInit = { credentials: 'same-origin', ...(requestInit || {}) } 
+    const finalInit: RequestInit = { credentials: 'same-origin', ...(requestInit || {}) }
     const headers = new Headers(finalInit.headers) // normalize headers to Headers so we can safely inspect / set
     const hasBody = body !== null && body !== undefined
     const browserSetContentTypeBasedOnBodyInstance = (body instanceof FormData || body instanceof File || body instanceof Blob || body instanceof URLSearchParams) // w/ these requests, the content type is set by the browser, so that the browser can identify delimeters in the header
     const shouldDefaultContentType = (!headers.has('content-type') && hasBody && !browserSetContentTypeBasedOnBodyInstance)
-    
+
     if (shouldDefaultContentType) headers.set('content-type', 'application/json')  // default content type
 
     const finalBody = (((headers.get('content-type') || '').includes('application/json'))
       ? hasBody && typeof body !== 'string' ? JSON.stringify(body) : body
       : body) as BodyInit
-    
+
     headers.set('Origin', window.location.origin) // if we don't send Origin then on same origin requests (dev) the browser won't send an origin header (but be expects one). But when we set origin manually, browser will ignore the value and send the real origin always
 
     return { ...finalInit, headers, body: finalBody }
@@ -164,14 +165,16 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param path - As defined @ `new API()`
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
+   * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
-  async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<GETPath2Api<T_Path>>, searchParams?: Api2SearchParams<GETPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<GETPath2Api<T_Path>>> {
+  async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<GETPath2Api<T_Path>>, searchParams?: Api2SearchParams<GETPath2Api<T_Path>>, bitKey?: AceKey, requestInit?: Partial<RequestInit>, manualBitOff?: boolean }): Promise<Api2Data<GETPath2Api<T_Path>>> {
     const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.GET })
-    
+
     return this.fetch<Api2Data<GETPath2Api<T_Path>>>({
       requestInit,
       bitKey: options?.bitKey,
-      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams}),
+      manualBitOff: options?.manualBitOff,
+      url: buildUrl(path, { pathParams: options?.pathParams, searchParams: options?.searchParams }),
     })
   }
 
@@ -182,14 +185,16 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    * @param options.body - Request body
+   * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
-  async POST<T_Path extends POSTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<POSTPath2Api<T_Path>>, searchParams?: Api2SearchParams<POSTPath2Api<T_Path>>, body?: Api2Body<POSTPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<POSTPath2Api<T_Path>>> {
+  async POST<T_Path extends POSTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<POSTPath2Api<T_Path>>, searchParams?: Api2SearchParams<POSTPath2Api<T_Path>>, body?: Api2Body<POSTPath2Api<T_Path>>, bitKey?: AceKey, requestInit?: Partial<RequestInit>, manualBitOff?: boolean }): Promise<Api2Data<POSTPath2Api<T_Path>>> {
     const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.POST }, options?.body)
 
     return this.fetch<Api2Data<POSTPath2Api<T_Path>>>({
       requestInit,
       bitKey: options?.bitKey,
-      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+      manualBitOff: options?.manualBitOff,
+      url: buildUrl(path, { pathParams: options?.pathParams, searchParams: options?.searchParams })
     })
   }
 
@@ -200,14 +205,16 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    * @param options.body - Request body
+   * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
-  async PUT<T_Path extends PUTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<PUTPath2Api<T_Path>>, searchParams?: Api2SearchParams<PUTPath2Api<T_Path>>, body?: Api2Body<PUTPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<PUTPath2Api<T_Path>>> {
+  async PUT<T_Path extends PUTPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<PUTPath2Api<T_Path>>, searchParams?: Api2SearchParams<PUTPath2Api<T_Path>>, body?: Api2Body<PUTPath2Api<T_Path>>, bitKey?: AceKey, requestInit?: Partial<RequestInit>, manualBitOff?: boolean }): Promise<Api2Data<PUTPath2Api<T_Path>>> {
     const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.PUT }, options?.body)
 
     return this.fetch<Api2Data<PUTPath2Api<T_Path>>>({
       requestInit,
       bitKey: options?.bitKey,
-      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+      manualBitOff: options?.manualBitOff,
+      url: buildUrl(path, { pathParams: options?.pathParams, searchParams: options?.searchParams })
     })
   }
 
@@ -218,36 +225,40 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
    * @param options.params - Path params
    * @param options.body - Request body
+   * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
-  async DELETE<T_Path extends DELETEPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<DELETEPath2Api<T_Path>>, searchParams?: Api2SearchParams<DELETEPath2Api<T_Path>>, body?: Api2Body<DELETEPath2Api<T_Path>>, bitKey?: string, requestInit?: Partial<RequestInit> }): Promise<Api2Data<DELETEPath2Api<T_Path>>> {
+  async DELETE<T_Path extends DELETEPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<DELETEPath2Api<T_Path>>, searchParams?: Api2SearchParams<DELETEPath2Api<T_Path>>, body?: Api2Body<DELETEPath2Api<T_Path>>, bitKey?: AceKey, requestInit?: Partial<RequestInit>, manualBitOff?: boolean }): Promise<Api2Data<DELETEPath2Api<T_Path>>> {
     const requestInit = this.#getRequestInit({ ...options?.requestInit, method: apiMethods.keys.DELETE }, options?.body)
 
     return this.fetch<Api2Data<DELETEPath2Api<T_Path>>>({
       requestInit,
       bitKey: options?.bitKey,
-      url: buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+      manualBitOff: options?.manualBitOff,
+      url: buildUrl(path, { pathParams: options?.pathParams, searchParams: options?.searchParams })
     })
   }
 
 
-  async fetch<T_Response>({url, requestInit, bitKey}: {url: string, requestInit: RequestInit, bitKey?: string}): Promise<T_Response> {
+  async fetch<T_Response>(props: { url: string, requestInit: RequestInit, bitKey?: AceKey, manualBitOff?: boolean }): Promise<T_Response> {
+    let bitKey = createAceKey(props.bitKey)
+
     if (bitKey) this.bits.set(bitKey, true)
 
     let res = null
     let goUrl = null
 
     try {
-      const resFetch = await fetch(url, requestInit)
+      const resFetch = await fetch(props.url, props.requestInit)
       res = await parseResponse<T_Response>(resFetch)
 
       if (res instanceof Response) goUrl = getGoUrl(res)
-    } catch(e) {
+    } catch (e) {
       res = await parseResponse<T_Response>(e)
     }
-    
-    if (goUrl) throw window.location.href = goUrl
 
-    if (bitKey) this.bits.set(bitKey, false)
+    if (goUrl && goUrl !== window.location.href) throw window.location.href = goUrl
+
+    if (!props.manualBitOff && bitKey) this.bits.set(bitKey, false)
 
     res = await parseResponse<T_Response>(res)
 
@@ -278,7 +289,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   Go<T_Path extends Routes>({ path, pathParams, searchParams, replace = false, scroll = true, state = {} }: { path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, replace?: boolean, scroll?: boolean, state?: JsonObject }) {
     if (isServer) return
 
-    const url = buildUrl(path, {pathParams, searchParams})
+    const url = buildUrl(path, { pathParams, searchParams })
 
     if (replace) window.history.replaceState(state, '', url)
     else window.history.pushState(state, '', url)

@@ -53,7 +53,7 @@ export const Submit = (props: {
   })
 
   return <>
-    <button type="submit" disabled={isLoading()} aria-busy={isLoading()} {...props.$button} >
+    <button type="submit" disabled={isLoading() === true} aria-busy={isLoading() === true} {...props.$button} >
       <Show when={isLoading()} fallback={typeof props.label === 'function' ? props.label() : props.label}>
         <span role="status" aria-live="polite">
           <Loading {...props.$Loading} />

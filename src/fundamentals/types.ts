@@ -251,9 +251,9 @@ export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
    * - Optional, bits are boolean signals, we identify them by bitKey, lovely for loading indicators
    * - IF `bitKey` = `undefined` AND `onLoadChange` = `undefined` THEN `bitKey` <- `apiName`
    */
-  bitKey?: string
+  bitKey?: AceKey
   /** Optional, if queryType set AND queryKey undefined THEN queryKey <- apiName */
-  queryKey?: QueryKey
+  queryKey?: AceKey
   /**
    * - Let's this api function know that we wanna use Solid's `query()` function! There are several different ways we can use `query()` and that is what this variable helps decide
    * - 🚨 When using Solid's `query()` a queryKey is required, we have it optional here b/c if a `queryType` is set & a `querKey` is `undefined` THEN the `queryKey` is set to the `apiName`
@@ -286,7 +286,11 @@ export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
 }
 
 
-export type QueryKey = string | (string | number)[]
+/**
+ * - Used for `bitKey` (boolean signals) & `queryKey` (solid's `query()` key)
+ * - Allows you to send a string or something like `['example', 2]`
+ */
+export type AceKey = string | (string | number)[]
 
 
 /** Utility to extract the *required* keys of some object */

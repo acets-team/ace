@@ -24,10 +24,10 @@ export const goStatusCode = 200
 
 /**
  * 
- * - By using Location as the header name, query() actually handles server side redirects which is helpful
- * - By putting the url in the header no json parsing is necessary
+ * - By using Location as the header name, query() actually handles server side redirects which is helpful when doing a queryType of 'stream'
+ * - By putting the url in the header & not the body => no json parsing is necessary
  */
-export const goHeaderName = 'Location'
+export const goHeaderName = 'ace_go'
 
 
 /** 

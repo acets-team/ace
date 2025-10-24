@@ -36,7 +36,7 @@ export async function hashValidate({ password, hash }: HashValidateProps): Promi
   const encoder = new TextEncoder()
 
   const passwordBinary = encoder.encode(password)
-console.log('.buffer salt')
+
   const salt = base64UrlDecodeToBinary(saltB64).buffer as ArrayBuffer
 
   const cryptoKey = await crypto.subtle.importKey( 'raw', passwordBinary, 'PBKDF2', false, ['deriveBits'] )

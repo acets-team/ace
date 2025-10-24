@@ -21,7 +21,7 @@ import { createMemo, type JSX, type Setter, type Accessor } from 'solid-js'
  * @param options - Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge
  * @param $div - Optional, props passed to inner wrapper div
  */
-export const Markdown = feComponent((props: {
+export const MarkdownIt = feComponent((props: {
   /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
   content?: Accessor<string | undefined>
   /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
@@ -56,4 +56,4 @@ const defaultMarkdownOptions: MarkdownItOptions = {
 }
 
 
-export type MarkdownProps = Parameters<typeof Markdown>[0]
+export type MarkdownProps = Parameters<typeof MarkdownIt>[0]
