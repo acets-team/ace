@@ -53,11 +53,9 @@
 
 
 ## What is Ace?
-- Ace is built with Solid. At its essence, Solid is all about signals. Signals help us alter the DOM optimally, subscribe to variable updates and maintain a smooth UI 🙌
-- Thanks to Solid’s beautiful API, Ace integrates simply & powerfully  with vanilla JS projects. **In the examples below** (that come from `npx create-ace-app@latest`) we add components w/ signals into AgGrid table cells & update Chart.js charts by just pushing to an array (that's a signal) 🙏
-- So Ace is built w/ Solid & thanks to [Vite](https://vite.dev/), extending your Ace projects w/ evergreen [NPM](https://www.npmjs.com/) imports is easy 💚 but what is Ace exactly? Ace is a set of functions, classes, and types (fundamentals) to aid web developers. We’ve grouped these fundamentals into plugins. When a plugin is set to true in your Ace config, that plugin's corresponding fundamentals are added into the `.ace` folder (at the root of your project). Each plugin is opt-in, and only the Ace fundamentals you import and use will be included in your build! **Standard Ace plugins include:**
+- Ace is a set of functions, classes, and types (fundamentals) to aid web developers. We’ve grouped these fundamentals into plugins. When a plugin is set to true in your Ace config, that plugin's corresponding fundamentals are added into the `.ace` folder (at the root of your project). Each plugin is opt-in, and only the Ace fundamentals you import and use will be included in your build! **Standard Ace plugins include:**
   1. **[Solid](https://docs.solidjs.com/)** (optimal DOM updates)
-  1. **[Drizzle](https://orm.drizzle.team/)** (typesafe db interactions)
+  1. **[Drizzle](https://orm.drizzle.team/)** (typesafe db updates)
   1. **[Turso](https://turso.tech/)** (5GB Free DB)
   1. **[Cloudflare](https://www.cloudflare.com/)** (Servers near users)
   1. **[AgGrid](https://www.ag-grid.com/)** (Scrollable, filterable & sortable tables)
@@ -1251,8 +1249,8 @@ export function SignIn() {
         // Clear local & session storage
         localStorage.clear();
         sessionStorage.clear();
-    })();
     ```
+1. Delete all cookies @ `Chrome` > `Inspect` > `Application`
 1. 🚨 Close ALL `localhost:3000` tabs
 1. IF you have `sw` set to true in your ace config:
     1. Open a new tab and visit `chrome://serviceworker-internals/`
@@ -1775,12 +1773,7 @@ export function SignIn() {
 
 
 ## Error Dictionary
-    Anytime you see "Standard Fix" below, do this please
-
-
-
-### ✅ Standard Fix
-1. In browser, delete the `Solid Start` cookie that has the cookie name from `./ace.config.js`
+#### Anytime you see "Standard Fix" below, [do these app clear steps first please](#if-developing-multiple-ace-projects-simultaneously)... & then these steps please
 1. Stop all local servers running Ace
 1. Delete generated `.ace` folder
 1. `npm run dev`
@@ -1794,7 +1787,7 @@ export function SignIn() {
     - Ensure `app.tsx` has `import { createApp } from '@ace/createApp'` and `export default createApp()`
     - Standard Fix
 1. `Error: <A> and 'use' router primitives can be only used inside a Route.`
-    - This is typically caused by something in the default export function @ `app.tsx` that should not be there, like `useParams()` or `useLocation()`. This function must only have items like  `<Router />`, `<FileRoutes />` or `<Route />`. Then w/in the component functions of the route or layout we may use router primatives
+    This is typically caused by something in the default export function @ `app.tsx` that should not be there, like `useParams()` or `useLocation()`. This function must only have items like  `<Router />`, `<FileRoutes />` or `<Route />`. Then w/in the component functions of the route or layout we may use router primatives
     - Standard Fix
 1. `Cannot read properties of null (reading 'push') @ Effects.push.apply(Effects, e);` 
     - Standard Fix
@@ -1808,14 +1801,14 @@ export function SignIn() {
         ```ts
         export default new Route('/')
           .component((scope) => {
-            return scope.go('/sign-in/:messageId?')
+            return scope.go('/sign-in')
           })
         ```
     - To this:
         ```ts
         export default new Route('/')
           .component((scope) => {
-            throw scope.go('/sign-in/:messageId?')
+            throw scope.go('/sign-in')
           })
         ```
     - Throwing thankfully ends the inference loop of defining and returning a route 🙌
