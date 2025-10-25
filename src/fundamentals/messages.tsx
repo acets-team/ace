@@ -27,9 +27,12 @@ export const Messages = feComponent(({ name = defaultMessageName, $div }: {
 }) => {
   const [messages] = scope.messages.get(name)
 
+  const baseClass = 'ace-messages'
+  const mergedClass = $div?.class ? `${baseClass} ${$div.class}` : baseClass
+
   return <>
     <Show when={ messages()?.length }>
-      <div class="ace-messages" {...$div}>
+      <div {...$div} class={mergedClass}>
         <Show when={ messages().length > 1 } fallback={messages()[0]}>
           <ul>
             <For each={messages()}>{ (msg) => <li>{msg}</li> }</For>

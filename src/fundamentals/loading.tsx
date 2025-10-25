@@ -16,7 +16,7 @@ import type { JSX, Component } from 'solid-js'
 
   <Loading type="two" color="black" twoColor="white" />
 
-  <Loading label="Processing..." spanProps={{ id: "loader" }} />
+  <Loading label="Processing..." $span={{ id: "loader" }} />
   ```
   @example
   ```css
@@ -48,9 +48,9 @@ import type { JSX, Component } from 'solid-js'
  * @param props.speed - Optional, spinner speed, `default: 1s`
  * @param props.twoColor - Optional, if type is `two`, this will set the color for the 2nd spinner, `default: white`
  * @param props.label - Optional, text to announce to screen readers, `default: 'Loading...'`
- * @param props.spanProps - Optional, additional props to spread onto the outer `span`
+ * @param props.$span - Optional, additional props to spread onto the outer `span`
  */
-export const Loading: Component<LoadingProps> = ({ type, size, thickness, color, speed, twoColor, label, spanProps }) => {
+export const Loading: Component<LoadingProps> = ({ type, size, thickness, color, speed, twoColor, label, $span }) => {
   const style: JSX.CSSProperties = {}
 
   if (size) style['--ace-loading-size'] = size
@@ -59,14 +59,17 @@ export const Loading: Component<LoadingProps> = ({ type, size, thickness, color,
   if (speed) style['--ace-loading-speed'] = speed
   if (twoColor) style['--ace-loading-two-color'] = twoColor
 
+  const baseClass = 'ace-loading'
+  const mergedClass = $span?.class ? `${baseClass} ${$span.class}` : baseClass
+
   return <>
     <span
-      class="ace-loading"
       classList={{ 'ace-loading--two': type === 'two' }}
       role="status"
       aria-live="polite"
       style={style}
-      {...spanProps}
+      {...$span}
+      class={mergedClass}
     >
       <span class="label">{label || 'Loading...'}</span>
     </span>
@@ -90,5 +93,5 @@ export type LoadingProps = {
   /** Optional, text to announce to screen readers, `default: 'Loading...'` */
   label?: string
   /** Optional, additional props to spread onto the outer `span` */
-  spanProps?: JSX.HTMLAttributes<HTMLSpanElement>
+  $span?: JSX.HTMLAttributes<HTMLSpanElement>
 }

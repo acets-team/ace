@@ -47,9 +47,9 @@ import { createSignal, createEffect, onCleanup, createMemo, Show, Index, type JS
  * @param props.autoPlay - Optional, autoplay on load;` default = true`
  * @param props.showPlayControl - Optional, show or hide play/pause control; `default = true`
  * @param props.interval - Optional, slide interval in milliseconds; `default = 6000`
- * @param props.sectionProps - Optional, any additional props that you'd love to add to the `<section class="ace-slideshow">` 
+ * @param props.$section - Optional, any additional props that you'd love to add to the `<section class="ace-slideshow">` 
  */
-export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl = true, interval = 6000, sectionProps }: SlideshowProps) {
+export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl = true, interval = 6000, $section }: SlideshowProps) {
   const [current, setCurrent] = createSignal(0)
   const [paused, setPaused] = createSignal(false)
   const itemsMemo = createMemo(() => items() || []) // derived, read-only & cached reactive computation
@@ -61,8 +61,11 @@ export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl
     onCleanup(() => clearInterval(timer))
   })
 
+  const baseClass = 'ace-slideshow'
+  const mergedClass = $section?.class ? `${baseClass} ${$section.class}` : baseClass
+
   return <>
-    <section class="ace-slideshow" aria-roledescription="carousel" aria-label="Slideshow" {...sectionProps}>
+    <section aria-roledescription="carousel" aria-label="Slideshow" {...$section} class={mergedClass}>
       <div class="track">
         <Index each={itemsMemo()} fallback={null}>{
           (item, i) => <>
@@ -110,5 +113,5 @@ export type SlideshowProps = {
   /** Slide interval in milliseconds; default = 6000 */
   interval?: number,
   /** Any additional props that you'd love to add to the `<section class="ace-slideshow">`  */
-  sectionProps?: JSX.HTMLAttributes<HTMLElement>,
+  $section?: JSX.HTMLAttributes<HTMLElement>,
 }

@@ -23,11 +23,11 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
  * ### Light Mode:
  * @example
   ```tsx
-  <button onClick={() => showToast({ value: 'Light Info', type: 'info', toastProps: {style: toastStyleLight} })}>Light Info</button>
+  <button onClick={() => showToast({ value: 'Light Info', type: 'info', $div: {style: toastStyleLight} })}>Light Info</button>
 
-  <button onClick={() => showToast({ value: 'Light Success', type: 'success', toastProps: {style: toastStyleLight} })}>Light Success</button>
+  <button onClick={() => showToast({ value: 'Light Success', type: 'success', $div: {style: toastStyleLight} })}>Light Success</button>
 
-  <button onClick={() => showToast({ value: 'Light Danger', type: 'danger', toastProps: {style: toastStyleLight} })}>Light Danger</button>
+  <button onClick={() => showToast({ value: 'Light Danger', type: 'danger', $div: {style: toastStyleLight} })}>Light Danger</button>
   ```
  * 
  * ### Custom Styles w/ tsx, TS:
@@ -51,13 +51,13 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
   ```
  * ### Custom Styles w/ tsx, TSX:
   ```tsx
-    <button onClick={() => showToast({ value: 'Custom Lavender 💜', toastProps: {style: toastStyleLavender} })}>Custom Lavender 💜</button>
+    <button onClick={() => showToast({ value: 'Custom Lavender 💜', $div: {style: toastStyleLavender} })}>Custom Lavender 💜</button>
   ```
  * 
  * ### Custom Styles w/ css, TSX:
  * @example
   ```tsx
-  <button class="brand" onClick={() => showToast({ value: 'Emerald 🌿', toastProps: {class: 'emerald toast'} })}>Emerald 🌿</button>
+  <button class="brand" onClick={() => showToast({ value: 'Emerald 🌿', $div: {class: 'emerald toast'} })}>Emerald 🌿</button>
   ```
  * ### Custom Styles w/ css, CSS:
   ```css
@@ -75,12 +75,12 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
   }
   ```
  * 
- * @param props.type - Sets the `icon` and applies `toastProps.style`, setting an `icon` as well will overide the type icon and setting custom `toastProps.style` will merge w/ the type style
+ * @param props.type - Sets the `icon` and applies `$div.style`, setting an `icon` as well will overide the type icon and setting custom `$div.style` will merge w/ the type style
  * @param props.value - One string shows as `<span>` and multiple strings in an array shows as an unordered list
  * @param props.ms - How many ms to show the toast, defaults to `9000`
  * @param props.icon - The icon to display in the `toast`, if no icon is set we'll set the icon based on the type
  * @param props.animationSpeed - How many ms does it take for the toast to hide, defaults to 600 b/c in the css for `.toast` > `transition: var(--ace-toast-transition, all 0.6s ease);`
- * @param props.toastProps - Additonal props you'd love to place on the html div toast like `style` or `class`
+ * @param props.$div - Additonal props you'd love to place on the html div toast like `style` or `class`
  */
 let showToast!: ShowToast
 let showErrorToast!: (value: string) => void
@@ -106,19 +106,19 @@ if (!isServer) {
     document.body.appendChild(container)
     render(() => <ToastWrapper />, container)
 
-    showToast = ({ type, value, ms = 9000, icon, toastProps, animationSpeed = 600 }) => {
-      const id = toastProps?.id ?? 'toast-' + crypto.randomUUID()
+    showToast = ({ type, value, ms = 9000, icon, $div, animationSpeed = 600 }) => {
+      const id = $div?.id ?? 'toast-' + crypto.randomUUID()
       const toast: ToastItem = {
         id,
         type,
         list: Array.isArray(value) ? value : [value],
         ms,
         icon: icon ?? defaultIconForType(type),
-        toastProps: {
-          ...toastProps,
+        $div: {
+          ...$div,
           style: {
             ...defaultStyleForType(type),
-            ...(toastProps?.style && typeof toastProps.style === 'object' ? toastProps.style : {}),
+            ...($div?.style && typeof $div.style === 'object' ? $div.style : {}),
           }
         }
       }
@@ -159,14 +159,17 @@ const ToastItemComponent: Component<{ toast: ToastItem, onRemove: (id: string) =
   onMount(() => refToast?.focus())
   createEffect(() => isHiding() && refToast && smoothHide(refToast))
 
+  const baseClass = `toast ${props.toast.type ? props.toast.type : ''}`
+  const mergedClass = props.toast.$div?.class ? `${baseClass} ${props.toast.$div.class}` : baseClass
+
   return <>
     <div
       id={props.toast.id}
       role="alert"
       tabIndex={0}
-      ref={el => refToast = el!}
-      classList={{ toast: true, [props.toast.type || '']: true }}
-      {...props.toast.toastProps}>
+      ref={el => refToast = el}
+      {...props.toast.$div}
+      class={mergedClass}>
 
       <div class="icon-wrapper">
         <div class="icon">{props.toast.icon}</div>
@@ -267,7 +270,7 @@ export const closeIcon = () => <svg fill="currentColor" viewBox="0 0 20 20" aria
 
 
 export type ShowToastProps = {
-  /** Sets the `icon` and applies `toastProps.style`, setting an `icon` as well will overide the type icon and setting custom `toastProps.style` will merge w/ the type style */
+  /** Sets the `icon` and applies `$div.style`, setting an `icon` as well will overide the type icon and setting custom `$div.style` will merge w/ the type style */
   type?: 'info' | 'success' | 'danger'
   /** One string shows as `<span>` and multiple strings in an array shows as an unordered list */
   value: string | string[]
@@ -276,7 +279,7 @@ export type ShowToastProps = {
   /** The icon to display in the `toast`, if no icon is set we'll set the icon based on the type */
   icon?: JSX.Element
   /** Additonal props you'd love to place on the html div toast like `style` or `class` */
-  toastProps?: JSX.HTMLAttributes<HTMLDivElement>,
+  $div?: JSX.HTMLAttributes<HTMLDivElement>,
   /** How many ms does it take for the toast to hide, defaults to 600 b/c in the css for `.toast` > `transition: var(--ace-toast-transition, all 0.6s ease);` */
   animationSpeed?: number
 }
@@ -296,5 +299,5 @@ type ToastItem = {
   list: string[]
   ms: number
   icon?: JSX.Element
-  toastProps?: JSX.HTMLAttributes<HTMLDivElement>
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
 }

@@ -16,10 +16,10 @@ export function getSearchParams(event: FetchEvent | APIEvent): UrlSearchParams {
   const url = new URL(event.request.url)
   const params: UrlSearchParams = {}
 
-  for (const [key, value] of url.searchParams.entries()) {
-    const all = url.searchParams.getAll(key)
+  for (const key of new Set(url.searchParams.keys())) {
+    const values = url.searchParams.getAll(key)
     // if multiple values, store as array, otherwise as string
-    params[key] = all.length > 1 ? all : value
+    params[key] = values.length > 1 ? values : values[0]
   }
 
   return params

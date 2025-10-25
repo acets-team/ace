@@ -19,7 +19,7 @@ import { onMount, createEffect, For, type JSX } from 'solid-js'
     ```tsx
     <Carousel
       duration={3}
-      sectionProps={{ style: {width: '21rem'} }}
+      $section={{ style: {width: '21rem'} }}
       items={() => [{title: 'relax 🏖️'}, {title: 'bliss 🌤️'}, {title: 'peace 🧘‍♀️'}]}
       render={(goal) => <div style="width: 9rem; text-align: center;">{goal.title}</div>} />
     ```
@@ -36,9 +36,9 @@ import { onMount, createEffect, For, type JSX } from 'solid-js'
  * @param props.render Function that gets the `item` and returns the JSX to render for each item
  * @param props.duplicateCount Optional, default is `2`, minimum is `2`, We duplicate items to ensure that when we get to the end of the carousel there are still items to show
  * @param props.duration Optional, default is `9`, how many seconds it will take to get to the end of the carousel
- * @param props.sectionProps Optional, dom props to place onto wrapper `<section>`
+ * @param props.$section Optional, dom props to place onto wrapper `<section>`
  */
-export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, sectionProps }: CarouselProps<T>) {
+export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $section }: CarouselProps<T>) {
   if (duplicateCount < 2) duplicateCount = 2
 
   let rafId = 0
@@ -135,13 +135,16 @@ export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, s
     }
   }
 
+  const baseClass = 'ace-carousel'
+  const mergedClass = $section?.class ? `${baseClass} ${$section.class}` : baseClass
+
   return <>
     <section
-      class="ace-carousel"
       role="region"
       aria-roledescription="carousel"
       aria-label="Image carousel"
-      {...sectionProps}
+      {...$section}
+      class={mergedClass}
     >
       <div
         class="loops"
@@ -179,5 +182,5 @@ export type CarouselProps<T> = {
   /** Optional, default is `10`, how many seconds it will take to get to the end of the carousel */
   duration?: number
   /** Optional, dom props to place onto wrapper `<section>` */
-  sectionProps?: JSX.HTMLAttributes<HTMLElement>
+  $section?: JSX.HTMLAttributes<HTMLElement>
 }

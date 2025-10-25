@@ -42,10 +42,19 @@ const id2Signal = new Map<string, ReturnType<typeof createSignal<boolean>>>()
     ```
  * @param props.id - How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">`
  * @param props.hideOnBackdropClick - Optional, defaults to `true`, if you'd love a click on the modal to hide it
- * @param props.divProps - Optional, html dom div props to the wrapper
+ * @param props.$div - Optional, html dom div props to the wrapper
  * @param props.children - The tsx content to place into the modal
  */
-export const Modal = feComponent(({id, children, hideOnBackdropClick = true, divProps}: ModalProps) => {
+export const Modal = feComponent(({ id, children, hideOnBackdropClick = true, $div }: {
+  /** How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">` */
+  id: string
+  /** The tsx content to place into the modal */
+  children: JSX.Element
+  /** Optional, defaults to `true`, if you'd love a click on the modal to hide it */
+  hideOnBackdropClick?: boolean
+  /** Optional, html dom div props to the wrapper */
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
+}) => {
   let modalRef: undefined | HTMLDivElement
 
   const [isOpen] = getVisibilitySignal(id)
@@ -58,10 +67,13 @@ export const Modal = feComponent(({id, children, hideOnBackdropClick = true, div
     if (hideOnBackdropClick) hideModal(id)
   }
 
+  const baseClass = 'ace-modal'
+  const mergedClass = $div?.class ? `${baseClass} ${$div.class}` : baseClass
+
   return <>
     <Show when={isOpen()}>
       <Portal>
-        <div id={`ace-modal--` + id} class="ace-modal" onClick={close} aria-hidden={isOpen() ? 'false' : 'true'} {...divProps}>
+        <div id={`ace-modal--` + id} onClick={close} aria-hidden={isOpen() ? 'false' : 'true'} {...$div} class={mergedClass}>
           <div class="content" onClick={close}>
             <div class="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby={`${id}-label`} tabIndex={-1}>{children}</div>
           </div>
@@ -133,13 +145,4 @@ function getVisibilitySignal(id: string): Signal<boolean> {
 }
 
 
-export type ModalProps = {
-  /** How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">` */
-  id: string
-  /** The tsx content to place into the modal */
-  children: JSX.Element
-  /** Optional, defaults to `true`, if you'd love a click on the modal to hide it */
-  hideOnBackdropClick?: boolean
-  /** Optional, html dom div props to the wrapper */
-  divProps?: JSX.HTMLAttributes<HTMLDivElement>
-}
+export type ModalProps = Parameters<typeof Modal>[0]

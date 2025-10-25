@@ -69,7 +69,7 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
  * @param props.scrollMargin - If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
  * @param props.$div - Set if you'd love to add your own props to the tabs html div element like class, style or id
  */
-export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, $div: $div }: TabsProps<Routes>) {
+export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, $div }: TabsProps<Routes>) {
   const location = useLocation()
 
   const pathToTabIndex = new Map<Routes, number>()
@@ -250,9 +250,12 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
   const accessibilityProps: JSX.HTMLAttributes<HTMLDivElement> = mode === 'content' ? { role: 'tablist', 'aria-orientation': 'horizontal' } : {}
 
+  const baseClass = `ace-tabs ${variant}`
+  const mergedClass = $div?.class ? `${baseClass} ${$div.class}` : baseClass
+
   return <>
-    <div class={`ace-tabs ${variant}`}>
-      <div class="tabs" ref={divTabs} {...accessibilityProps} {...$div}>
+    <div {...$div} class={mergedClass}>
+      <div class="tabs" ref={divTabs} {...accessibilityProps}>
         <For each={tabs()}>
           {(tab, i) => {
             const isActive = () => i() === active()
