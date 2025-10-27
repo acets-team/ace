@@ -1,4 +1,3 @@
-import { onMount } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import type { API } from './fundamentals/api'
 import { parseResponse } from './parseResponse'
@@ -41,7 +40,7 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
           const result = await response()
 
           if (options?.queryType === 'stream') { // the other query types do their callbacks on the FE so this is not necessary for them, stores only run on fe and stores are often populated in callbacks, so it's important to call the callbacks on the FE too
-            onMount(async () => {
+            if (!isServer) {
               if (result?.og) {
                 try {
                   await _onResponse(result.og)
@@ -53,7 +52,7 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
                   if (bitKey) scope.bits.set(bitKey, false)
                 }
               }
-            })
+            }
           }
         } catch (err) {
           await _onError(err)

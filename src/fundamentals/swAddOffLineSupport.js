@@ -1,6 +1,6 @@
-/// <reference lib="webworker" />
-
 // @ts-check
+
+/// <reference lib="webworker" />
 
 /**
  * Adds offline caching and fetch-handling logic to a Service Worker.
@@ -9,7 +9,7 @@
  * @param {string[]} [options.installUrls] - Optional, defaults to an empty string, cache is lazy, meaning we cache what we see, good for performance but that means if offline, someone will only have in cache what they have seen, so if they never went to page x it's not in cache. Use this array to say on install of the service worker (in a seperate thread so not blocking the dom) cache these items
  * @param {Response} [options.page404Response] - Optional, defaults to `defaultPage404Response`, when offline & don't have the requested page in cache provide this
  */
-export function addOfflineSupport({ cacheName, installUrls = [], page404Response = defaultPage404Response }) {
+export function swAddOffLineSupport({ cacheName, installUrls = [], page404Response = defaultPage404Response }) {
   /** @type {ServiceWorkerGlobalScope} */
   const sw = /** @type {any} */ (self)
 
@@ -98,14 +98,7 @@ export function addOfflineSupport({ cacheName, installUrls = [], page404Response
         return cachedResponse
       }
 
-      return new Response( // generic offline HTML
-        '<!DOCTYPE html><html><head><title>Offline</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family: sans-serif text-align: center padding: 20px"><h1>You are offline</h1><p>This page has not been saved for offline use. Please check your connection and try again.</p></body></html>',
-        {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'text/html' }
-        }
-      )
+      return page404Response
     }
   }
 
@@ -147,6 +140,7 @@ export function addOfflineSupport({ cacheName, installUrls = [], page404Response
 
   /**
    * - Automatically caches resources on install
+   * - Puting crucial pages you'd love to have offline support here is suggested!
    * @param {ExtendableEvent} event The install event.
    */
   const onInstall = (event) => {

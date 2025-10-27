@@ -6,6 +6,7 @@
 1. [Save state to indexdb](#save-state-to-indexdb)
 1. [Create API Route](#create-api-route)
 1. [Create Middleware](#create-api-route)
+1. [🙌 VS Code Extension](#vs-code-extension)
 1. [Path and Search Params](#path-and-search-params)
 1. [Valibot Helpers](#valibot-helpers)
 1. [Create a Layout](#create-a-layout)
@@ -15,6 +16,7 @@
 1. [Typesafe Redirects](#typesafe-redirects)
 1. [Add Offline Support](#add-offline-support)
 1. [Network Status Hook](#network-status-hook)
+1. [💻 Create Desktop Application](#create-desktop-application)
 1. [Modal Demo](#modal-demo)
 1. [Form Demo](#form-demo)
 1. [Magic Link Demo](#magic-link-demo)
@@ -35,7 +37,7 @@
 1. [Deploy on Cloudflare](#deploy-on-cloudflare)
 1. [Add a custom domain](#add-a-custom-domain)
 1. [Resolve www DNS](#resolve-www-dns)
-1. [VS Code Enhancements](#vs-code-enhancements)
+1. [VS Code Helpful Info](#vs-code-helpful-info)
 1. [Error Dictionary](#error-dictionary)
 
 
@@ -194,10 +196,20 @@
 
 
 
+## VS Code Extension
+- Provides links to `Ace API's` right **above API Function calls!** 🙌
+    ![Ace for Vs Code Extension](https://i.imgur.com/IKFCa3T.png)
+- In **VS Code** or any fork like **VsCodium**:
+    - Extensions Search: `ace-vs-code`
+    - The name of the package is `Ace for VS Code` and the author is `acets-team`
+- & please feel free click here to see [additional vs code helpful info](#vs-code-helpful-info)!
+
+
+
 ## Path and Search Params
 
 #### 🚨 Important
-- @ `new Route()` & `new API()`, `.pathParams()` & `.searchParams()` work the same way!
+- `.pathParams()` & `.searchParams()` @ `new Route()` & `new API()` work the same way!
 - IF params are valid THEN `scope.pathParams` and/or `scope.searchParams` will be set w/ their typesafe parsed values!
 - And when working w/ `new API()` you may also pass a parser to `.body()` which if valid will be available @ `scope.body`
 
@@ -212,12 +224,25 @@
     ```
 1. Required path params:
     ```ts
-    import { object } from 'valibot'
-    import { vParse } from '@ace/vParse'
-    import { vString } from '@ace/vString'
-
     export default new Route('/magic-link/:token')
       .pathParams(vParse(object({ token: vString('Please provide a token') })))
+    ```
+1. Optional search params:
+    ```ts
+    export const GET = new API('/api/test', 'apiTest')
+      .searchParams(vParse(object({ amount: optional(vNum()) })))
+      .resolve(async (scope) => {
+        return scope.success(scope.searchParams)
+      })
+    ```
+1. Required search & body params:
+    ```ts
+    export const POST = new API('/api/test', 'apiTest')
+      .body(vParse(object({ when: vDate() })))
+      .searchParams(vParse(object({ allGood: vBool() })))
+      .resolve(async ({ success, body, searchParams }) => {
+        return success({ body, searchParams })
+      })
     ```
 1. [All valibot helpers that can be used w/in `vParse(object(())`](#valibot-helpers)
 
@@ -448,46 +473,63 @@ export default new Route404()
 
 
 ## Add Offline Support
-- Add `<ServiceWorker />` component to your `RootLayout`
-  ```ts
-  import { Nav } from '@src/Nav/Nav'
-  import { Layout } from '@ace/layout'
-  import { ServiceWorker } from '@ace/serviceWorker'
+1. Create `/public/sw.js`
+    ```js
+    // @ts-check
 
-  export default new Layout()
-    .component((scope) => {
-      return <>
-        <Nav />
-        {scope.children}
-        <ServiceWorker />
-      </>
-    })
-  ```
-- Create `/public/sw.js`
-  ```js
-  // @ts-check
+    import { swAddOffLineSupport } from './.ace/swAddOffLineSupport.js'
 
-  import { addOfflineSupport } from '../.ace/addOfflineSupport.js'
+    const packageDotJsonVersion = ''
 
-  const packageDotJsonVersion = ''
-
-  addOfflineSupport({ cacheName: `offline-cache-v-${packageDotJsonVersion}` })
-  ```
-- 🚨 If you want your app version (in package.json) to align w/ your cache version **(recommended)** then:
+    swAddOffLineSupport({ cacheName: `offline-cache-v-${packageDotJsonVersion}` })
+    ```
+1. 🚨 To align our app version (in package.json) w/ your cache version then:
+    1. Ensure `package.json` [version is defined](https://docs.npmjs.com/cli/commands/npm-version)
     1. Ensure `/public/sw.js` has `const packageDotJsonVersion = ''` 
-    1. Run in bash: `ace swVersion` to place your `package.json` version into your sw.js file :)
-    1. Update package.json scripts to run `ace swVersion` automatically
+    1. Run in bash: `ace sw` to place your `package.json` version into your sw.js file 🥳
+    1. Update package.json scripts to run `ace sw` automatically
         ```json
         {
           "scripts": {
-            "dev": "ace build local && ace swVersion && vinxi dev",
-            "build": "ace build prod && ace swVersion && vinxi build",
+            "dev": "ace build local && ace sw && vinxi dev",
+            "build": "ace build prod && ace sw && vinxi build",
           },
         }
         ```
+1. Add `/.ace/sw.styles.css` AND `/.ace/swRegister.js` to  `src/entry-server.tsx`
+    ```js
+    // @refresh reload
+    import { createHandler, StartServer } from '@solidjs/start/server'
+
+
+    export default createHandler(() => (
+      <StartServer
+        document={({ assets, children, scripts }) => (
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <link rel="icon" href="/favicon.ico" />
+              <link href="/.ace/sw.styles.css" rel="stylesheet" />
+              {assets}
+            </head>
+
+            <body>
+              <div id="app">{children}</div>
+              <script src="/.ace/swRegister.js"></script>
+              {scripts}
+            </body>
+          </html>
+        )}
+      />
+    ))
+    ```
+
+
 - How it works:
     - On every GET request we first go to the server, and if that response is ok then the service worker will store the response in cache
     - When offline we'll still try to fetch, and when it fails we'll check cache, and if cache has a response we'll give it
+    - The styling is b/c service workers register when you go to a page that has a service worker, but it won't install and activate till the first refresh after it's been registered, so we do this immediately after registration, and to not let the user know this is happening we have the app be 0 opacity till after he refresh. The refresh only happens once in the lifetime of the customer on the app w/ this cache version (app version).
 
 
 
@@ -508,6 +550,18 @@ export default new Route404()
         </>
       })
     ```
+
+
+
+## Create Desktop Application
+1. Please follow the [Add Offline Support](#add-offline-support) direction to ensure you register the service worker correctly!
+    - Offline support is a lovely app feature but if you don't want it, just don't call `swAddOffLineSupport()` @ `/public/sw.js`
+1. For free in [Figma](https://www.figma.com/) create a 512x512 icon for your app
+1. For free @ [Progressier](https://progressier.com/pwa-manifest-generator) create a `manifest.json` and icon suite
+1. Add the generated `manifest.json` and `icons` to your `/public` folder
+1. @ `src/entry-server.tsx` > `<head>` add `<link rel="manifest" href="/manifest.json" />`
+1. Now customers can install your app right from the Browser URL bar!
+    ![Create Desktop Application](https://i.imgur.com/K0ZEiQe.png)
 
 
 
@@ -1229,6 +1283,9 @@ export function SignIn() {
     Please ensure localhost:3000 is clean!
     So no left over local storage, index db or service workers!
 #### When you are switching from one project to another please follow these steps:
+1. @ `Chrome` > `Inspect` > `Application` delete all:
+    - `Cookies` 
+    - `Cache Storage`
 1. Fully wipe fe cache, paste in browser console:
     ```ts
     (async () => {
@@ -1249,13 +1306,11 @@ export function SignIn() {
         // Clear local & session storage
         localStorage.clear();
         sessionStorage.clear();
+    })()
     ```
-1. Delete all cookies @ `Chrome` > `Inspect` > `Application`
+1. IF you do not see `Promise {<pending>}` in the console after pasting the above in, close console, reopen console & try again please
 1. 🚨 Close ALL `localhost:3000` tabs
-1. IF you have `sw` set to true in your ace config:
-    1. Open a new tab and visit `chrome://serviceworker-internals/`
-    1. On this chrome page, do a browser find for `:3000` to ensure `localhost:3000` has no service workers attached, if you see it here click the Stop/Unregister button
-
+1. `Force Quit` browser then open it back up (& can reopen previous tabs)
 
 
 ## Add Tailwind
@@ -1722,7 +1777,7 @@ export function SignIn() {
 
 
 
-## VS Code Enhancements
+## VS Code Helpful Info
 1. How to show intellisense dropdown in VS Code?
     - `Control` + `Space`
     

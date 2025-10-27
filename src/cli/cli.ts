@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { swVersion } from './swVersion.js' // .js extension required b/c this is cli / dist / node, land
+import { sw } from './sw.js' // .js extension required b/c this is cli / dist / node, land
 import { cliBuild } from './build/build.js'
 import { base64UrlEncode } from '../fundamentals/base64UrlEncode.js'
 
@@ -12,8 +12,8 @@ try {
     case 'build':
       await cliBuild(cwd)
       break
-    case 'swVersion':
-      swVersion(cwd)
+    case 'sw':
+      await sw(cwd)
       break
     case 'password':
       const randomBytes = new Uint8Array(64)
