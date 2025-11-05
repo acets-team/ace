@@ -1,15 +1,15 @@
+import { config } from 'ace.config'
 import { createSignal, type Signal } from 'solid-js'
 import { defaultMessageName } from './fundamentals/vars'
 import type { AceErrorProps } from './fundamentals/aceError'
 
 
 /**
- * - String Array Signal Management! 👷‍♀️
- *     - In `valibot` / `zod`, messages are `Record<string, string[]>`
- *     - On the `BE` messages are: `Record<string, string[]>`
- *     - On the `FE` messages are: `Map<string, Signal<string[]>>`
+ * - Messages are grouped by name: `Map<string, Signal<string[]>>`
+ * - Messages are read from `response.error.messages` & typically have `valibot` / `zod` errors
+ * - If `response.error.message` is defined, we'll put that value @ `mesages[defaultMessageName] = [response.error.message]`
  */
-export class FEMessages {
+export class ScopeComponentMessages {
   #messages: Map<string, Signal<string[]>> = new Map()
 
 
@@ -18,7 +18,7 @@ export class FEMessages {
    * @param name - Messages are grouped by name
    * @param clearOnSubmit - If on form submit should this signal reset, default to true
    */
-  set({ name = defaultMessageName, value }: { name?: string, value: string | string[] }): Signal<string[]> {
+  set({ name = config.defaultMessageName || defaultMessageName, value }: { name?: string, value: string | string[] }): Signal<string[]> {
     let signal$ = this.#messages.get(name)
     const v = Array.isArray(value) ? value : [value]
 
@@ -37,7 +37,7 @@ export class FEMessages {
    * If the signal has not been gotten yet, set it, this way no matter if the set or get happens first the signal will render
    * @param name - Messages are grouped by name
    */
-  get(name: string = defaultMessageName): Signal<string[]> {
+  get(name: string = config.defaultMessageName || defaultMessageName): Signal<string[]> {
     const current$ = this.#messages.get(name)
     return (current$) ? current$ : this.clear(name)
   }
@@ -47,7 +47,7 @@ export class FEMessages {
    * @param value - If `value` is an array => concat `value` w/ `#messages`, if `value` is a `string` => push `value` onto `#messages`
    * @param name - Messages are grouped by name
    */
-  push({ name = defaultMessageName, value }: { name?: string, value: string | string[] }): void {
+  push({ name = config.defaultMessageName || defaultMessageName, value }: { name?: string, value: string | string[] }): void {
     const [current, setCurent] = this.get(name)
 
     if (Array.isArray(value)) setCurent(current().concat(value))

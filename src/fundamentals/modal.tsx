@@ -42,7 +42,7 @@ const id2Signal = new Map<string, ReturnType<typeof createSignal<boolean>>>()
     ```
  * @param props.id - How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">`
  * @param props.hideOnBackdropClick - Optional, defaults to `true`, if you'd love a click on the modal to hide it
- * @param props.$div - Optional, html dom div props to the wrapper
+ * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  * @param props.children - The tsx content to place into the modal
  */
 export const Modal = feComponent(({ id, children, hideOnBackdropClick = true, $div }: {

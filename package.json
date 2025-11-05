@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "author": "https://github.com/acets-team",
   "homepage": "https://github.com/acets-team/ace#readme",
-  "description": "👋 Ace is the typesafetiest framework!",
+  "description": "Our Mission: 🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, typesafe and beautifully documented library! 🙏",
   "bin": {
     "ace": "dist/src/cli/cli.js"
   },
@@ -40,6 +40,7 @@
     "solid-js": "^1.9.9",
     "typescript": "^5.9.3",
     "valibot": "^1.1.0",
+    "wrangler": "^4.45.1",
     "zod": "^4.1.12"
   },
   "dependencies": {

@@ -9,7 +9,7 @@ try {
   const distDir = join(cwd, 'dist')
 
   await rm(distDir, { recursive: true, force: true })
-  await mkdir(distDir, { recursive: true })
+  await mkdir(join(distDir, 'fundamentals/hljs'), { recursive: true })
 } catch (error) {
   console.error('❌ fresh:', error)
 }

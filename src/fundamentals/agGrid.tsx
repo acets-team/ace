@@ -44,7 +44,7 @@ import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
   />
 
 
-  const TableCellAmount = agGridComponent<Transaction[]>(params => {
+  const TableCellAmount = agGridComponent<Transaction>(params => {
     const amount = params.data?.amount ?? 0
 
     return <>
@@ -55,42 +55,46 @@ import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
   })
   ```
  * @param props.gridOptions - Passed to `agGrid.createGrid(grid, gridOptions)`
- * @param props.$div - Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div
+ * @param props.$div - Optional, default is `{style: defaultStyle}`, additional styles will be merged, & props.$div = additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  */
 export const AgGrid = feComponent(Component)
 
 
-function Component<T_Data>({ setGridApi, gridOptions, $div = { style: defaultStyle }, register }: AgGridProps<T_Data>) {
-  if (register) register()
-
-  let gridDiv: undefined | HTMLDivElement
-  let gridApi: GridApi<T_Data> | undefined
-
-  createEffect(() => {
-    const opts = gridOptions()
-
-    if (!opts || !gridDiv) return
-    
-    if (gridApi) gridApi.updateGridOptions(opts) // grid already exists — update it
-    else { // frirst time — create the grid
-      gridApi = createGrid(gridDiv, opts)
-      if (setGridApi) setGridApi(gridApi)
-    }
-  })
-
-  return <div ref={gridDiv} {...$div}></div>
-}
-
-
-export const defaultStyle: JSX.CSSProperties = { height: '45rem', width: '100%', 'margin-bottom': '2.1rem' }
-
-
-export type AgGridProps<T_Data extends any> = {
+function Component<T_Data>(props: {
   /** Passed to `agGrid.createGrid(grid, gridOptions)` */
   gridOptions: Accessor<GridOptions<T_Data>>
   /** Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div */
   $div?: JSX.HTMLAttributes<HTMLDivElement>
   /** Provide setter if you'd like to work w/ gridApi */
   setGridApi?: Setter<GridApi<any> | undefined>
+  /** By passing the register function to the component we can ensure the grid is registered before being created */
   register?: AgGridRegisterFn
+}) {
+  if (props.register) props.register()
+
+  let gridDiv: undefined | HTMLDivElement
+  let gridApi: GridApi<T_Data> | undefined
+
+  const baseStyle = defaultStyle
+  const mergedStyle = typeof props.$div?.style === 'object' ? { ...baseStyle, ...props.$div.style } : baseStyle
+
+  createEffect(() => {
+    const opts = props.gridOptions()
+
+    if (!opts || !gridDiv) return
+    
+    if (gridApi) gridApi.updateGridOptions(opts) // grid already exists — update it
+    else { // frirst time — create the grid
+      gridApi = createGrid(gridDiv, opts)
+      if (props.setGridApi) props.setGridApi(gridApi)
+    }
+  })
+
+  return <div ref={gridDiv} {...props.$div} style={mergedStyle}></div>
 }
+
+
+export const defaultStyle: JSX.CSSProperties = { height: '45rem', width: '100%', 'margin-bottom': '2.1rem' }
+
+
+export type AgGridProps<T_Data extends any> = Parameters<typeof Component<T_Data>>[0]

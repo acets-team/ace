@@ -8,7 +8,7 @@
 
 import { getEnv } from '../getEnv'
 import { base64UrlDecodeToBinary, base64UrlDecodeToString } from './base64UrlDecode'
-import type { FullJWTPayload, JWTValidateResponse, JWTValidateFailure, JWTValidateSuccess, BaseJWTPayload } from './types'
+import type { FullJWTPayload, JWTValidateResponse, JWTValidateFailure, JWTValidateSuccess, BaseJWTPayload } from './vanilla'
 
 
 /**

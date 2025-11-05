@@ -6,7 +6,7 @@
 
 
 
-import type { DateLike } from './types'
+import type { DateLike } from './vanilla'
 import { dateLike2Date } from './dateLike2Date'
 
 

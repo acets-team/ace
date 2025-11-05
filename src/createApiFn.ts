@@ -17,6 +17,8 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
 
     let bitKey: string | undefined
 
+    let feBound = false
+
     try {
       if (options?.onLoadChange) options.onLoadChange(true)
 
@@ -35,32 +37,8 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
       const queryKey = createAceKey(options?.queryKey ?? apiName)
       const response = query(callApiAndCallbacks, queryKey)
 
-      const doAsync = async () => {
-        try {
-          const result = await response()
-
-          if (options?.queryType === 'stream') { // the other query types do their callbacks on the FE so this is not necessary for them, stores only run on fe and stores are often populated in callbacks, so it's important to call the callbacks on the FE too
-            if (!isServer) {
-              if (result?.og) {
-                try {
-                  await _onResponse(result.og)
-                } catch (err) {
-                  await _onError(err)
-                } finally {
-                  if (options?.onLoadChange) options.onLoadChange(false)
-
-                  if (bitKey) scope.bits.set(bitKey, false)
-                }
-              }
-            }
-          }
-        } catch (err) {
-          await _onError(err)
-        }
-      }
-
-      if (options?.queryType === queryType.keys.stream) createAsync(doAsync)
-      else doAsync()
+      if (options?.queryType === queryType.keys.stream) createAsync(() => onCreateAsync(response))
+      else onCreateAsync(response)
     }
 
 
@@ -73,11 +51,13 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
       } catch (err) {
         result = await _onError(err)
       } finally {
+        if (!isServer) feBound = true
+
         if (options?.onLoadChange) options.onLoadChange(false)
 
         if (bitKey) scope.bits.set(bitKey, false)
 
-        if (options?.queryType === 'stream' && result?.og instanceof Response && isServer) {
+        if (result?.og instanceof Response && isServer) {
           const goUrl = result.og.headers.get(goHeaderName)
 
           if (goUrl) {
@@ -87,6 +67,29 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
       }
 
       return result
+    }
+
+
+    async function onCreateAsync (response: () => Promise<any>) {
+      try {
+        if (!feBound && !isServer) {
+          const result = await response()
+
+          if (!feBound && result?.og) { // recheck feBound b/c it could have been updated @ response()
+            try {
+              await _onResponse(result.og)
+            } catch (err) {
+              await _onError(err)
+            } finally {
+              if (options?.onLoadChange) options.onLoadChange(false)
+
+              if (bitKey) scope.bits.set(bitKey, false)
+            }
+          }
+        }
+      } catch (err) {
+        await _onError(err)
+      }
     }
 
 
@@ -102,21 +105,28 @@ export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName:
 
 
 
+    /**
+     * - IF `onResponse` provided THEN `onResponse` will be called w/ `Response`
+     * - IF `onError` provided AND `response.error` truthy THEN `onError` will be called w/ `response.error`
+     * - IF `onSuccess` provided AND `response.error` is falsy THEN `onSuccess` will be called w/ `response.data`
+     */
     async function _onResponse(response?: AceError | Response) {
       let result: Result<T_API> = { og: response, parsed: null }
 
       if (options?.onResponse) options.onResponse(result.og) // don't parse response, just give response
 
-      if (!options?.onResponse) {
-        const parsed = await parseResponse<Api2Response<T_API>>(result.og)
+      if (options?.onError || options?.onSuccess) {
+        result.parsed = await parseResponse<Api2Response<T_API>>(result.og)
 
-        if (parsed && typeof parsed === 'object') {
-          if (parsed.error) throw parsed.error
-          if (parsed.data) options?.onData?.(parsed.data as any)
-          result.parsed = parsed
+        if (result.parsed && typeof result.parsed === 'object' && result.parsed.error) throw result.parsed.error
+
+        if (options.onSuccess) {
+          options.onSuccess(
+            (result.parsed && typeof result.parsed === 'object' && result.parsed.data)
+              ? result.parsed.data
+              : undefined as any
+          )
         }
-
-        options?.onGood?.(result)
       }
 
       return result

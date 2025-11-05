@@ -67,7 +67,7 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
  * @param props.mode - `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected.
  * @param props.variant - `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons
  * @param props.scrollMargin - If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
- * @param props.$div - Set if you'd love to add your own props to the tabs html div element like class, style or id
+ * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  */
 export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, $div }: TabsProps<Routes>) {
   const location = useLocation()

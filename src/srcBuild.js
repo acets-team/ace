@@ -7,27 +7,36 @@ import { fundamentals } from './fundamentals.js'
 
 try {
   const cwd = process.cwd()
-  const distDir = join(cwd, 'dist')
+  const dirDist = join(cwd, 'dist')
+  const dirFundamentals = join(dirDist, 'fundamentals')
 
-  const promises = [
-    copyFile(join(cwd, 'src/fundamentals/createApp.tsx'), join(distDir, `createApp.txt`)),
-    copyFile(join(cwd, 'src/index.ts'), join(distDir, `index.d.ts`)), // ts does not show errors in .d.ts files so we start w/o it to get intellisense & then use it to inform ts, only declarations in here
-    copyFile(join(cwd, 'src/fundamentals/types.ts'), join(distDir, `types.d.txt`)),
-  ]
+  /** @type {Promise<void>[]} */
+  const promises = []
 
-  fundamentals.forEach((f, name) => {
+  promises.push(copyFile(join(cwd, 'src/index.ts'), join(dirDist, `index.d.ts`)))
+  promises.push(copyFile(join(cwd, 'src/fundamentals/env.ts'), join(dirFundamentals, `env.txt`)))
+  promises.push(copyFile(join(cwd, 'src/fundamentals/types.ts'), join(dirFundamentals, `types.d.txt`)))
+  promises.push(copyFile(join(cwd, 'src/fundamentals/vanilla.ts'), join(dirFundamentals, `vanilla.d.txt`)))
+  promises.push(copyFile(join(cwd, 'src/fundamentals/createApp.tsx'), join(dirFundamentals, `createApp.txt`)))
+
+  for (const [name, f] of fundamentals) {
     switch(f.type) {
-      case 'helper':
-        promises.push(copyFile(join(cwd, 'src', `${name}.${f.ext}`), join(distDir, `${name}.txt`)))
+      case 'helper': {
+        const src = join(cwd, 'src', `${name}.${f.ext}`)
+        const dest = join(dirDist, `${name}.txt`)
+        promises.push(copyFile(src, dest))
         break
-      case 'copy':
-        promises.push(copyFile(join(cwd, 'src/fundamentals', `${name}.${f.ext}`), join(distDir, `${name}.txt`)))
+      }
+      case 'copy': {
+        const src = join(cwd, `src/fundamentals/${name}.${f.ext}`)
+        const dest = join(join(dirDist, 'fundamentals'), `${name}.txt`)
+        promises.push(copyFile(src, dest))
         break
+      }
     }
-  })
+  }
 
   await Promise.all(promises)
-
   console.log('✅ Built Ace!')
 } catch (error) {
   console.error('❌ srcBuild:', error)

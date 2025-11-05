@@ -7,7 +7,16 @@ export class SmoothFor {
   }
 
 
-  constructor(props: { parent: string, children: string }) {
+  /**
+   * @param props.parent - Wrapper DOM element, value is passed to `document.querySelector()`
+   * @param props.children - DOM elements that we want to move smoothly, value is passed to `document.querySelector()`
+   */
+  constructor(props: {
+    /** Wrapper DOM element, value is passed to `document.querySelector()` */
+    parent: string,
+    /** DOM elements that we want to move smoothly, value is passed to `document.querySelector()` */
+    children: string
+  }) {
     this.querySelectorAll = {
       parent: props.parent,
       children: props.children,

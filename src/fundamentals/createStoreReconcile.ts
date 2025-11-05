@@ -12,10 +12,7 @@ export function createStoreReconcile<T_Atoms extends Atoms>(setStore: SetStoreFu
     const optsMaybe = args.at(-1)
     const valueMaybe = args.at(-2)
 
-    // if there are 2 args → (key, value)
-    // if 3 → (key, value, opts)
-    // if >3 → (path..., value, opts)
-    const hasOpts = typeof optsMaybe === 'object' && !Array.isArray(optsMaybe)
+    const hasOpts = typeof optsMaybe === 'object' && !Array.isArray(optsMaybe) && ('merge' in optsMaybe || 'key' in optsMaybe)
     const value = hasOpts ? valueMaybe : optsMaybe
     const opts = hasOpts ? optsMaybe : undefined
 
@@ -26,10 +23,15 @@ export function createStoreReconcile<T_Atoms extends Atoms>(setStore: SetStoreFu
 
     const topKey = path[0] as keyof T_Atoms
 
+    const finalOpts = {
+      merge: opts?.merge ?? true,
+      key: opts?.key ?? 'id',
+    }
+
     // cast to any to avoid Solid’s massive overload resolution
     ;(setStore as any).apply(
       null,
-      [...path, solidReconcile(value, opts)]
+      [...path, solidReconcile(value, finalOpts)]
     )
 
     save(topKey)

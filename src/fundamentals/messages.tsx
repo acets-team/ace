@@ -5,6 +5,7 @@
  */
 
 
+import { config } from 'ace.config'
 import { scope } from './scopeComponent'
 import { feComponent } from './feComponent'
 import { defaultMessageName } from './vars'
@@ -13,13 +14,14 @@ import { For, Show, type JSX } from 'solid-js'
 
 
 /**
- * - Messages are: `string[]`
- * - Messages are grouped by name: `Record<string, Signal<string[]>>`
  * - This component will show the messages for one group
+ * - Messages are grouped by name: `Map<string, Signal<string[]>>`
+ * - Messages are read from `response.error.messages` & typically have `valibot` / `zod` errors
+ * - If `response.error.message` is defined, we'll put that value @ `mesages[defaultMessageName] = [response.error.message]`
  * @param options.name -  Messages are grouped by name
  * @param options.$div -  Props to put on the wrapper div that already has the class `ace-messages`
  */
-export const Messages = feComponent(({ name = defaultMessageName, $div }: {
+export const Messages = feComponent(({ name = config.defaultMessageName || defaultMessageName, $div }: {
   /** Messages are grouped by name */
   name?: string
   /** Props to put on the wrapper div that already has the class `ace-messages` */

@@ -1,6 +1,7 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import { queryUpdate } from '@ace/queryUpdate'
+ *     - Plugin: solid
+ *     - import { reQuery } from '@ace/reQuery'
  */
 
 
@@ -14,7 +15,7 @@ import { createAceKey } from './createAceKey'
  * - Helpful when an api was called w/ Solid's query() and you'd love to call it again
  * - Will call query() again to each of the keys requested simultaneously
  */
-export async function queryAgain(props: {key?: AceKey, keys?: AceKey[], bitKey?: string}) {
+export async function reQuery(props: {key?: AceKey, keys?: AceKey[], bitKey?: string}) {
   if (props.bitKey) scope.bits.set(props.bitKey, true)
   
   const keys = props.keys ? props.keys : []

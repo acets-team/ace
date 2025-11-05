@@ -80,7 +80,7 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
  * @param props.ms - How many ms to show the toast, defaults to `9000`
  * @param props.icon - The icon to display in the `toast`, if no icon is set we'll set the icon based on the type
  * @param props.animationSpeed - How many ms does it take for the toast to hide, defaults to 600 b/c in the css for `.toast` > `transition: var(--ace-toast-transition, all 0.6s ease);`
- * @param props.$div - Additonal props you'd love to place on the html div toast like `style` or `class`
+ * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  */
 let showToast!: ShowToast
 let showErrorToast!: (value: string) => void

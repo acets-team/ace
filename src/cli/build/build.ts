@@ -28,11 +28,14 @@ export class Build {
   env: string
   space = '\n'
   fsApp?: string
-  dirRead: string
+  fsEnv?: string
   found404 = false
   config: AceConfig
   dirWriteRoot: string
   fsSolidTypes?: string
+  /** `./dist/src/cli/build/build.js` */
+  dirDistBuildJs: string
+  fsVanillaTypes?: string
   dirWriteFundamentals: string
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
@@ -92,7 +95,7 @@ export class Build {
     this.config = this.whiteList.populate(config)
 
     this.dirWriteRoot = join(cwd, '.ace')
-    this.dirRead = dirname(fileURLToPath(import.meta.url))
+    this.dirDistBuildJs = dirname(fileURLToPath(import.meta.url)) // import.meta.url provides the full URL to the current module file, this code will run @ ./dist/src/cli/build/build.js
     this.dirWriteFundamentals = join(cwd, '.ace/fundamentals')
 
     if (this.commandOptions.has('--verbose')) console.log(`✅ Read: ${configPath}`)

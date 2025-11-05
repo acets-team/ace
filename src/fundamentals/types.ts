@@ -24,6 +24,7 @@ import type { apiMethods, atomIs, atomPersit, queryType } from './vars'
 import type { reconcile as solidReconcile, Store as SolidStore, SetStoreFunction } from 'solid-js/store'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
+
 /** { 'apiPostA' | 'apiGetA' | 'apiPostB' } */
 export type ApiNames = keyof typeof regexApiNames
 
@@ -59,7 +60,7 @@ export type RegexMap<Kind extends 'route' | 'api'> = Kind extends 'route'
 
 
 /** loader() gives back the new API() or new Route() */
-export type RegexMapEntry<T_Module> = { pattern: RegExp, loader: () => Promise<T_Module> }
+export type RegexMapEntry<T_Module> = { path?: string, pattern: RegExp, loader: () => Promise<T_Module> }
 
 
 /** 
@@ -192,21 +193,10 @@ export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name]
  * - Gives: API Type
 */
 export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
-  ? T_API
+  ? T_API extends API<any, any, any, any, any>
+    ? T_API
+    : never
   : never
-
-
-/**
- * - Receives: API Function Name, so => `apiExample`
- * - Gives: The type for the `load()` response
- * @example
-  ```ts
-  const res = load(() => apiCharacter({params: {element: 'water'}}))
-
-  function Characters(res: ApiName2LoadResponse<'apiCharacter'>) {}
-  ```
- */
-export type ApiName2LoadResponse<T_Name extends ApiNames> = Accessor<undefined | ApiName2Response<T_Name>>
 
 
 /** 
@@ -254,33 +244,16 @@ export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
   bitKey?: AceKey
   /** Optional, if queryType set AND queryKey undefined THEN queryKey <- apiName */
   queryKey?: AceKey
-  /**
-   * - Let's this api function know that we wanna use Solid's `query()` function! There are several different ways we can use `query()` and that is what this variable helps decide
-   * - 🚨 When using Solid's `query()` a queryKey is required, we have it optional here b/c if a `queryType` is set & a `querKey` is `undefined` THEN the `queryKey` is set to the `apiName`
-   * - Stream: Best when:
-   *     - This API is called before page render (before the `return <></>` part in the `.component()`)
-   *     - We'd love this API call to happen simultaneously to any other pre render call
-   * - May Set Cookies:
-   *     - Server cookies are set on the `fe` w/ a `Set-Cookie` server `Response` header
-   *     - Once streaming starts we **may not** update the `Set-Cookie` header b/c the browser already has the Response
-   *     - If an API may set cookies it's safest to ensure this request starts & ends on the `fe` (typical spa style) & we don't stream, that way the browser receives any potential Set-Cookie headers
-   *     - This option is less performant then streaming, b/c streaming has the oportunity to start getting api data on the server so to do this maySetCookies option less we recommend example: IF realize someone is unAuth & we wanna clear cookies THEN redirect to a `/sign-out` **Route** that has a call to `apiSignOut({ queryType: 'maySetCookies' })` so redirect first, and set cokies 2nd, so we can stream the og api :)
-   * - Direct: Best when goal is to:
-   *     - Go out and do a solid start query() and then give the result back
-   *     - Not happening pre render like streaming so not during page transition
-   *     - Wanna ensure request is cached, deduped and/or can be queried again simply later
-   */
+  /** @ README.md > Call APIs is a full explanation of queryType */
   queryType?: QueryType,
   /** Optional, to send w/ `fetch()` */
   requestInit?: Partial<RequestInit>,
-  /** Optional, default is `if (error?.message) showErrorToast(error.message), Provide if you'd love a specific onError() happening, callback is provided the error  */
+  /** IF `onError` provided AND `response.error` truthy THEN `onError` will be called w/ `response.error`  */
   onError?: (error: AceErrorProps | AceError) => void
-  /** Optional, what you'd love to happen when response.data is truthy, callback is provided response.data */
-  onData?: (data: Api2Data<T_API>) => void
-  /** Helpful when your api returned something you'd love for us not to parse and check for data or error and just to give to ya fresh, also called if there is an error w/ an unparsed error object */
+  /** IF `onSuccess` provided AND `response.error` is falsy THEN `onSuccess` will be called w/ `response.data` */
+  onSuccess?: (data: Api2Data<T_API>) => void
+  /** IF `onResponse` provided THEN `onResponse` will be called w/ `Response` */
   onResponse?: (response: any) => void
-  /** - Helpful when an api does not return data & you'd love to know the api responded & did not return an error */
-  onGood?: (response?: any) => void
   /** Optional, set if you'd love a callback on load change by this api */
   onLoadChange?: (value: boolean) => void
 }
@@ -403,15 +376,6 @@ export type APIEvent = SolidAPIEvent
 export type FetchEvent = SolidFetchEvent
 
 
-/**
- * - JWTPayload is defined @ ace.config.js
- * - The FullJWTPayload adds `{iat: number, exp: number}` to the payload to align w/ the `JWT spec (RFC 7519)`
- * - The `JWTPayload` is what is stored in the jwt and the `JWTResponse` is created if the `JWTPayload` is valid
- * - We recomend only putting a sessionId in the `JWTPayload`, and also putting the sessionId in the database, so you can always sign someone out by removing the db entry and then putting any goodies ya love in the `JWTResponse` like email, name, isAdmin, etc.
- */
-export type FullJWTPayload<T_JWTPayload extends BaseJWTPayload = {}> = T_JWTPayload & {iat: number, exp: number}
-
-
 /** 
  * - Anonymous async function (aaf) that runs b4 api and/or route fn
  * - If the aaf's response is truthy, that response is given to client & the api and/or route fn is not called, else the api and/or route fn is called
@@ -464,25 +428,6 @@ export type CMSItem = {
 export type CMSMap = Map<number, Signal<CMSItem | undefined>>
 
 
-export type JWTValidateSuccess<T_JWTPayload extends BaseJWTPayload = {}> = {
-  isValid: true
-  payload: FullJWTPayload<T_JWTPayload>
-  errorId?: never
-  errorMessage?: never
-}
-
-export type JWTValidateFailure<T_JWTPayload extends BaseJWTPayload = {}>  = {
-  isValid: false
-  payload?: FullJWTPayload<T_JWTPayload>
-  errorId: 'FALSY_JWT' | 'INVALID_PARTS' | 'INVALID_EXP' | 'INVALID_JWT' | 'EXPIRED'
-  errorMessage: string
-}
-
-export type JWTValidateResponse<T_JWTPayload extends BaseJWTPayload = {}> = JWTValidateSuccess<T_JWTPayload> | JWTValidateFailure<T_JWTPayload>
-
-export type BaseJWTPayload = Record<string, unknown>
-
-
 /**
  * Goal w/ 3 types below: Enforce the exact shape of keys from InferOutput<T> @ `parse()`
  * Allow more flexible values (e.g., string | null instead of just string) b/c `fd()` has no guarantee's on response but valibot will guarantee that but atleast the object shape going into parse can be enforced, let valibot do the actual value enforcing
@@ -531,16 +476,6 @@ export type Parser<T> = (input: unknown) => T
 
 /** The api methods we support */
 export type ApiMethods = InferEnums<typeof apiMethods>
-
-
-/**
- * - String is passed to `new Date()`
- * - Date is already a `new Date()`
- * - Number is `epoch` and passed to `new Date()` assumed to be in milliseconds
- * @link https://epoch.vercel.app/
- * @link https://orm.drizzle.team/docs/guides/timestamp-default-value
- */
-export type DateLike = string | Date | number
 
 
 /** 
@@ -836,3 +771,4 @@ export type ChartJsRegisterFn = () => void
 
 
 export type AgGridRegisterFn = () => void
+

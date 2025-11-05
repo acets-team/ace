@@ -37,7 +37,7 @@ import type { AgGridParams, AgGridComponentProps } from './agGrid.types'
       })}
     />
 
-    const TableCellAmount = agGridComponent<Transaction[]>(params => {
+    const TableCellAmount = agGridComponent<Transaction>(params => {
       const amount = params.data?.amount ?? 0
 
       return <>

@@ -4,7 +4,7 @@
  */
 
 
-import { DateLike } from './types'
+import { DateLike } from './vanilla'
 
 
 /**

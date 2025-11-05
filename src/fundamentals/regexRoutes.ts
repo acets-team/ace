@@ -1,4 +1,4 @@
-import type { RegexMap } from './types';
+import type { RegexMap } from './types'
 
 
 export const regexRoutes = {
@@ -6,4 +6,4 @@ export const regexRoutes = {
     pattern: /^\/a:id\/?$/,
     loader: () => import('../app/a').then((m) => m.default)
   },
-} as const satisfies RegexMap<'route'>
+} satisfies RegexMap<'route'>

@@ -1,3 +1,5 @@
+import { RegexMap } from './types'
+
 export const regexApiNames = {
   'apiGetA': {
     path: '/api/a/:id',
@@ -19,4 +21,4 @@ export const regexApiNames = {
     pattern: /^\/api\/a\/(?<id>[^/]+)\/?$/,
     loader: () => import('../api/a').then((m) => m.DELETE)
   },
-} as const
+} satisfies RegexMap<'api'>

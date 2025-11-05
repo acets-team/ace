@@ -6,7 +6,7 @@
 
 
 import { getEnv } from '../getEnv'
-import type { BaseJWTPayload } from './types'
+import type { BaseJWTPayload } from './vanilla'
 import { base64UrlEncode } from './base64UrlEncode'
 
 

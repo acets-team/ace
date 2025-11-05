@@ -4,16 +4,18 @@
  */
 
 
+import { env } from './env'
 import { Bits } from '../bits'
+import { config } from 'ace.config'
 import { apiMethods } from './vars'
 import { getGoUrl } from './getGoUrl'
 import { buildUrl } from '../buildUrl'
 import { isServer } from 'solid-js/web'
-import { FEMessages } from '../feMessages'
 import { useLocation } from '@solidjs/router'
 import { createAceKey } from './createAceKey'
 import { parseResponse } from '../parseResponse'
 import { destructureReady } from './destructureReady'
+import { ScopeComponentMessages } from '../scopeComponentMessages'
 import { getScopeComponentChildren } from '../scopeComponentChildren'
 import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
 import type { GETPaths, POSTPaths, UrlPathParams, UrlSearchParams, RoutePath2PathParams, Routes, JsonObject, RoutePath2SearchParams, PUTPaths, DELETEPaths, GETPath2Api, POSTPath2Api, PUTPath2Api, DELETEPath2Api, Api2PathParams, Api2SearchParams, Api2Body, Api2Data, AceKey } from './types'
@@ -49,7 +51,7 @@ export const ScopeComponentContextProvider: ParentComponent = (props) => {
  */
 export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_Params extends UrlSearchParams = {}> {
   bits = new Bits()
-  messages = new FEMessages()
+  messages = new ScopeComponentMessages()
 
 
   constructor() {
@@ -59,7 +61,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
   /**
    * - Path params as an object
-   * - If using in a `createEffect()` use `scope.PathParams()`
+   * - IF using in a `createEffect()` THEN use `scope.PathParams()`
    * @example
     ```tsx
     <>{scope.pathParams.example}</>
@@ -69,8 +71,8 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
 
   /**
-   * - Reactive path params that can be used in a createEffect()
-   * - If not using in a createEffect just use scope.pathParams
+   * - Reactive path params that can be used in a `createEffect()`
+   * - IF not using in a `createEffect()` THEN use `scope.pathParams`
    * @example
     ```ts
     createEffect(() => {
@@ -83,7 +85,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
   /**
    * - Search params as an object
-   * - If using in a `createEffect()` use `scope.SearchParams()`
+   * - IF using in a `createEffect()` THEN use `scope.SearchParams()`
    * @example
     ```tsx
     <>{scope.searchParams.example}</>
@@ -94,7 +96,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
   /**
    * - Reactive search params that can be used in a `createEffect()`
-   * - If not using in a createEffect just use scope.searchParams
+   * - IF not using in a `createEffect()` THEN use `scope.searchParams`
    * @example
     ```ts
     createEffect(() => {
@@ -105,9 +107,20 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   SearchParams = (() => { }) as Accessor<T_Search_Params>
 
 
-  /** @returns The url location data  */
+  /**
+   * - Location as an object
+   * - IF using in a `createEffect()` THEN use `scope.Location()`
+   * @example
+    ```tsx
+    <div class="path">{scope.location.pathname}</div>
+    ```
+   */
+  get location() { return this.Location() }
+
+
   /**
    * - Reactive location that can be used in a `createEffect()`
+   * - IF not using in a `createEffect()` THEN use `scope.location`
    * @example
     ```ts
     createEffect(() => {
@@ -121,20 +134,9 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
 
   /**
-   * - Location as an object
-   * - If you'd like reactive location that can be used in a `createEffect()` call `scope.Location()`
-   * @example
-    ```tsx
-    <div class="path">{scope.location.pathname}</div>
-    ```
-   */
-  get location() { return this.Location() }
-
-
-  /**
    * - Get the children for a layout
    * - Returns the jsx elemement or undefined if no children
-   * - With `Ace` only a `Layout` has children btw, routes do not
+   * - With `Ace` only a `Layout` has children, routes do not
    */
   get children(): JSX.Element | undefined {
     return getScopeComponentChildren(this)
@@ -163,8 +165,9 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   /**
    * Call api GET method w/ intellisense
    * @param path - As defined @ `new API()`
-   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
-   * @param options.params - Path params
+   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
+   * @param options.pathParams - Path params
+   * @param options.searchParams - Search params
    * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
   async GET<T_Path extends GETPaths>(path: T_Path, options?: { pathParams?: Api2PathParams<GETPath2Api<T_Path>>, searchParams?: Api2SearchParams<GETPath2Api<T_Path>>, bitKey?: AceKey, requestInit?: Partial<RequestInit>, manualBitOff?: boolean }): Promise<Api2Data<GETPath2Api<T_Path>>> {
@@ -182,8 +185,9 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   /**
    * Call api POST method w/ intellisense
    * @param path - As defined @ `new API()`
-   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
-   * @param options.params - Path params
+   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
+   * @param options.pathParams - Path params
+   * @param options.searchParams - Search params
    * @param options.body - Request body
    * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
@@ -202,8 +206,9 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   /**
    * Call api POST method w/ intellisense
    * @param path - As defined @ `new API()`
-   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
-   * @param options.params - Path params
+   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
+   * @param options.pathParams - Path params
+   * @param options.searchParams - Search params
    * @param options.body - Request body
    * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
@@ -222,8 +227,9 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
   /**
    * Call api DELETE method w/ intellisense
    * @param path - As defined @ `new API()`
-   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them
-   * @param options.params - Path params
+   * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
+   * @param options.pathParams - Path params
+   * @param options.searchParams - Search params
    * @param options.body - Request body
    * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
    */
@@ -269,9 +275,11 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
 
   /**
-   * Frontend redirect w/ simple options
+   * - Frontend redirect w/ simple options
+   * - For all possible options please use `scope.Go()`
    * @param path - Redirect to this path, as defined @ new Route()
-   * @param params - Params to put in the url
+   * @param params.pathParams - Path params
+   * @param params.searchParams - Search params
    */
   go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }) {
     this.Go({ path, pathParams: params?.pathParams, searchParams: params?.searchParams })
@@ -279,9 +287,11 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
 
   /**
-   * Frontend redirect w/ all options
+   * - Frontend redirect w/ all options
+   * - For simple options please use `scope.go()`
    * @param path - Redirect to this path, as defined @ new Route()
-   * @param params - Params to put in the url
+   * @param pathParams - Path params
+   * @param searchParams - Search params
    * @param replace - Optional, defaults to false, when true this redirect will clear out a history stack entry 
    * @param scroll - Optional, defaults to true, if you'd like to scroll to the top of the page when done redirecting
    * @param state - Optional, defaults to an empty object, must be an object that is serializable, available @ the other end via `fe.getLocation().state`
@@ -297,5 +307,30 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
     window.dispatchEvent(new PopStateEvent('popstate', { state }))
 
     if (scroll) window.scrollTo(0, 0)
+  }
+
+
+
+  /**
+   * ### Helpful when you'd love to create a ws connection to an Ace Live Server
+   * @example
+      ```ts
+      const ws = scope.liveSubscribe({ stream: 'example' })
+  
+      ws.addEventListener('message', event => {
+        console.log(event.data)
+      })
+  
+      ws.addEventListener('close', () => {
+        console.log('ws closed')
+      })
+      ```
+   * @param props.stream - The `stream` to subscribe to. Events are grouped by stream.
+   */
+  liveSubscribe(props: { stream: string }): WebSocket {
+    const host = config.liveHosts?.[env]
+    if (!host) throw new Error(`ace.config.js > liveHosts > "${env}" is undefined`)
+
+    return new WebSocket(`ws://${host}/subscribe?stream=${encodeURIComponent(props.stream)}`);
   }
 }

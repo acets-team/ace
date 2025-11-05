@@ -16,6 +16,7 @@
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.03);
   &::before {
     animation: acePulse 2s linear infinite reverse;
+    animation-delay: var(--pulse-delay, 0ms);
     content: '';
     position: absolute;
     top: 0;

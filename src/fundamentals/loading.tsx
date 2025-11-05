@@ -59,12 +59,11 @@ export const Loading: Component<LoadingProps> = ({ type, size, thickness, color,
   if (speed) style['--ace-loading-speed'] = speed
   if (twoColor) style['--ace-loading-two-color'] = twoColor
 
-  const baseClass = 'ace-loading'
+  const baseClass = `ace-loading ${type === 'two' ? 'ace-loading--two' : ''}`
   const mergedClass = $span?.class ? `${baseClass} ${$span.class}` : baseClass
 
   return <>
     <span
-      classList={{ 'ace-loading--two': type === 'two' }}
       role="status"
       aria-live="polite"
       style={style}

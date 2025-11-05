@@ -54,7 +54,7 @@ export class AceError {
         else if (typeof error === 'string') res = AceError.simple(error)
       }
 
-      if (!res) res = AceError.simple(defaultError)
+      if (!res) res = AceError.simple(config.defaultError || defaultError)
 
       if (config.logCaughtErrors) {
         console.error(JSON.stringify(res, null, 2))

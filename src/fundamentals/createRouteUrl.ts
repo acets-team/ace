@@ -10,11 +10,12 @@ import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './typ
 
 /**
  * - Get typesafe autocomplete assistance when creating a route url
- * - 🚨 Does not add the origin to the url `(window.location.origin)`, if you'd love the origin added, see the example below
  * @example
   ```ts
+  import {buildOrigin} from '@ace/env'
+
   return scope.success({
-    url: scope.origin + createRouteUrl('/magic-link/:token', {pathParams: {token}})
+    url: buildOrigin + createRouteUrl('/magic-link/:token', {pathParams: {token}})
   })
   ```
  * @param path - As defined at `new Route()`

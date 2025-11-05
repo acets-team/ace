@@ -6,7 +6,9 @@ import { mkdir, copyFile, writeFile } from 'node:fs/promises'
 
 
 export async function buildWrite(build: Build) {
-  await mkdir(build.dirWriteFundamentals, { recursive: true })
+  if (build.config.plugins.hljs) await mkdir(join(build.dirWriteFundamentals, '/hljs'), { recursive: true })
+  else await mkdir(build.dirWriteFundamentals, { recursive: true })
+
   await Promise.all(getPromises(build))
 }
 
@@ -15,20 +17,18 @@ export async function buildWrite(build: Build) {
 function getPromises(build: Build) {
   const promises: Promise<any>[] = []
 
-  fundamentals.forEach((f, name) => {
-    switch(f.type) {
+  for (const [name, f] of fundamentals) {
+    if (!build.whiteList.set.has(name)) continue
+
+    switch (f.type) {
       case 'copy':
-        if (build.whiteList.set.has(name)) {
-          promises.push(fsCopy({ build, dirWrite: build.dirWriteFundamentals, srcFileName: `${name}.txt`, aimFileName: `${name}.${f.ext}` }))
-        }
+        promises.push(fsCopy({ build, dirWrite: build.dirWriteFundamentals, srcFileName: `fundamentals/${name}.txt`, aimFileName: `${name}.${f.ext}` }))
         break
       case 'helper':
-        if (build.whiteList.set.has(name)) {
-          promises.push(fsCopy({ build, dirWrite: build.dirWriteRoot, srcFileName: `${name}.txt`, aimFileName: `${name}.${f.ext}` }))
-        }
+        promises.push(fsCopy({ build, dirWrite: build.dirWriteRoot, srcFileName: `${name}.txt`, aimFileName: `${name}.${f.ext}` }))
         break
     }
-  })
+  }
 
   if (build.config.plugins.solid) {
     promises.push(
@@ -46,7 +46,8 @@ function getPromises(build: Build) {
   }
 
   promises.push(
-    fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' })
+    fsWrite({ build, dir: build.dirWriteFundamentals, content: renderEnv(build), fileName: 'env.ts' }),
+    fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsVanillaTypes || '', fileName: 'vanilla.d.ts' }),
   )
 
   return promises
@@ -62,25 +63,16 @@ async function fsWrite({ dir, content, fileName, build }: { dir: string, content
 
 
 async function fsCopy({ dirWrite, srcFileName, aimFileName, build }: { dirWrite: string, srcFileName: string, aimFileName: string, build: Build }){
-  await copyFile(join(build.dirRead, '../../../' + srcFileName), join(dirWrite, aimFileName))
+  await copyFile(join(build.dirDistBuildJs, '../../../' + srcFileName), join(dirWrite, aimFileName))
   if (build.commandOptions.has('--verbose')) console.log('✅ Wrote: ' + join(dirWrite, aimFileName))
 }
 
 
+
 function renderEnv(build: Build) {
-  return `/**
-* 🧚‍♀️ How to access:
-*     - import { env, origins } from '@ace/env'
-*/
+  if (!build.fsEnv) throw new Error('!build.fsEnv')
 
-import { config } from 'ace.config'
-
-export const env: string = '${build.env}'
-
-export const origins: Set<string> = typeof config.origins[env] === 'string'
-  ? new Set([config.origins[env]])
-  : new Set(config.origins[env])
-`
+  return build.fsEnv.replace('{/* gen */}', build.env)
 }
 
 
@@ -95,59 +87,66 @@ ${build.writes.apiFunctions}`
 
 
 function renderRegexRoute(build: Build) {
-  return `export const regexRoutes = {
+  return `import type { RegexMap } from './types'
+
+export const regexRoutes = {
 ${build.writes.constRoutes ? build.writes.constRoutes.slice(0, -1) : ''}
-} as const\n`
+} satisfies RegexMap<'route'>\n`
 }
 
 
 
 function renderRegexApiGets(build: Build) {
-  return `import { regexApiNames } from './regexApiNames'
+  return `import { RegexMap } from './types'
+import { regexApiNames } from './regexApiNames'
 
 export const regexApiGets = {
 ${build.writes.constGET ? build.writes.constGET.slice(0, -1) : ''}
-} as const\n`
+} satisfies RegexMap<'api'>\n`
 }
 
 
 
 function renderRegexApiPosts(build: Build) {
-  return `import { regexApiNames } from './regexApiNames'
+  return `import { RegexMap } from './types'
+import { regexApiNames } from './regexApiNames'
 
 export const regexApiPosts = {
 ${build.writes.constPOST ? build.writes.constPOST.slice(0, -1) : ''}
-} as const\n`
+} satisfies RegexMap<'api'>\n`
 }
 
 
 
 function renderRegexApiPuts(build: Build) {
-  return `import { regexApiNames } from './regexApiNames'
+  return `import { RegexMap } from './types'
+import { regexApiNames } from './regexApiNames'
 
 export const regexApiPuts = {
 ${build.writes.constPUT ? build.writes.constPUT.slice(0, -1) : ''}
-} as const\n`
+} satisfies RegexMap<'api'>\n`
 }
 
 
 
 function renderRegexApiDeletes(build: Build) {
-  return `import { regexApiNames } from './regexApiNames'
+  return `import { RegexMap } from './types'
+import { regexApiNames } from './regexApiNames'
 
 export const regexApiDeletes = {
 ${build.writes.constDELETE ? build.writes.constDELETE.slice(0, -1) : ''}
-} as const\n`
+} satisfies RegexMap<'api'>\n`
 }
 
 
 
 function renderRegexApiNames(build: Build) {
-  return `import * as apiLoaders from '@ace/apiLoaders'
+  return `import { RegexMap } from './types'
+import * as apiLoaders from '@ace/apiLoaders'
 
 export const regexApiNames = {
 ${build.writes.constApiName ? build.writes.constApiName.slice(0, -1) : ''}
-} as const\n`
+} satisfies RegexMap<'api'>\n`
 }
 
 

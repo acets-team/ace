@@ -14,8 +14,22 @@
     &:checked + label {
       box-shadow: var(--ace-radio-card-active-shadow);
       border-color: var(--ace-radio-card-active-border-color);
-      background-color: var(--ace-radio-card-active-bg-color);
+      background: var(--ace-radio-card-active-bg);
+      
+      .dot {
+        background: var(--ace-radio-card-active-border-color, #4f46e5);
+      }
     }
+  }
+
+  .dot {
+    position: absolute;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    border: 0.18rem solid #ccc;
+    background: white;
+    transition: var(--speed);
   }
 
   label {
@@ -23,16 +37,65 @@
     flex-direction: column;
     text-align: center;
     max-width: 33rem;
-    border: 2px solid #f0efef;
+    border: 0.3rem solid #f0efef;
     border-radius: 1.2rem;
     padding: 1.5rem;
     background: white;
     cursor: pointer;
     transition: var(--speed);
+    position: relative;
+    opacity: 0.9;
     &:hover {
       transform: var(--ace-radio-card-active-transform);
       border-color: var(--ace-radio-card-active-border-color);
       box-shadow: var(--ace-radio-card-active-shadow);
+    }
+    &[aria-checked="true"] {
+      opacity: 1;
+
+      .title {
+        color: var(--ace-radio-card-active-title-color, rgb(9, 9, 11));
+      }
+
+      .description {
+        color: var(--ace-radio-card-active-description-color, rgb(67, 66, 66));
+      }
+    }
+    &.dot-topCenter .dot {
+      top: 0.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    &.dot-topLeft .dot {
+      top: 0.6rem;
+      left: 0.8rem;
+    }
+    &.dot-topRight .dot {
+      top: 0.6rem;
+      right: 0.8rem;
+    }
+    &.dot-bottomCenter .dot {
+      bottom: 0.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    &.dot-bottomLeft .dot {
+      bottom: 0.6rem;
+      left: 0.8rem;
+    }
+    &.dot-bottomRight .dot {
+      bottom: 0.6rem;
+      right: 0.8rem;
+    }
+    &.dot-topCenter,
+    &.dot-topLeft,
+    &.dot-topRight {
+      padding-top: 2.4rem;
+    }
+    &.dot-bottomCenter,
+    &.dot-bottomLeft,
+    &.dot-bottomRight {
+      padding-bottom: 2.4rem;
     }
 
     .title {

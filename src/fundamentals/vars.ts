@@ -7,11 +7,15 @@
 import { Enums } from './enums'
 
 
-/** Messages are grouped by name, if there are messages w/o a name and no other default is provided we'll put the messages w/ this name */
+/** 
+ * - Messages are grouped by name: `Map<string, Signal<string[]>>`
+ * - Messages are read from `response.error.messages` & typically have `valibot` / `zod` errors
+ * - If `response.error.message` is defined, we'll put that value @ `mesages[defaultMessageName] = [response.error.message]`
+ */
 export const defaultMessageName = '_info'
 
 
-/** If no other error is given to us from an api we'll show this */
+/** If no other error is provided we'll show this */
 export const defaultError = '❌ Sorry but an error just happened'
 
 
@@ -55,17 +59,5 @@ export const idbDefaultDbName = 'ace_db'
 export const idbDefaultStoreName = 'kv'
 
 
-/** When we send Request event streams, the default headers we'll use */
-export const eventsStreamHeaders = {
-  'Content-Type': 'text/event-stream',
-  'Cache-Control': 'no-cache',
-  'Connection': 'keep-alive',
-}
-
-
-/**
- * - 🚨 Stream: 
- * - 🚨 Direct: 
- * - 🚨 May Set Cookies: 
- */
+/** @ README.md > Call APIs is a full explanation of queryType */
 export const queryType = new Enums(['stream', 'direct', 'maySetCookies'])

@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to use:
- *   Plugin agGrid
+ *   Plugin: agGrid
  *   import { agGridComponent } from '@ace/agGridComponent'
  */
 
@@ -15,7 +15,7 @@ import type { AgGridParams, AgGridComponentProps } from './agGrid.types'
  * @returns A fully typed Solid function component that can be used in your 'cellRenderer'.
  * @example
   ```ts
-  const TableCellAmount = agGridComponent<Transaction[]>(params => {
+  const TableCellAmount = agGridComponent<Transaction>(params => {
     const amount = params.data?.amount ?? 0
 
     return <>
