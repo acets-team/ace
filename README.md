@@ -77,7 +77,7 @@
 
 
 ## Ace Mission Statement
-    🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, typesafe and beautifully documented library! 🙏
+**🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, typesafe and beautifully documented library! 🙏**
 
 
 

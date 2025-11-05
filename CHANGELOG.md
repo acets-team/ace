@@ -1,11 +1,25 @@
 # Changelog
 - All notable changes to `@acets-team/ace` will be documented here
 - The format of this file is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-- `@acets-team/ace` adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+- & `@acets-team/ace` adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+
+
+## [0.6.1] - 2025-11-04
+
+### 🧠 Improved
+- Update the package.json versions @:
+    - `@types/node` 
+    - `ag-grid-community` 
+    - `chart.js` 
+    - `drizzle-orm` 
+    - `solid-js` 
+    - `wrangler` 
+- Improve the `DEVELOPMENT.md` directions @:
+    - How to deploy?
+    - Unlink ace
 
 
 ## [0.6.0] - 2025-11-04
-
 
 ### ✨ Added
 - `<MarkdownStatic />` for SEO friendly `Markdown`
@@ -52,4 +66,5 @@
 
 
 
+[0.6.1]: https://github.com/acets-team/ace/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/acets-team/ace/releases/tag/v0.6.0
