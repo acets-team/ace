@@ -4,6 +4,16 @@
 - & `@acets-team/ace` adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 
+## [0.6.2] - 2025-11-05
+
+### 🧠 Improved
+- Simplified + Optimized API Function logic
+
+### 🐛 Fixed
+- IF API Function is using `stream` > on first refresh, callbacks don't happen
+
+
+
 ## [0.6.1] - 2025-11-04
 
 ### 🧠 Improved
@@ -17,6 +27,7 @@
 - Improve the `DEVELOPMENT.md` directions @:
     - How to deploy?
     - Unlink ace
+
 
 
 ## [0.6.0] - 2025-11-04
@@ -66,5 +77,6 @@
 
 
 
+[0.6.2]: https://github.com/acets-team/ace/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/acets-team/ace/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/acets-team/ace/releases/tag/v0.6.0

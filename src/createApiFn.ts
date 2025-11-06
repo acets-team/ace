@@ -4,185 +4,176 @@ import { parseResponse } from './parseResponse'
 import { scope } from './fundamentals/scopeComponent'
 import { showErrorToast } from './fundamentals/toast'
 import { createAceKey } from './fundamentals/createAceKey'
+import { regexApiNames } from './fundamentals/regexApiNames'
 import { query, createAsync, redirect } from '@solidjs/router'
 import { AceError, type AceErrorProps } from './fundamentals/aceError'
 import { apiMethods, goHeaderName, queryType } from './fundamentals/vars'
-import type { ApiMethods, ApiFnProps, Api2Function, Api2Response } from './fundamentals/types'
+import type { ApiFnProps, Api2Function, Api2Response, RegexMapEntry, ApiName2Api } from './fundamentals/types'
 
 
 
-export function createApiFn<T_API extends API<any, any, any, any, any>>(apiName: string, path: string, method: ApiMethods, apiLoader: () => Promise<T_API>): Api2Function<T_API> {
-  const apiFn = (options?: ApiFnProps<T_API>) => { // when someone calls an API function this is what runs, depending on where the request is @ @ the moment this will run on the fe and/or the be
-    if (options?.queryType === queryType.keys.maySetCookies && isServer) return // flow through on fe
+/**
+ * - IF `response.error` truthy THEN `options.onError()` OR `defaultOnError()` will be called w/ `response.error`
+ * - ELSE
+ *     - IF `options.onResponse` provided THEN `options.onResponse` will be called w/ `Response`
+ *     - IF `options.onSuccess` provided THEN `onSuccess` will be called w/ `response.data`
+ * @param apiName - API `name` as defined @ `new API()`
+ */
+export function createApiFn<const T_Name extends keyof typeof regexApiNames>(apiName: T_Name): Api2Function<ApiName2Api<T_Name>> {
+  return ((props?: ApiFnProps<ApiName2Api<T_Name>>) => { // when someone calls an API function this is what runs
+    (new ApiFn(apiName, props)).main()
+  }) as unknown as Api2Function<ApiName2Api<T_Name>>
+}
 
-    let bitKey: string | undefined
 
-    let feBound = false
 
+class ApiFn<T_API extends API<any, any, any, any, any>> {
+  bitKey?: string
+  apiName: string
+  result?: Result
+  props?: ApiFnProps<T_API>
+  regexMapEntry: RegexMapEntry<'api', any>
+
+
+  constructor(apiName: string, options?: ApiFnProps<T_API>) {
+    const entry = regexApiNames[apiName as keyof typeof regexApiNames]
+    if (!entry) throw new Error('!entry')
+
+    this.apiName = apiName
+    this.props = options
+    this.regexMapEntry = entry
+  }
+
+
+  /** public static void main ❤️ */
+  main() {
     try {
-      if (options?.onLoadChange) options.onLoadChange(true)
+      if (this.props?.queryType === queryType.keys.maySetCookies && isServer) return // skip maySetCookies on BE
 
-      if (options?.bitKey) bitKey = createAceKey(options.bitKey) // IF bitkey requested THEN use it
-      else if (!options?.onLoadChange) bitKey = apiName // IF no bitKey set AND no onLoadChange set THEN default bitkey to apiName
+      if (this.props?.onLoadChange) this.props.onLoadChange(true) // call options.onLoadChange()
 
-      if (queryType.has(options?.queryType)) onSolidQuery() // IF requested query type is valid => call api w/ solid query()
-      else callApiAndCallbacks()
+      if (this.props?.bitKey) this.bitKey = createAceKey(this.props.bitKey) // IF bitkey defined THEN use it
+      else this.bitKey = this.apiName // IF no bitKey set THEN default bitkey to apiName
+
+      scope.bits.set(this.bitKey, true) // start bits loading indicator
+
+      if (queryType.has(this.props?.queryType)) this.onQuery() // IF Solid's query() requested => use it
+      else { // call API w/o Solid's query()
+        (async () => { // IIFE so we can await in a none async wrapper function
+          this.result = { query: await this.callApi() }
+          await this.onResult()
+        })()
+      }
     } catch (err) {
-      _onError(err)
-    }
-
-
-
-    function onSolidQuery() { // opted into using solidjs query() by setting a queryType
-      const queryKey = createAceKey(options?.queryKey ?? apiName)
-      const response = query(callApiAndCallbacks, queryKey)
-
-      if (options?.queryType === queryType.keys.stream) createAsync(() => onCreateAsync(response))
-      else onCreateAsync(response)
-    }
-
-
-
-    async function callApiAndCallbacks() {
-      let result: undefined | Result<T_API>
-
-      try {
-        result = await _onResponse(await callApi())
-      } catch (err) {
-        result = await _onError(err)
-      } finally {
-        if (!isServer) feBound = true
-
-        if (options?.onLoadChange) options.onLoadChange(false)
-
-        if (bitKey) scope.bits.set(bitKey, false)
-
-        if (result?.og instanceof Response && isServer) {
-          const goUrl = result.og.headers.get(goHeaderName)
-
-          if (goUrl) {
-            return redirect(goUrl)
-          }
-        }
-      }
-
-      return result
-    }
-
-
-    async function onCreateAsync (response: () => Promise<any>) {
-      try {
-        if (!feBound && !isServer) {
-          const result = await response()
-
-          if (!feBound && result?.og) { // recheck feBound b/c it could have been updated @ response()
-            try {
-              await _onResponse(result.og)
-            } catch (err) {
-              await _onError(err)
-            } finally {
-              if (options?.onLoadChange) options.onLoadChange(false)
-
-              if (bitKey) scope.bits.set(bitKey, false)
-            }
-          }
-        }
-      } catch (err) {
-        await _onError(err)
-      }
-    }
-
-
-
-    async function callApi() {
-      try {
-        if (isServer) return await onBE(apiLoader, options)
-        return await onFE(path, method, { ...options, bitKey } as ApiFnProps<T_API>)
-      } catch (err) {
-        return await AceError.catch(err)
-      }
-    }
-
-
-
-    /**
-     * - IF `onResponse` provided THEN `onResponse` will be called w/ `Response`
-     * - IF `onError` provided AND `response.error` truthy THEN `onError` will be called w/ `response.error`
-     * - IF `onSuccess` provided AND `response.error` is falsy THEN `onSuccess` will be called w/ `response.data`
-     */
-    async function _onResponse(response?: AceError | Response) {
-      let result: Result<T_API> = { og: response, parsed: null }
-
-      if (options?.onResponse) options.onResponse(result.og) // don't parse response, just give response
-
-      if (options?.onError || options?.onSuccess) {
-        result.parsed = await parseResponse<Api2Response<T_API>>(result.og)
-
-        if (result.parsed && typeof result.parsed === 'object' && result.parsed.error) throw result.parsed.error
-
-        if (options.onSuccess) {
-          options.onSuccess(
-            (result.parsed && typeof result.parsed === 'object' && result.parsed.data)
-              ? result.parsed.data
-              : undefined as any
-          )
-        }
-      }
-
-      return result
-    }
-
-
-
-    async function _onError(err: unknown) {
-      const e = err instanceof AceError ? err : await AceError.catch(err)
-
-      if (options?.onError) options.onError(e as any)
-      else defaultOnError(e as any)
-
-      return e
+      this.onError(err)
     }
   }
 
-  return apiFn as unknown as Api2Function<T_API>
-}
+
+  /** ensures we call an API the correct way if @ FE or BE */
+  async callApi() {
+    try {
+      if (isServer) return await this.onBE()
+      return await this.onFE()
+    } catch (err) {
+      return this.onError(err)
+    }
+  }
 
 
+  /** Opted into using Solid's `query()` by setting a `options.queryType` */
+  onQuery() {
+    const queryKey = createAceKey(this.props?.queryKey ?? this.apiName)
 
-async function onFE<T_API extends API<any, any, any, any, any>>(path: string, method: ApiMethods, options?: ApiFnProps<T_API>) {
-  const { scope } = await import('./fundamentals/scopeComponent')
+    const resQuery = query(this.innerQuery, queryKey)
 
-  const o = { ...options, manualBitOff: true }
+    if (this.props?.queryType !== 'stream') this.parseQuery(resQuery) // createAsync() outside of 'stream' creates hydration error or data leak error, example: computations created outside a `createRoot` or `render` will never be disposed
+    else createAsync(async () => { this.parseQuery(resQuery) }, { deferStream: true })
+  }
 
-  switch (method) {
-    case apiMethods.keys.GET: return scope.GET(path as never, o)
-    case apiMethods.keys.POST: return scope.POST(path as never, o)
-    case apiMethods.keys.PUT: return scope.PUT(path as never, o)
-    case apiMethods.keys.DELETE: return scope.DELETE(path as never, o)
-    default: throw new Error(`"${method}" is not a valid method @ handleFE()`)
+
+  /** Provided to Solid's `query()` */
+  async innerQuery() {
+    const res = await this.callApi()
+
+    if (res instanceof Response && isServer) { // dip out early on redirect
+      const goUrl = res.headers.get(goHeaderName)
+      if (goUrl) throw redirect(goUrl)
+    }
+
+    return res
+  }
+
+
+  async parseQuery(resQuery: () => Promise<any>) {
+    this.result = {
+      query: await resQuery()
+    }
+
+    await this.onResult()
+  }
+
+
+  async onResult() {
+    if (!this.result) throw new Error('!this.result')
+
+    if (this.props?.onError || this.props?.onSuccess) {
+      const parsed = await parseResponse<Api2Response<T_API>>(this.result.query)
+
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.error) this.result.error = parsed.error
+        if (parsed.data) this.result.data = parsed.data
+      }
+    }
+
+    if (this.result.error) this.onError(this.result.error)
+    else {
+      if (this.props?.onResponse) this.props.onResponse(this.result.query)
+      if (this.props?.onSuccess) this.props.onSuccess(this.result.data)
+    }
+
+    if (this.bitKey) scope.bits.set(this.bitKey, false)
+
+    if (this.props?.onLoadChange) this.props.onLoadChange(false)
+  }
+
+
+  async onError(err: unknown) {
+    if (this.props?.onError) this.props.onError(err as any)
+    else if (!isServer) this.defaultOnError(err as any)
+  }
+
+
+  async onFE() {
+    const { scope } = await import('./fundamentals/scopeComponent')
+
+    const o = { ...this.props, manualBitOff: true }
+
+    switch (this.regexMapEntry.method) {
+      case apiMethods.keys.GET: return scope.GET(this.regexMapEntry.path as never, o)
+      case apiMethods.keys.POST: return scope.POST(this.regexMapEntry.path as never, o)
+      case apiMethods.keys.PUT: return scope.PUT(this.regexMapEntry.path as never, o)
+      case apiMethods.keys.DELETE: return scope.DELETE(this.regexMapEntry.path as never, o)
+      default: throw new Error(`"${this.regexMapEntry.method}" is not a valid method @ handleFE()`)
+    }
+  }
+
+
+  async onBE() {
+    const [api, { callAPIResolve }] = await Promise.all([
+      this.regexMapEntry.loader(),
+      import('./callAPIResolve'),
+    ])
+
+    const o = this.props ?? ({} as ApiFnProps<T_API>)
+    return await callAPIResolve(api, o.pathParams ?? {}, o.searchParams ?? {})
+  }
+
+
+  defaultOnError(error?: AceError | AceErrorProps) {
+    if (!isServer && error?.message) showErrorToast(error.message)
   }
 }
 
 
-
-async function onBE<T_API extends API<any, any, any, any, any>>(apiLoader: () => Promise<T_API>, options?: ApiFnProps<T_API>) {
-  const [api, { callAPIResolve }] = await Promise.all([
-    apiLoader(),
-    import('./callAPIResolve'),
-  ])
-
-  const o = options ?? ({} as ApiFnProps<T_API>)
-  return await callAPIResolve(api, o.pathParams ?? {}, o.searchParams ?? {})
-}
-
-
-
-export function defaultOnError(error?: AceError | AceErrorProps) {
-  if (error?.message) showErrorToast(error.message)
-}
-
-
-type Result<T_API extends API<any, any, any, any, any>> = {
-  og?: AceError | Response,
-  parsed?: null | Api2Response<T_API>
-}
+type Result = { error?: any, query?: any, data?: any }

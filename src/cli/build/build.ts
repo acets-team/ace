@@ -139,19 +139,20 @@ export class Build {
   }
 
 
-  getConstEntry = (pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', fnName?: string) => {
-    if (pathIsKey && fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
-      return `  '${urlPath}': regexApiNames.${fnName},\n`
-    } else if (fnName) { // regexApiNames
-      return `  '${fnName}': {
-      path: '${urlPath}',
-      pattern: ${pathnameToPattern(urlPath)},
-      loader: apiLoaders.${fnName}Loader,
+  getConstEntry = (props: { pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', method?: string, fnName?: string }) => {
+    if (props.pathIsKey && props.fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
+      return `  '${props.urlPath}': regexApiNames.${props.fnName},\n`
+    } else if (props.fnName) { // regexApiNames
+      return `  '${props.fnName}': {
+      path: '${props.urlPath}',
+      method: '${props.moduleName}',
+      pattern: ${pathnameToPattern(props.urlPath)},
+      loader: apiLoaders.${props.fnName}Loader,
     },\n`
     } else { // regexRoutes
-      return `  '${urlPath}': {
-      pattern: ${pathnameToPattern(urlPath)},
-      loader: () => import(${this.fsPath2Relative(fsPath)}).then((m) => m.${moduleName}),
+      return `  '${props.urlPath}': {
+      pattern: ${pathnameToPattern(props.urlPath)},
+      loader: () => import(${this.fsPath2Relative(props.fsPath)}).then((m) => m.${props.moduleName}),
     },\n`
     }
   }

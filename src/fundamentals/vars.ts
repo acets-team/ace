@@ -59,5 +59,5 @@ export const idbDefaultDbName = 'ace_db'
 export const idbDefaultStoreName = 'kv'
 
 
-/** @ README.md > Call APIs is a full explanation of queryType */
+/** @link https://github.com/acets-team/ace?tab=readme-ov-file#call-apis > full explanation of `queryType` */
 export const queryType = new Enums(['stream', 'direct', 'maySetCookies'])

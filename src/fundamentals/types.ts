@@ -53,14 +53,22 @@ export type Routes = keyof typeof regexRoutes
 export type AnyRoute = Route<any, any> | Route404
 
 
-/** When we need to determine a route / api we look at a map that's in this structure, the key is the path as defined @ new Route() or new API() */
+/**
+ * - `RegexMap` helps organize and type all route or `API` entries in one place
+ * - Ensures each `key` in the map corresponds to a properly typed `RegexMapEntry`, providing consistent access to route or `API` meta data
+ */
 export type RegexMap<Kind extends 'route' | 'api'> = Kind extends 'route'
-  ? Record<string, RegexMapEntry<AnyRoute>>
-  : Record<string, RegexMapEntry<API<any, any, any, any, any>>>
+  ? Record<string, RegexMapEntry<'route', AnyRoute>>
+  : Record<string, RegexMapEntry<'api', API<any, any, any, any, any>>>;
 
 
-/** loader() gives back the new API() or new Route() */
-export type RegexMapEntry<T_Module> = { path?: string, pattern: RegExp, loader: () => Promise<T_Module> }
+/**
+ * - `RegexMapEntry` defines the shape of a single entry in the `RegexMap` based on its kind (`route` or `API`)
+ * - Ensures that each entry contains the correct fields (like `method` for APIs) and type-safe dynamic loader functions
+ */
+export type RegexMapEntry<Kind extends 'route' | 'api', T_Module> = Kind extends 'route'
+  ? { pattern: RegExp, loader: () => Promise<T_Module> }
+  : { path: string, method: ApiMethods, pattern: RegExp, loader: () => Promise<T_Module> }
 
 
 /** 
@@ -174,7 +182,7 @@ export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? fals
  * - Receives: API Function Name
  * - Gives: API Response
 */
-export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
   ? Api2Response<T_API>
   : never
 
@@ -183,7 +191,7 @@ export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_N
  * - Receives: API Function Name
  * - Gives: API Response Data
 */
-export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
   ? Api2Data<T_API>
   : never
 
@@ -192,7 +200,7 @@ export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name]
  * - Receives: API Function Name
  * - Gives: API Type
 */
-export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API>
+export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
   ? T_API extends API<any, any, any, any, any>
     ? T_API
     : never
@@ -209,7 +217,7 @@ export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] 
     const res = await apiClothing(props)
     ```
 */
-export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<infer T_API> // Get module type T_API from the RegexMapEntry
+export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API> // Get module type T_API from the RegexMapEntry
   ? T_API extends API< infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals > // ensure T_API is indeed an API<…>
     ? BaseAPIFnProps<API<T_PathParams,T_SearchParams,T_Body,T_Response,T_Locals>> & { bitKey?: string } // build props type
     : never
@@ -244,7 +252,7 @@ export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
   bitKey?: AceKey
   /** Optional, if queryType set AND queryKey undefined THEN queryKey <- apiName */
   queryKey?: AceKey
-  /** @ README.md > Call APIs is a full explanation of queryType */
+  /** @link https://github.com/acets-team/ace?tab=readme-ov-file#call-apis > full explanation of `queryType` */
   queryType?: QueryType,
   /** Optional, to send w/ `fetch()` */
   requestInit?: Partial<RequestInit>,

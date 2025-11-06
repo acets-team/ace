@@ -78,8 +78,7 @@ function renderEnv(build: Build) {
 
 
 function renderApis(build: Build) {
-  return `import * as apiLoaders from './apiLoaders'
-import { createApiFn } from '../createApiFn' 
+  return `import { createApiFn } from '../createApiFn' 
 
 ${build.writes.apiFunctions}`
 }

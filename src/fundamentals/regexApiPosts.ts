@@ -1,8 +1,6 @@
-import { RegexMap } from './types'
+import type { RegexMap } from './types'
+import { regexApiNames } from './regexApiNames'
 
 export const regexApiPosts = {
-  '/api/b': {
-    pattern: /^\/api\/a\/?$/,
-    loader: () => import('../api/a').then((m) => m.POST)
-  },
+  '/api/b': regexApiNames['apiGetA'],
 } satisfies RegexMap<'api'>

@@ -1,6 +1,5 @@
+import { regexApiNames } from "./regexApiNames";
+
 export const regexApiDeletes = {
-  '/api/a/:id': {
-    pattern: /^\/api\/a\/(?<id>[^/]+)\/?$/,
-    loader: () => import('../api/a').then((m) => m.DELETE)
-  },
+  '/api/a/:id': regexApiNames['apiGetA'],
 } as const

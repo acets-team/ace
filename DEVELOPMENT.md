@@ -38,6 +38,9 @@
     | `npm version patch` | Bug fixes or minor improvements    | `0.6.0 → 0.6.1` |
     | `npm version minor` | New features (backward-compatible) | `0.6.0 → 0.7.0` |
     | `npm version major` | Breaking changes                   | `0.6.0 → 1.0.0` |
+1. IF @ `create-ace-app` THEN
+    1. Run `npm run bump`
+    1. `Git Commit`
 1. Publish `GitHub` Release
     1. Push to Github
         - 🚨 `git push origin main --follow-tags`
@@ -45,10 +48,11 @@
         - `git push` by itself only pushes commits, **not tags**.
         - `--follow-tags` pushes both the commit and the tag (so `GitHub` can create the release properly)
     1. Go to [GitHub → Releases](https://github.com/acets-team/ace/releases)
-    1. Click `Create a new release`
+    1. Click `Draft a new release`
     1. Select new tag (match new version), example `0.6.3`
     1. Click `Generate release notes`
-    1. Click `Publish Release`
+    1. Select `Set as the latest release`
+    1. Click `Publish release`
 1. Publish to `NPM`
     - From project root directory:
         1. Login: `npm login`

@@ -2671,7 +2671,7 @@ export default new Route('/')
     let registered = false
 
     export function registerHljs() {
-      if (!registered) { // it's important to have ts & xml for tsx ❤️
+      if (!registered) { // it's important to have ts & xml for tsx (& then for tsx just use the language "ts") ❤️
         hljs.registerLanguage('xml', xml)
         hljs.registerLanguage('typescript', typescript)
 
@@ -2722,12 +2722,48 @@ export default new Route('/')
     - Build Command: `npm run build`
     - Deploy Command: `npx wrangler deploy`
     - Save & Deploy
-1. Locally at your project root (where package.json is) create `wrangler.toml`
-1. In the first line place the worker name that you gave to cloudflare: `name = "your-project-name"`
-1. On the 2nd line place yesterday's date, example: `compatibility_date = "2025-01-30"`
+1. Locally at your project root (where package.json is) create `wrangler.jsonc`, example:
+    ```json
+    {
+      "name": "create-ace-app",
+      "compatibility_date": "2025-11-04",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "observability": {
+        "enabled": true
+      }
+    }
+    ```
+1. Update the `compatibility_date` to yesterday's date, example: `compatibility_date = "2025-01-30"`
 1. Locally navigate to `.env` at your project root
 1. For each item here, tell cloudflare about it, example: `npx wrangler secret put JWT_SECRET`
 1. Navigate to `Workers & Pages` > `Your Project` > `Deployments`
+1. Find prod URL, by visiting site, or seeing logs
+1. Add prod url to your `ace.config.js`, example:
+    ```js
+    // @ts-check 
+
+    /** @type {import('@acets-team/ace').AceConfig} */
+    export const config = {
+      sw: true,
+      apiDir: './src/api',
+      appDir: './src/app',
+      logCaughtErrors: true,
+      origins: {
+        prod: 'https://create-ace-app.jquery-ssr.workers.dev/',
+        local: ['http://localhost:3000', 'http://localhost:3001']
+      },
+      plugins: {
+        hljs: true,
+        solid: true,
+        agGrid: true,
+        valibot: true,
+        chartjs: true,
+        markdownIt: true,
+      }
+    }
+    ```
 1. 💫 Push to GitHub aka **Deploy**! ❤️
 
 
