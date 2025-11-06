@@ -85,7 +85,7 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
   onQuery() {
     const queryKey = createAceKey(this.props?.queryKey ?? this.apiName)
 
-    const resQuery = query(this.innerQuery, queryKey)
+    const resQuery = query(this.innerQuery.bind(this), queryKey) // bind 'this' to innerQuery to preserve the ApiFn instance context
 
     if (this.props?.queryType !== 'stream') this.parseQuery(resQuery) // createAsync() outside of 'stream' creates hydration error or data leak error, example: computations created outside a `createRoot` or `render` will never be disposed
     else createAsync(async () => { this.parseQuery(resQuery) }, { deferStream: true })
@@ -115,6 +115,7 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
 
 
   async onResult() {
+    if (isServer) return // callbacks server side leads to hydration issues
     if (!this.result) throw new Error('!this.result')
 
     if (this.props?.onError || this.props?.onSuccess) {

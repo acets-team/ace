@@ -4,6 +4,16 @@
 - & `@acets-team/ace` adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 
+## [0.6.3] - 2025-11-05
+
+### 🧠 Improved
+- Don't call API Function callbacks server side
+
+### 🐛 Fixed
+- `API Function` > `innerQuery()` throws undefined error when accessing `this`
+
+
+
 ## [0.6.2] - 2025-11-05
 
 ### 🧠 Improved
@@ -77,6 +87,7 @@
 
 
 
+[0.6.3]: https://github.com/acets-team/ace/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/acets-team/ace/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/acets-team/ace/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/acets-team/ace/releases/tag/v0.6.0
