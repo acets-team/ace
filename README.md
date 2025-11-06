@@ -82,9 +82,12 @@
 
 
 ## Create Ace App!
-```bash
-npx create-ace-app@latest
-```
+- Bash:
+    ```bash
+    npx create-ace-app@latest
+    ```
+- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it can take 10 seconds to load 😡 b/c Vite is altering code to optimize `HMR` 🤓 but this is no factor in production. To prove this, here's <a href="https://create-ace-app.jquery-ssr.workers.dev/" target="blank" alt="Create Ace App In Production">Create Ace App In Production</a>! 🚀 Deployed to Cloudflare Workers via `git push`, [directions here](#deploy-on-cloudflare)!
+    ![Create Ace App in Production](https://i.imgur.com/tUleSef.png)
 
 
 
@@ -96,21 +99,20 @@ npx create-ace-app@latest
 
 1. Define atoms: `src/store/atoms.ts`
     ```ts
+    // Create Ace App's atoms
+
     import { Atom } from '@ace/atom'
-    import type { ApiName2Data, ChartJsData } from '@ace/types'
+    import type { ApiName2Data, ChartJsMap } from '@ace/types'
     import type { FinanceSummary, Transaction, ChatMessage } from '@src/lib/types'
 
 
     export const atoms = {
       count: new Atom({ save: 'idb', is: 'number', init: 0 }),
-      buildStats: new Atom({ save: 'idb', is: 'string', init: '' }),
       chatMessage: new Atom({ save: 'idb', is: 'string', init: '' }),
-      cashFlow: new Atom<ChartJsData[]>({ save: 'idb', is: 'json', init: [] }),
       chatMessages: new Atom<ChatMessage[]>({ save: 'idb', is: 'json', init: [] }),
       transactions: new Atom<Transaction[]>({ save: 'idb', is: 'json', init: [] }),
-      financeCategories: new Atom<ChartJsData[]>({ save: 'idb', is: 'json', init: [] }),
+      financeCategories: new Atom<ChartJsMap[]>({ save: 'idb', is: 'json', init: [] }),
       financeSummary: new Atom<undefined | FinanceSummary>({ save: 'idb', is: 'json' }),
-      newsletterForm: new Atom({ save: 'idb', is: 'json',  init: { name: '', email: '' } }),
       fortunes: new Atom<ApiName2Data<'apiGetFortune'>[]>({ save: 'idb', is: 'json', init: [] }),
     }
     ```
@@ -473,12 +475,7 @@ npx create-ace-app@latest
         .component(() => {
           const {sync} = useStore()
 
-          apiGetCashFlow({ // api's load simultaneously btw ❤️
-            queryType: 'stream',
-            onSuccess: (d) => sync('cashFlow', d)
-          })
-
-          apiGetTransactions({
+          apiGetTransactions({ // api's load simultaneously btw ❤️
             queryType: 'stream',
             onSuccess: (d) => sync('transactions', d)
           })
