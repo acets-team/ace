@@ -63,16 +63,16 @@
 ## What is Ace?
 - Ace is a set of functions, classes, and types (**fundamentals**) to aid web developers. We’ve grouped these fundamentals into **plugins**. When a plugin is set to true @ `ace.config.js`, that plugin's corresponding fundamentals are added to the `.ace` folder @ your `current working directory`. 
 - So each plugin is opt-in, and only the Ace fundamentals you import & use will be included in your build! **Standard Ace plugins include:**
-  1. **[Solid](https://docs.solidjs.com/)** (optimal DOM updates)
-  1. **[Drizzle](https://orm.drizzle.team/)** (typesafe db updates)
-  1. **[Turso](https://turso.tech/)** (Swift SQL DB)
-  1. **[Cloudflare](https://www.cloudflare.com/)** (Region: Earth)
-  1. **[AgGrid](https://www.ag-grid.com/)** (Scrollable, filterable & sortable tables)
-  1. **[Charts.js](https://www.chartjs.org/)** (Evergreen charting library)
-  1. **[Valibot](https://valibot.dev/)** (Small bundle Zod)
-  1. **[Brevo](https://www.brevo.com/)** (300 emails a day for free)
-  1. **[Markdown-It](https://markdown-it.github.io/markdown-it/)** (Markdown to HTML)
-  1. **[Highlight.js](https://github.com/highlightjs/highlight.js)** (Highlight code in Markdown)
+  1. **<a href="https://docs.solidjs.com/" target="_blank" rel="noopener noreferrer">Solid</a>** (optimal DOM updates)
+  1. **<a href="https://orm.drizzle.team/" target="_blank" rel="noopener noreferrer">Drizzle</a>** (typesafe db updates)
+  1. **<a href="https://turso.tech/" target="_blank" rel="noopener noreferrer">Turso</a>** (Swift SQL DB)
+  1. **<a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer">Cloudflare</a>** (Region: Earth)
+  1. **<a href="https://www.ag-grid.com/" target="_blank" rel="noopener noreferrer">AgGrid</a>** (Scrollable, filterable & sortable tables)
+  1. **<a href="https://www.chartjs.org/" target="_blank" rel="noopener noreferrer">Charts.js</a>** (Evergreen charting library)
+  1. **<a href="https://valibot.dev/" target="_blank" rel="noopener noreferrer">Valibot</a>** (Small bundle Zod)
+  1. **<a href="https://www.brevo.com/" target="_blank" rel="noopener noreferrer">Brevo</a>** (300 emails a day for free)
+  1. **<a href="https://markdown-it.github.io/markdown-it/" target="_blank" rel="noopener noreferrer">Markdown-It</a>** (Markdown to HTML)
+  1. **<a href="https://github.com/highlightjs/highlight.js" target="_blank" rel="noopener noreferrer">Highlight.js</a>** (Highlight code in Markdown)
 
 
 
@@ -86,7 +86,7 @@
     ```bash
     npx create-ace-app@latest
     ```
-- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it can take 10 seconds to load 😡 b/c Vite is altering code to optimize `HMR` 🤓 but this is no factor in production. To prove this, here's <a href="https://create-ace-app.jquery-ssr.workers.dev/" target="blank" alt="Create Ace App In Production">Create Ace App In Production</a>! 🚀 Deployed to Cloudflare Workers via `git push`, [directions here](#deploy-on-cloudflare)!
+- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it can take 10 seconds to load 😡 b/c Vite is altering code to optimize `HMR` 🤓 but this is no factor in production. To prove this, here's <a href="https://create-ace-app.jquery-ssr.workers.dev/" target="_blank" rel="noopener noreferrer">Create Ace App In Production</a>! 🚀 Deployed to Cloudflare Workers via `git push`, [directions here](#deploy-on-cloudflare)!
     ![Create Ace App in Production](https://i.imgur.com/tUleSef.png)
 
 
@@ -147,12 +147,12 @@
     ```
 1. `useStore()` has lots of lovely goodies including:
     - `store`
-        - [Solid's store](https://docs.solidjs.com/concepts/stores) is the accessor to all our store values
+        - <a href="https://docs.solidjs.com/concepts/stores" target="_blank" rel="noopener noreferrer">Solid's store</a> is the accessor to all our store values
         - Each `Atom` is added into the store and is accessible via it's `key`. So based on the example atoms above, we can access:
             - `store.count`
             - `store.newsletterForm.name`
     - `setStore()`
-        - [Solid's setStore()](https://docs.solidjs.com/concepts/stores) helps us to assign store value, examples:
+        - <a href="https://docs.solidjs.com/concepts/stores" target="_blank" rel="noopener noreferrer">Solid's setStore()</a> helps us to assign store value, examples:
           - `setStore('count', 1)`
           - `setStore('count', c => c + 1)`
           - `setStore('newsletterForm', 'name', 'Chris')`
@@ -162,13 +162,13 @@
             - `save('count')`
             - `save('newsletterForm')`
     - `set()`
-        - Calls [Solid setStore()](https://docs.solidjs.com/concepts/stores) and then calls `save()`, examples:
+        - Calls <a href="https://docs.solidjs.com/concepts/stores" target="_blank" rel="noopener noreferrer">Solid's setStore()</a> and then calls `save()`, examples:
             - `set('count', 1)`
             - `set('count', c => c + 1)`
             - `set('newsletterForm', 'name', 'Chris')`
             - `set('newsletterForm', {name: 'Chris', email: 'chris@gmail.com'})`
     - `copy()`
-        - Calls [Solid's produce()](https://docs.solidjs.com/concepts/stores) which lets us mutate a copy/draft of the data inside a single callback and then calls `save()`, examples:
+        - Calls <a href="https://docs.solidjs.com/concepts/stores" target="_blank" rel="noopener noreferrer">Solid's produce()</a> which lets us mutate a copy/draft of the data inside a single callback and then calls `save()`, examples:
           ```ts
           copy('user', u => {
             u.settings.theme = 'dark'
@@ -181,7 +181,7 @@
         - To avoid this please use `sync()`
 
     - `sync()`
-        - Calls [Solid's reconcile()](https://docs.solidjs.com/concepts/stores) which efficiently diffs and merges entire objects or arrays and then calls `save()`, examples:
+        - Calls <a href="https://docs.solidjs.com/concepts/stores" target="_blank" rel="noopener noreferrer">Solid's reconcile()</a> which efficiently diffs and merges entire objects or arrays and then calls `save()`, examples:
           ```ts
           // array example:
 
@@ -595,7 +595,7 @@
 ## VS Code Extension
 - Provides links to `Ace API's` right **above API Function calls!** 🙌
     ![Ace for Vs Code Extension](https://i.imgur.com/6risrqD.png)
-- In **VS Code** or any fork like **[VsCodium](https://vscodium.com/)**:
+- In **VS Code** or any fork like **<a href="https://vscodium.com/" target="_blank" rel="noopener noreferrer">VsCodium</a>**:
     - Extensions Search: `ace-vs-code`
     - The name of the package is `Ace for VS Code` and the author is `acets-team`
 - & please feel free click here to see [additional vs code helpful info](#vs-code-helpful-info)!
@@ -604,7 +604,7 @@
 
 ## Breakpoints
 #### BE Breakpoints ✅
-1. To the left of the line numbers in [VsCodium](https://vscodium.com/) place the breakpoint!
+1. To the left of the line numbers in <a href="https://vscodium.com/" target="_blank" rel="noopener noreferrer">VsCodium</a> place the breakpoint!
     ![Add Ace Breakpoint](https://i.imgur.com/JaTmZrA.png)
 1. Refresh site and now in your editor you may `watch variables` & see the `call stack`!
     ![Ace BE Breakpoint Example](https://i.imgur.com/t7QuasD.png)
@@ -938,7 +938,7 @@ export default new Route404()
     swAddOffLineSupport({ cacheName: `offline-cache-v-${packageDotJsonVersion}` })
     ```
 1. 🚨 To align our app version (in package.json) w/ your cache version then:
-    1. Ensure `package.json` [version is defined](https://docs.npmjs.com/cli/commands/npm-version)
+    1. Ensure `package.json` <a href="https://docs.npmjs.com/cli/commands/npm-version" target="_blank" rel="noopener noreferrer">version is defined</a>
     1. Ensure `/public/sw.js` has `const packageDotJsonVersion = ''` 
     1. Run in bash: `ace sw` to place your `package.json` version into your sw.js file 🥳
     1. Update package.json scripts to run `ace sw` automatically
@@ -1012,8 +1012,8 @@ export default new Route404()
 ![Create Ace App](https://i.imgur.com/KPXGwRm.png)
 1. Please follow the [Add Offline Support](#add-offline-support) directions to ensure you register the service worker correctly!
     - Offline support is a lovely app feature but if you don't want it, just **don't** call `swAddOffLineSupport()` @ `/public/sw.js`
-1. For free in [Figma](https://www.figma.com/) create a 512x512 icon for your app
-1. For free @ [Progressier](https://progressier.com/pwa-manifest-generator) create a `manifest.json` and icon suite
+1. For free in <a href="https://www.figma.com/" target="_blank" rel="noopener noreferrer">Figma</a> create a 512x512 icon for your app
+1. For free @ <a href="https://progressier.com/pwa-manifest-generator" target="_blank" rel="noopener noreferrer">Progressier</a> create a `manifest.json` and icon suite
 1. Add the generated `manifest.json` and `icons` to your `/public` folder
 1. @ `src/entry-server.tsx` > `<head>` add `<link rel="manifest" href="/manifest.json" />`
 1. App install is now ready!
@@ -1581,8 +1581,8 @@ export function SignIn() {
 #### ✅ Helpful when people post a link to your site on places like `Facebook`, `Discord` or `Slack` & you'd love an image / specific information to show
 1. Take a screenshot of the website OR use an existing image
     - Using an existing image makes sense if this is for example a product page so just use an existing product image
-    - If using a screenshot, before adding it to your `/public` folder, we recommend [sqooshing](https://squoosh.app/editor) your image (reduces size by +70% & still looks really good), so it loads quickly & is accepted by the 3rd party showing your link
-1. Add `<Meta />` tags, [og meta tags info](https://ogp.me/)
+    - If using a screenshot, before adding it to your `/public` folder, we recommend <a href="https://squoosh.app/editor" target="_blank" rel="noopener noreferrer">sqooshing</a> your image (reduces size by +70% & still looks really good), so it loads quickly & is accepted by the 3rd party showing your link
+1. Add `<Meta />` tags, <a href="https://ogp.me/" target="_blank" rel="noopener noreferrer">og meta tags info</a>
 ```ts
 import './Home.css'
 import { Route } from '@ace/route'
@@ -2181,7 +2181,7 @@ export default new Route('/')
       }
     })
     ```
-1. Tailwind [Cheatsheet](https://nerdcave.com/tailwind-cheat-sheet)
+1. Tailwind <a href="https://nerdcave.com/tailwind-cheat-sheet" target="_blank" rel="noopener noreferrer">Cheatsheet</a>
 1. Download the tailwind vscode extension
     1. Click Extensions
     1. Search: `bradlc.vscode-tailwindcss`
@@ -2191,11 +2191,11 @@ export default new Route('/')
 
 
 ## Turso Demo
-1. [Install Turso locally & Sign In](https://docs.turso.tech/quickstart)
+1. <a href="https://docs.turso.tech/quickstart" target="_blank" rel="noopener noreferrer">Install Turso locally & Sign In</a>
 1. Install: `npm i @libsql/client -D`
 1. Install: `npm i drizzle-orm -D`
 1. Install: `npm i drizzle-kit -D`
-1. Create [`./drizzle.config.ts`](https://orm.drizzle.team/docs/drizzle-config-file), example:
+1. Create <a href="https://orm.drizzle.team/docs/drizzle-config-file" target="_blank" rel="noopener noreferrer"><code>./drizzle.config.ts</code></a>, example:
     ```ts
     // Helps Drizzle CLI connect to DB
 
@@ -2590,7 +2590,7 @@ export default new Route('/')
 ## Markdown-It Demo
 #### `<MarkdownItStatic />` ✅
 - Ideal for SEO
-- Supports `.md` files & markdown `Preview` @ [VsCodium](https://vscodium.com/)  ✅
+- Supports `.md` files & markdown `Preview` @ <a href="https://vscodium.com/" target="_blank" rel="noopener noreferrer">VsCodium</a>  ✅
     ![Ace Markdown Example](https://i.imgur.com/DZvLKs8.jpeg)
 - Install: `npm i markdown-it -D`
 - Example:
@@ -2657,7 +2657,7 @@ export default new Route('/')
 1. Install: `npm i highlight.js -D`
 1. Install: `npm i @highlightjs/cdn-assets -D`
 1. @ `app.css` add: `@import '@highlightjs/cdn-assets/styles/github-dark.min.css';`
-    - [All available styles](https://github.com/highlightjs/highlight.js/tree/main/src/styles)
+    - <a href="https://github.com/highlightjs/highlight.js/tree/main/src/styles" target="_blank" rel="noopener noreferrer">All available styles</a>
 1. Add `hljs: true` @ [`ace.config.js`](#ace-config) > `plugins` & then run `npm run dev` to get the `hljs` fundamentals
 1. @ `src/init/registerHljs.ts` register the languages you'd love to support, example:
     ```ts
@@ -2687,14 +2687,14 @@ export default new Route('/')
 
 
 ## Send Brevo Emails
-1. [Brevo](https://www.brevo.com/) offers **300** marketing / API emails a day for [free](https://www.brevo.com/pricing/), has a super easy integration w/ Cloudflare, and allows people to reply to your emails, so you get a free email inbox too!
-1. [Setup DNS between Brevo & Cloudflare](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC)
+1. <a href="https://www.brevo.com/" target="_blank" rel="noopener noreferrer">Brevo</a> offers **300** marketing / API emails a day for [free](https://www.brevo.com/pricing/), has a super easy integration w/ Cloudflare, and allows people to reply to your emails, so you get a free email inbox too!
+1. <a href="https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC" target="_blank" rel="noopener noreferrer">Setup DNS between Brevo & Cloudflare</a>
     - During this process there is an option of `Authenticate the domain automatically`. If you're using Cloudflare we recommend this option, it adds all the DNS records in 1 lovely step!
-1. [Ensure you have a sender setup](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email)
-1. [Create an API Key](https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys)
+1. <a href="https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email" target="_blank" rel="noopener noreferrer">Ensure you have a sender setup</a>
+1. <a href="https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys" target="_blank" rel="noopener noreferrer">Create an API Key</a>
     - Add `BREVO_API_KEY` to `.env` file
-1. [Create an Email Template](https://help.brevo.com/hc/en-us/articles/360019787120-Create-an-email-template)
-    - On the edit template page, to have a link point to a param, set the `Link Target` to `{{params.EXAMPLE_LINK}}` & then [(reference)](https://developers.brevo.com/docs/send-a-transactional-email):
+1. <a href="https://help.brevo.com/hc/en-us/articles/360019787120-Create-an-email-template" target="_blank" rel="noopener noreferrer">Create an Email Template</a>
+    - On the edit template page, to have a link point to a param, set the `Link Target` to `{{params.EXAMPLE_LINK}}` & then <a href="https://developers.brevo.com/docs/send-a-transactional-email" target="_blank" rel="noopener noreferrer">(reference)</a>:
     - Ensure you have `plugins > brevo` set to true in your Ace config, do a [dev restart](#-when-a-dev-restart-is-necessary) & then:
     ```ts
     const response = await sendBrevoTemplate({ // send brevo email 
@@ -2708,7 +2708,7 @@ export default new Route('/')
 
 
 ## Deploy on Cloudflare
-### [Cloudflare](https://www.cloudflare.com/) offers 100,000 requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)! 🥹
+### <a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer">Cloudflare</a> offers 100,000 requests a day for <a href="https://developers.cloudflare.com/workers/platform/pricing/" target="_blank" rel="noopener noreferrer">free</a>! 🥹
 1. Create a GitHub account or Sign in
 1. Push to a public or private repository
 1. Create a Cloudlfare account or Sign in
@@ -2766,7 +2766,7 @@ export default new Route('/')
 
 
 ## Add a custom domain
-1. Purchase a domain, I love [Namecheap](http://namecheap.com)!
+1. Purchase a domain, I love <a href="http://namecheap.com" target="_blank" rel="noopener noreferrer">Namecheap</a>!
 1. Sign into Cloudflare
 1. In the `Dashboard` navigate to `Acount Home`
 1. Click `Add a Domain`
