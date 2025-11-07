@@ -42,11 +42,7 @@ export async function sw(cwd: string) {
     mkdir(dirPublicAce, { recursive: true }), // create public/.ace
   ])
 
-  await Promise.all([
-    copyFile(join(dirWriteFundamentals, 'swRegister.js'), join(dirPublicAce, 'swRegister.js')),
-    copyFile(join(dirWriteFundamentals, 'sw.styles.css'), join(dirPublicAce, 'sw.styles.css')),
-    copyFile(join(dirWriteFundamentals, 'swAddOffLineSupport.js'), join(dirPublicAce, 'swAddOffLineSupport.js')),
-  ])
+  await copyFile(join(dirWriteFundamentals, 'swAddOffLineSupport.js'), join(dirPublicAce, 'swAddOffLineSupport.js'))
 
   cuteLog('🎉 Wrote: /public/sw.js', 'bold', 'green')
 }

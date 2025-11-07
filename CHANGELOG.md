@@ -5,6 +5,17 @@
 
 
 
+## [0.7.1] - 2025-11-06
+
+### 🧠 Improved
+- Inline `sw.styles.css` and `swRegister.js` @ `src/entry-server.tsx` for optimal Lighthouse score
+- Now `@ace` import can have a `?raw` at the end and work to get the raw file string
+
+### 🗑️ Removed
+- Removed `sw.styles.css` AND `sw.styles.css` from `/public/.ace` b/c we can get then `?raw` from `@ace` now
+
+
+
 ## [0.7.0] - 2025-11-06
 
 ### 🧠 Improved
@@ -133,6 +144,8 @@
 
 
 
+[0.7.1]: https://github.com/acets-team/ace/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/acets-team/ace/compare/v0.6.7...v0.7.0
 [0.6.7]: https://github.com/acets-team/ace/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/acets-team/ace/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/acets-team/ace/compare/v0.6.4...v0.6.5

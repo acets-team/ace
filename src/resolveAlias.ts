@@ -63,8 +63,13 @@ function getFundamentalsAliases(dir: string): Record<string, string> {
     const fsPath = path.join(fundamentalsRoot, file) // Get the full fs path to each item in the fundamentals directory
     const { name, base, ext } = path.parse(file) // file name
 
-    if (ext === '.css') aliases[`@ace/${base}`] = fsPath
-    else aliases[`@ace/${name}`] = fsPath // standard
+    if (ext === '.css') { // base is the filename WITH extension ex: sw.styles.css
+      aliases[`@ace/${base}`] = fsPath
+      aliases[`@ace/${base}?raw`] = `${fsPath}?raw` // now we'll have ?raw support for any @ace module
+    } else { // name is the filename WITHOUT extension, ex: swRegister
+      aliases[`@ace/${name}`] = fsPath
+      aliases[`@ace/${name}?raw`] = `${fsPath}?raw`
+    }
   }
 
   return aliases

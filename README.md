@@ -87,7 +87,7 @@
     ```bash
     npx create-ace-app@latest
     ```
-- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it can take 6-9 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy-on-cloudflare)!
+- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it will take 10-15 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy-on-cloudflare)!
     ![Create Ace App in Production](https://i.imgur.com/tUleSef.png)
 
 
@@ -960,11 +960,12 @@ export default new Route404()
           },
         }
         ```
-1. @ `src/entry-server.tsx` add `.ace/sw.styles.css` AND `.ace/swRegister.js`
-    ```js
+1. @ `src/entry-server.tsx` add `@ace/sw.styles.css?raw` AND `@ace/swRegister?raw`. The `?raw` is a `Vite` thing, it gives us the import as a string, and then we inline it for an optimal [Lighthouse score](https://developer.chrome.com/docs/lighthouse/overview)!
+    ```tsx
     // @refresh reload
+    import swRegister from '@ace/swRegister?raw'
+    import swStyles from '@ace/sw.styles.css?raw'
     import { createHandler, StartServer } from '@solidjs/start/server'
-
 
     export default createHandler(() => (
       <StartServer
@@ -972,15 +973,21 @@ export default new Route404()
           <html lang="en">
             <head>
               <meta charset="utf-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <style>{swStyles}</style>
               <link rel="icon" href="/favicon.ico" />
-              <link href="/.ace/sw.styles.css" rel="stylesheet" />
+              <link rel="manifest" href="/manifest.json" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta name="description" content="Create Ace App is a showcase for what is possible w/ Ace!" />
+
+              {/* enhance how the site looks when added to an iOS device's home screen */}
+              <meta name="apple-mobile-web-app-capable" content="yes" /> {/* tells iOS Safari that the web application should be run in full-screen mode without the standard browser chrome (address bar, toolbar) when launched from a home screen icon */}
+              <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /> {/* sets the appearance of the iOS status bar (time, battery icons) when running in full-screen mode */}
+
               {assets}
             </head>
-
             <body>
               <div id="app">{children}</div>
-              <script src="/.ace/swRegister.js"></script>
+              <script>{swRegister}</script>
               {scripts}
             </body>
           </html>
@@ -1019,15 +1026,15 @@ export default new Route404()
 
 ## Create Desktop Application
 **✅ [`npx create-ace-app@latest`](#create-ace-app) is built w/ the following directions done btw!**
-![Create Ace App](https://i.imgur.com/KPXGwRm.png)
+![Create Ace App](https://i.imgur.com/Nyd6HdL.png)
 1. Please follow the [Add Offline Support](#add-offline-support) directions to ensure you register the service worker correctly!
     - Offline support is a lovely app feature but if you don't want it, just **don't** call `swAddOffLineSupport()` @ `/public/sw.js`
 1. For free in [Figma](https://www.figma.com/) create a 512x512 icon for your app
 1. For free @ [Progressier](https://progressier.com/pwa-manifest-generator) create a `manifest.json` and icon suite
 1. Add the generated `manifest.json` and `icons` to your `/public` folder
 1. @ `src/entry-server.tsx` > `<head>` add `<link rel="manifest" href="/manifest.json" />`
-1. App install is now ready!
-    ![Create Desktop Application](https://i.imgur.com/K0ZEiQe.png)
+1. App install is now ready! (works on `localhost` too btw!)
+    ![Create Desktop Application](https://i.imgur.com/iN3ywWW.png)
 
 
 
