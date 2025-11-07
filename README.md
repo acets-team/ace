@@ -87,8 +87,8 @@
     ```bash
     npx create-ace-app@latest
     ```
-- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it will take 10-15 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy-on-cloudflare)!
-    ![Create Ace App in Production](https://i.imgur.com/tUleSef.png)
+- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev`, it will take 10-15 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy-on-cloudflare)!
+    ![Create Ace App in Production](https://i.imgur.com/UcfHhXh.jpeg)
 
 
 
@@ -622,7 +622,7 @@
 1. @ `FE` code, place a `debugger` w/in your code and/or an `if (condition) debugger` (as seen in screenshot below)
 1. In browser navigate to `Inpect` > `Sources`
 1. Refresh site and now in your browser you may `watch variables` & see the `call stack`!
-    ![Ace FE Breakpoint Example](https://i.imgur.com/on3ziF1.png)
+    ![Ace FE Breakpoint Example](https://i.imgur.com/sY9tJ2w.jpeg)
 
 
 
@@ -2611,14 +2611,15 @@ export default new Route('/')
 #### `<MarkdownItStatic />` ✅
 - Ideal for SEO
 - Supports `.md` files & markdown `Preview` @ [VsCodium](https://vscodium.com/)  ✅
-    ![Ace Markdown Example](https://i.imgur.com/DZvLKs8.jpeg)
+    ![Ace Markdown Example](https://i.imgur.com/cigzPqB.jpeg)
 - Install: `npm i markdown-it -D`
 - Example:
     ```ts
     // How `.md?raw` works:
-    // at build time, the markdown file is bundled as a string literal 
-    // the markdown file is cached, minified, and tree-shaken like any other module
-    // so at runtime, there's no file I/O b/c the markdown is an in memory string constant 
+      // at build time, the markdown file is bundled as a string literal 
+      // the markdown file is cached, minified, and tree-shaken like any other module
+      // so at runtime, there's no file I/O b/c the markdown is an in memory string constant 
+
     // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
 
     import mdAppInfo from '@src/md/mdAppInfo.md?raw'
