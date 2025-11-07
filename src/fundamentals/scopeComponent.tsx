@@ -333,4 +333,22 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
     return new WebSocket(`ws://${host}/subscribe?stream=${encodeURIComponent(props.stream)}`);
   }
+
+
+  /**
+   * ### Closes a live WebSocket connection created via `liveSubscribe`
+   * @example
+      ```ts
+      const ws = scope.liveSubscribe({ stream: 'example' })
+      onCleanup(() => scope.liveUnsubscribe(ws))
+      ```
+   * @param ws - The `ws` to unsubscribe
+   */
+  liveUnsubscribe(ws: WebSocket): void {
+    if (!ws) return
+
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+      ws.close(1000, 'liveUnsubscribe()')
+    }
+  }
 }

@@ -11,12 +11,13 @@ import type { IndexDB } from './indexDB'
 import type { ScopeBE } from './scopeBE'
 import type { InferEnums } from './enums'
 import type { Route404 } from './route404'
+import type { JSX, Signal } from 'solid-js'
 import type { regexRoutes } from './regexRoutes'
+import type { createAsync } from '@solidjs/router'
 import type { regexApiPuts } from './regexApiPuts'
 import type { regexApiGets } from './regexApiGets'
 import type { regexApiNames } from './regexApiNames'
 import type { regexApiPosts } from './regexApiPosts'
-import type { JSX, Signal, Accessor } from 'solid-js'
 import type { ScopeComponent } from './scopeComponent'
 import type { regexApiDeletes } from './regexApiDeletes'
 import type { AceError, AceErrorProps } from './aceError'
@@ -256,14 +257,16 @@ export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
   queryType?: QueryType,
   /** Optional, to send w/ `fetch()` */
   requestInit?: Partial<RequestInit>,
-  /** IF `onError` provided AND `response.error` truthy THEN `onError` will be called w/ `response.error`  */
+  /** On `FE`, IF `response.error` is truthy THEN `onError()` OR `defaultOnError()` will be called w/ `response.error`  */
   onError?: (error: AceErrorProps | AceError) => void
-  /** IF `onSuccess` provided AND `response.error` is falsy THEN `onSuccess` will be called w/ `response.data` */
+  /** On `FE`, IF no errors AND `onSuccess` provided THEN `onSuccess` will be called w/ `response.data` */
   onSuccess?: (data: Api2Data<T_API>) => void
-  /** IF `onResponse` provided THEN `onResponse` will be called w/ `Response` */
+  /** On `FE`, IF no errors AND `onResponse` provided THEN `onResponse` will be called w/ `Response` */
   onResponse?: (response: any) => void
-  /** Optional, set if you'd love a callback on load change by this api */
+  /** On `FE`, Optional, set if you'd love a callback on load change by this api */
   onLoadChange?: (value: boolean) => void
+  /** Optional, default is `{deferStream: true}`, requested `createAsyncOptions` are merged w/ default & passed to `createAsync()` */
+  createAsyncOptions?: Partial<Parameters<typeof createAsync>[1]>
 }
 
 
@@ -726,34 +729,48 @@ export type BaseStoreContext<T_Atoms extends Atoms> = {
    */
   _: BaseStoreContextInternal,
 
-  /** Provided by Solid - https://docs.solidjs.com/concepts/stores */
+  /**
+   * Provided by Solid 
+   * @link https://docs.solidjs.com/concepts/stores
+   */
   store: SolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
 
-  /** Provided by Solid - https://docs.solidjs.com/concepts/stores */
+  /**
+   * Provided by Solid 
+   * @link https://docs.solidjs.com/concepts/stores
+   */
   setStore: SetStoreFunction<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
 
-  /** Does: setStore() + save() - https://docs.solidjs.com/concepts/stores */
+  /** 
+   * Does: Solid's `setStore()` + Ace's `save()`
+   * @link https://docs.solidjs.com/concepts/stores
+   */
   set: SetStoreFunction<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
 
   /** Your own index db instance that you can read and write too like a document db :) */
   idb: IndexDB,
 
-  /** Readonly, the init atoms sent to createStore() */
+  /** Readonly, the init atoms sent to `createStore()` */
   atoms: Readonly<T_Atoms>,
 
   /** Inspired by AngularJS ngModel, 2 way data binding between a variable in a store and an input, textarea or select */
   refBind: StoreRefBind<T_Atoms>,
 
-  /** Does: setStore() + produce() + save() - https://docs.solidjs.com/concepts/stores */
+  /** 
+   * - Does: Solid's `setStore()` + Solid's `produce()` + Ace's `save()`
+   * - Convenient but not fine grained reactivity like `sync()` b/c the entire array/object is overwritten
+   * @link https://docs.solidjs.com/concepts/stores
+   */
   copy: StoreCopy<T_Atoms>,
 
   /** 
-   * - Does: `setStore()` + `reconcile()` + `save()` - https://docs.solidjs.com/concepts/stores
-   * - `reconcile()` performs a diff between current array state and requested array state and preserves existing DOM nodes b/c it does not update the entire array reference like `set()`
+   * - Does: Solid's `setStore()` + Solid's `reconcile()` + Ace's `save()`
+   * - `reconcile()` performs a diff between current array/object state and requested array/object state and then only updates in the array/object/DOM the changed items
+   * @link https://docs.solidjs.com/concepts/stores
    */
   sync: StoreSync<T_Atoms>,
 
-  /** Persist Atom by key */
+  /** Persist `Atom` by `key` */
   save: (key: keyof T_Atoms) => void,
 }
 

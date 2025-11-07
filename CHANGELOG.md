@@ -5,6 +5,15 @@
 
 
 
+## [0.6.7] - 2025-11-06
+
+### 🧠 Improved
+- Improved `README.md` & `JSDoc` comments
+- Added `ScopeComponent.liveUnsubscribe()`
+- Add `createAsyncOptions` to `Api Functions` & merge whatever is provided w/ `defaultCreateAsyncOptions`
+
+
+
 ## [0.6.6] - 2025-11-06
 
 ### 🧠 Improved
@@ -109,6 +118,7 @@
 
 
 
+[0.6.7]: https://github.com/acets-team/ace/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/acets-team/ace/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/acets-team/ace/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/acets-team/ace/compare/v0.6.3...v0.6.4

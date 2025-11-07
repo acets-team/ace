@@ -86,7 +86,7 @@
     ```bash
     npx create-ace-app@latest
     ```
-- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it can take 10 seconds to load 😡 b/c Vite is altering code to optimize `HMR` 🤓 but this is no factor in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, [directions here](#deploy-on-cloudflare)!
+- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev` it can take 6-9 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy-on-cloudflare)!
     ![Create Ace App in Production](https://i.imgur.com/tUleSef.png)
 
 
@@ -436,13 +436,13 @@
 
 ## Call APIs
 1. The less common way to call APIs is by their url w/ the typesafe functions `scope.GET()`, `scope.POST()`, `scope.PUT()` & `scope.DELETE()`
-1. The more common way to call APIs is by their function
+1. The more common way to call APIs is via **API functions**! 🙌
     ```tsx
     function UpdateEmail() {
       const {store, refBind} = useStore() // refBind() allows us to add 2 way data binding between an input and a store. see newsletterForm @ atoms.ts above to see why we bind to newsletterForm.email
 
       const onSubmit = createOnSubmit(({ event }) => {
-        apiUpdateEmail({
+        apiUpdateEmail({ // API Function! ❤️
           body: kParse(updateEmailParser, { email: store.newsletterForm.email }), // kParse() accepts a validating / parsing function (a parser) and an input and does the validating / parsing for us, it also reads the parser @ compile time and shows us in the editor if our input is missing any keys that this parser requires. So if the parser needs an email, this line will show an error till an email is provided. then at runtime the parser will check that email is the exact shape it should be
           onSuccess() {
             event.currentTarget.reset() // resets the form & refFormReset() below will ensure that when we reset the form the store values will clear and the error messages @ <Messages /> will also clear
@@ -460,7 +460,15 @@
       </>
     }
     ```
-1. If you specify a `queryType` then the API request will use Solid's `query()` function. Solid’s `query()` caches the response in the browser for a couple seconds and let's us call `reQuery()` to refresh the cached data (update the DOM). There are 3 different available `queryType's`:
+1. `onError()`
+    - On `FE`, IF `response.error` is truthy THEN `onError()` OR `defaultOnError()` will be called w/ `response.error`
+    - `defaultOnError()` => [`showErrorToast(error.message)`](#show-toast-notifications)
+1. `onResponse()`
+    - On `FE`, IF no errors AND `onResponse` provided THEN `onResponse` will be called w/ `Response`
+1. `onSuccess()`
+    - On `FE`, IF no errors AND `onSuccess` provided THEN `onSuccess` will be called w/ `response.data`
+1. `queryType`
+    - If you specify a `queryType` then the API request will use Solid's `query()` function. Solid’s `query()` caches the response in the browser for a couple seconds and let's us call `reQuery()` to refresh the cached data (update the DOM). There are 3 different available `queryType's`:
     - 🚨 set the `queryType` to `stream` when you'd love this api call to happen while the component is rendering & this request **does NOT set cookies**. On refresh the request will start on the `BE` and on SPA navigation (on anchor click) the request will start on the `FE`
       ```ts
       import './Home.css'
@@ -571,7 +579,8 @@
         })
       }
       ```
-1. If you specify a `queryType` then the API request will use Solid's `query()` function. Solid’s `query()` caches the response in the browser for a couple seconds and let's us call `reQuery()` to refresh the cached data (update the DOM)
+1. `reQuery()`
+    - If you specify a `queryType` then the API request will use Solid's `query()` function. Solid’s `query()` caches the response in the browser for a couple seconds and let's us call `reQuery()` to refresh the cached data (update the DOM)
     - Simple `reQuery()` example:
       ```ts
       function updateSession() { // calls api > calls [ onSuccess(), onError(), onResponse() ] > updates DOM

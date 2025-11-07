@@ -13,10 +13,7 @@ import type { ApiFnProps, Api2Function, Api2Response, RegexMapEntry, ApiName2Api
 
 
 /**
- * - IF `response.error` truthy THEN `options.onError()` OR `defaultOnError()` will be called w/ `response.error`
- * - ELSE
- *     - IF `options.onResponse` provided THEN `options.onResponse` will be called w/ `Response`
- *     - IF `options.onSuccess` provided THEN `onSuccess` will be called w/ `response.data`
+ * Create an API Function
  * @param apiName - API `name` as defined @ `new API()`
  */
 export function createApiFn<const T_Name extends keyof typeof regexApiNames>(apiName: T_Name): Api2Function<ApiName2Api<T_Name>> {
@@ -30,9 +27,9 @@ export function createApiFn<const T_Name extends keyof typeof regexApiNames>(api
 class ApiFn<T_API extends API<any, any, any, any, any>> {
   bitKey?: string
   apiName: string
-  result?: Result
   props?: ApiFnProps<T_API>
   regexMapEntry: RegexMapEntry<'api', any>
+  result?: { error?: any, query?: any, data?: any }
 
 
   constructor(apiName: string, options?: ApiFnProps<T_API>) {
@@ -42,6 +39,11 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
     this.apiName = apiName
     this.props = options
     this.regexMapEntry = entry
+  }
+
+
+  static get defaultCreateAsyncOptions () {
+    return { deferStream: true }
   }
 
 
@@ -87,8 +89,10 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
 
     const resQuery = query(this.innerQuery.bind(this), queryKey) // bind 'this' to innerQuery to preserve the ApiFn instance context
 
+    const createAsyncOptions = {...ApiFn.defaultCreateAsyncOptions, ...this.props?.createAsyncOptions }
+
     if (this.props?.queryType !== 'stream') this.parseQuery(resQuery) // createAsync() outside of 'stream' creates hydration error or data leak error, example: computations created outside a `createRoot` or `render` will never be disposed
-    else createAsync(async () => { this.parseQuery(resQuery) }, { deferStream: true })
+    else createAsync(async () => { this.parseQuery(resQuery) }, createAsyncOptions)
   }
 
 
@@ -175,6 +179,3 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
     if (!isServer && error?.message) showErrorToast(error.message)
   }
 }
-
-
-type Result = { error?: any, query?: any, data?: any }

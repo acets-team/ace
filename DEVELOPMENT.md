@@ -40,7 +40,7 @@
     | `npm version major` | Breaking changes                   | `0.6.0 → 1.0.0` |
 1. IF @ `create-ace-app` THEN
     1. Run `npm run bump`
-    1. `Git Commit`
+    1. `Git Commit` > `0.6.9 bump`
 1. Publish `GitHub` Release
     1. Push to Github
         - 🚨 `git push origin main --follow-tags`
