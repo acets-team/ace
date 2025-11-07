@@ -5,6 +5,13 @@
 
 
 
+## [0.7.2] - 2025-11-07
+
+### 🧠 Improved
+- `README.md` docs
+
+
+
 ## [0.7.1] - 2025-11-06
 
 ### 🧠 Improved
@@ -144,6 +151,7 @@
 
 
 
+[0.7.2]: https://github.com/acets-team/ace/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/acets-team/ace/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/acets-team/ace/compare/v0.6.7...v0.7.0
 [0.6.7]: https://github.com/acets-team/ace/compare/v0.6.6...v0.6.7
