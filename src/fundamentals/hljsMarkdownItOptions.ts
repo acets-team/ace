@@ -1,19 +1,19 @@
 /**
  * 🧚‍♀️ How to use:
  *   Plugin: hljs
- *   import { hljsMarkdownIt } from '@ace/hljsMarkdownIt'
+ *   import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
  */
 
 
+import hljs from './hljs/core'
 import markdownit from 'markdown-it'
-import hljs from './fundamentals/hljs/core'
 import type { Options as MarkdownItOptions } from 'markdown-it'
 
 
 /**
- * - MarkdownIt + HighlightJs Options
+ * - `MarkdownIt` > `options` > `highlight` to be done via `hljs`
  */
-export const hljsMarkdownIt: MarkdownItOptions['highlight'] = (str: string, lang: string) => {
+export const hljsMarkdownItOptions: MarkdownItOptions['highlight'] = (str: string, lang: string) => {
   try {
     if (lang && hljs.getLanguage(lang)) {
       const result = hljs.highlight(str, { language: lang, ignoreIllegals: true }).value

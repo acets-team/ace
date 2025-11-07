@@ -27,6 +27,7 @@ export function createApiFn<const T_Name extends keyof typeof regexApiNames>(api
 class ApiFn<T_API extends API<any, any, any, any, any>> {
   bitKey?: string
   apiName: string
+  onResultHappened = false
   props?: ApiFnProps<T_API>
   regexMapEntry: RegexMapEntry<'api', any>
   result?: { error?: any, query?: any, data?: any }
@@ -42,7 +43,7 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
   }
 
 
-  static get defaultCreateAsyncOptions () {
+  static get defaultCreateAsyncOptions() {
     return { deferStream: true }
   }
 
@@ -52,23 +53,36 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
     try {
       if (this.props?.queryType === queryType.keys.maySetCookies && isServer) return // skip maySetCookies on BE
 
+      this.initLoading()
+
+      if (queryType.has(this.props?.queryType)) this.onQuery() // IF Solid's query() requested => use it
+      else this.onNoQuery() // call API w/o Solid's query()
+    } catch (err) {
+      this.onError(err)
+    }
+  }
+
+
+  initLoading() {
+    if (!isServer) {
       if (this.props?.onLoadChange) this.props.onLoadChange(true) // call options.onLoadChange()
 
       if (this.props?.bitKey) this.bitKey = createAceKey(this.props.bitKey) // IF bitkey defined THEN use it
       else this.bitKey = this.apiName // IF no bitKey set THEN default bitkey to apiName
 
-      scope.bits.set(this.bitKey, true) // start bits loading indicator
-
-      if (queryType.has(this.props?.queryType)) this.onQuery() // IF Solid's query() requested => use it
-      else { // call API w/o Solid's query()
-        (async () => { // IIFE so we can await in a none async wrapper function
-          this.result = { query: await this.callApi() }
-          await this.onResult()
-        })()
+      if (this.props?.queryType !== 'maySetCookies') scope.bits.set(this.bitKey, true) // set loading bit to true
+      else {
+        setTimeout(() => { // 🚨 IF we start bitKey immediately (no setTimeout) AND queryType is maySetCookies THEN hydration error MAYBE B/C on page init they'll be a different DOM then was rendered on the server 🤷‍♀️
+          if (this.bitKey && !this.onResultHappened) scope.bits.set(this.bitKey, true) // skip if onResultHappened b/c then the bit is already false
+        })
       }
-    } catch (err) {
-      this.onError(err)
     }
+  }
+
+
+  async onNoQuery() {
+    this.result = { query: await this.callApi() }
+    await this.onResult()
   }
 
 
@@ -89,7 +103,7 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
 
     const resQuery = query(this.innerQuery.bind(this), queryKey) // bind 'this' to innerQuery to preserve the ApiFn instance context
 
-    const createAsyncOptions = {...ApiFn.defaultCreateAsyncOptions, ...this.props?.createAsyncOptions }
+    const createAsyncOptions = { ...ApiFn.defaultCreateAsyncOptions, ...this.props?.createAsyncOptions }
 
     if (this.props?.queryType !== 'stream') this.parseQuery(resQuery) // createAsync() outside of 'stream' creates hydration error or data leak error, example: computations created outside a `createRoot` or `render` will never be disposed
     else createAsync(async () => { this.parseQuery(resQuery) }, createAsyncOptions)
@@ -121,6 +135,8 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
   async onResult() {
     if (isServer) return // callbacks server side leads to hydration issues
     if (!this.result) throw new Error('!this.result')
+
+    this.onResultHappened = true
 
     if (this.props?.onError || this.props?.onSuccess) {
       const parsed = await parseResponse<Api2Response<T_API>>(this.result.query)

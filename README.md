@@ -40,6 +40,7 @@
 1. [Radio Cards Component](#radio-cards-component)
 1. [Slidshow Component](#tabs-component)
 1. [Ace Config](#ace-config)
+1. [Ace Plugins](#ace-plugins)
 1. [🚨 When to restart dev?](#when-to-restart-dev)
 1. [IF developing multiple Ace projects simultaneously](#if-developing-multiple-ace-projects-simultaneously)
 1. [Environment Variables](#environment-variables)
@@ -61,11 +62,11 @@
 
 
 ## What is Ace?
-- Ace is a set of functions, classes, and types (**fundamentals**) to aid web developers. We’ve grouped these fundamentals into **plugins**. When a plugin is set to true @ `ace.config.js`, that plugin's corresponding fundamentals are added to the `.ace` folder @ your `current working directory`. 
-- So each plugin is opt-in, and only the Ace fundamentals you import & use will be included in your build! **Standard Ace plugins include:**
+- Ace is a set of functions, classes, and types (**fundamentals**) to aid web developers. We’ve grouped these fundamentals into **plugins**. To use a plugins fundamentals, set that plugin to **true** in your [`ace.config.js`](#ace-config)! 🙏
+- [**Ace plugins:**](#ace-plugins)
   1. **[Solid](https://docs.solidjs.com/)** (optimal DOM updates)
   1. **[Drizzle](https://orm.drizzle.team/)** (typesafe db updates)
-  1. **[Turso](https://turso.tech/)** (Swift SQL DB)
+  1. **[Turso](https://turso.tech/)** (Fast SQL DB)
   1. **[Cloudflare](https://www.cloudflare.com/)** (Region: Earth)
   1. **[AgGrid](https://www.ag-grid.com/)** (Scrollable, filterable & sortable tables)
   1. **[Charts.js](https://www.chartjs.org/)** (Evergreen charting library)
@@ -518,7 +519,7 @@
                 <Transactions/>
               </section>
 
-              <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs} $div={{ class: 'markdown' }} />
+              <MarkdownItStatic content={mdAppInfo} />
 
               <Nav showRefresh={true} />
             </main>
@@ -614,12 +615,11 @@
 
 ## Breakpoints
 #### BE Breakpoints ✅
-1. To the left of the line numbers in [VsCodium](https://vscodium.com/) place the breakpoint!
-    ![Add Ace Breakpoint](https://i.imgur.com/JaTmZrA.png)
+1. @ `BE` code, place a `debugger` w/in your code and/or an `if (condition) debugger` (as seen in screenshot below)
 1. Refresh site and now in your editor you may `watch variables` & see the `call stack`!
-    ![Ace BE Breakpoint Example](https://i.imgur.com/t7QuasD.png)
+    ![Ace BE Breakpoint Example](https://i.imgur.com/WZXgN9x.png)
 #### FE Breakpoints ✅
-1. Place a `debugger` w/in your code or an `if (condition) debugger` (as seen in screenshot below)
+1. @ `FE` code, place a `debugger` w/in your code and/or an `if (condition) debugger` (as seen in screenshot below)
 1. In browser navigate to `Inpect` > `Sources`
 1. Refresh site and now in your browser you may `watch variables` & see the `call stack`!
     ![Ace FE Breakpoint Example](https://i.imgur.com/on3ziF1.png)
@@ -1949,7 +1949,10 @@ export default new Route('/')
       logCaughtErrors?: boolean,
     }
     ```
-- Plugins:
+
+
+
+### Ace Plugins:
   ```js
   export type PluginsConfig = {
     /**
@@ -2609,13 +2612,14 @@ export default new Route('/')
     // at build time, the markdown file is bundled as a string literal 
     // the markdown file is cached, minified, and tree-shaken like any other module
     // so at runtime, there's no file I/O b/c the markdown is an in memory string constant 
-
+    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
 
     import mdAppInfo from '@src/md/mdAppInfo.md?raw'
     import { registerHljs } from '@src/init/registerHljs'
     import { MarkdownItStatic } from '@ace/markdownItStatic'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
 
-    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs} />
+    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs}  options={{ highlight: hljsMarkdownItOptions }} />
     ```
 - Props:
     ```ts
@@ -2624,11 +2628,11 @@ export default new Route('/')
       content: string,
       /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
       setMD?: Setter<markdownit | undefined>
-      /** Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge */
+      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
       options?: MarkdownItOptions
       /** Optional, props passed to inner wrapper div */
       $div?: JSX.HTMLAttributes<HTMLDivElement>,
-      /** Optional, required if want code highlighting, registers highlight languages */
+      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
       registerHljs?: () => void
     }
     ```
@@ -2640,10 +2644,13 @@ export default new Route('/')
 - Install: `npm i markdown-it -D`
 - Example:
     ```ts
+    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
+
     import { registerHljs } from '@src/init/registerHljs'
     import { MarkdownItDynamic } from '@ace/markdownItDynamic'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
 
-    <MarkdownItDynamic content={() => store.buildStats} registerHljs={registerHljs} />
+    <MarkdownItDynamic content={() => store.buildStats} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} $div={{ class: 'markdown' }} />
     ```
 - Props:
     ```ts
@@ -2652,12 +2659,24 @@ export default new Route('/')
       content: Accessor<string | undefined>
       /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
       setMD?: Setter<markdownit | undefined>
-      /** Optional, defaults to `defaultMarkdownOptions`, can override one prop at a time b/c we merge */
+      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
       options?: MarkdownItOptions
       /** Optional, props passed to inner wrapper div */
       $div?: JSX.HTMLAttributes<HTMLDivElement>,
-      /** Optional, required if want code highlighting, registers highlight languages */
+      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
       registerHljs?: () => void
+    }
+    ```
+
+#### `defaultMarkdownOptions` ✅
+- Requested options @ `<MarkdownItStatic />` OR `<MarkdownItDynamic />` will be merged w/ these `defaultMarkdownOptions`
+    ```ts
+    import type { Options as MarkdownItOptions } from 'markdown-it'
+
+    const defaultMarkdownOptions: MarkdownItOptions = {
+      html: true,
+      linkify: true,
+      typographer: true
     }
     ```
 
@@ -2678,7 +2697,7 @@ export default new Route('/')
     let registered = false
 
     export function registerHljs() {
-      if (!registered) { // it's important to have ts & xml for tsx (& then for tsx just use the language "ts") ❤️
+      if (!registered) { // Register typescript & xml for tsx (& then for tsx just use the language "ts") ❤️
         hljs.registerLanguage('xml', xml)
         hljs.registerLanguage('typescript', typescript)
 
@@ -2691,9 +2710,11 @@ export default new Route('/')
     import mdAppInfo from '@src/md/mdAppInfo.md?raw'
     import { registerHljs } from '@src/init/registerHljs'
     import { MarkdownItStatic } from '@ace/markdownItDynamic'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
 
-    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs} />
+    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} />
     ```
+
 
 
 ## Send Brevo Emails

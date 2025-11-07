@@ -5,6 +5,21 @@
 
 
 
+## [0.7.0] - 2025-11-06
+
+### 🧠 Improved
+- Send `options={{ highlight: hljsMarkdownItOptions }}` to `MarkdownIt` components if highlight options are desired
+
+### 🐛 Fixed
+- IF `queryType` is `maySetCookies` THEN hydration error
+- IF the `hljs plugin` is not `true` THEN `MarkdownIt` components error
+- IF `<Loading />` is passed `style` options @ `$span` THEN we ignore them
+
+### 🗑️ Removed
+- `@ace/hljsMarkdownIt` is now @ `@ace/hljsMarkdownItOptions`
+
+
+
 ## [0.6.7] - 2025-11-06
 
 ### 🧠 Improved

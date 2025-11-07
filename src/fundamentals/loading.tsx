@@ -51,23 +51,27 @@ import type { JSX, Component } from 'solid-js'
  * @param props.$span - Optional, additional props to spread onto the outer `span`
  */
 export const Loading: Component<LoadingProps> = ({ type, size, thickness, color, speed, twoColor, label, $span }) => {
-  const style: JSX.CSSProperties = {}
+  const requestedStyle = typeof $span?.style === 'object' ? $span.style : {}
 
-  if (size) style['--ace-loading-size'] = size
-  if (thickness) style['--ace-loading-thickness'] = thickness
-  if (color) style['--ace-loading-color'] = color
-  if (speed) style['--ace-loading-speed'] = speed
-  if (twoColor) style['--ace-loading-two-color'] = twoColor
+  const propsStyle: JSX.CSSProperties = {}
+
+  if (size) propsStyle['--ace-loading-size'] = size
+  if (thickness) propsStyle['--ace-loading-thickness'] = thickness
+  if (color) propsStyle['--ace-loading-color'] = color
+  if (speed) propsStyle['--ace-loading-speed'] = speed
+  if (twoColor) propsStyle['--ace-loading-two-color'] = twoColor
 
   const baseClass = `ace-loading ${type === 'two' ? 'ace-loading--two' : ''}`
   const mergedClass = $span?.class ? `${baseClass} ${$span.class}` : baseClass
+
+  const mergedStyle = { ...propsStyle, ...requestedStyle }
 
   return <>
     <span
       role="status"
       aria-live="polite"
-      style={style}
       {...$span}
+      style={mergedStyle}
       class={mergedClass}
     >
       <span class="label">{label || 'Loading...'}</span>
