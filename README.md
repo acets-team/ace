@@ -53,7 +53,7 @@
 1. [Markdown-It Demo](#markdown-it-demo)
 1. [Highlight.js Demo](#highlightjs-demo)
 1. [Send Brevo Emails](#send-brevo-emails)
-1. [🚀 Deploy on Cloudflare](#deploy-on-cloudflare)
+1. [🚀 Deploy](#deploy)
 1. [Add a custom domain](#add-a-custom-domain)
 1. [Resolve www DNS](#resolve-www-dns)
 1. [VS Code Helpful Info](#vs-code-helpful-info)
@@ -87,7 +87,7 @@
     ```bash
     npx create-ace-app@latest
     ```
-- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev`, it will take 10-15 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy-on-cloudflare)!
+- 🚨 When opening `Create Ace App` **locally** for the first time after an `npm run dev`, it will take 10-15 seconds to load 😡 b/c Vite is altering code to optimize [`HMR`](https://vite.dev/guide/features#hot-module-replacement) (so subsequent loads are instant 🤓) BUT this slow initial load is **no factor** in production. To prove this, here's [Create Ace App In Production](https://create-ace-app.jquery-ssr.workers.dev)! 🚀 Deployed to Cloudflare Workers via `git push`, deploy directions [here](#deploy)!
     ![Create Ace App in Production](https://i.imgur.com/UcfHhXh.jpeg)
 
 
@@ -395,8 +395,8 @@
             <AuthHeroTitle />
 
             <div class="main-content">
-              <Show when={scope.bits.get('apiGetSession')} fallback={<Loaded scope={scope} />}>
-                <AuthLoading />
+              <Show when={scope.bits.get('apiGetSession') === false} fallback={<AuthLoading />}>
+                <Loaded scope={scope} />
               </Show>
             </div>
           </main>
@@ -436,8 +436,7 @@
 
 
 ## Call APIs
-1. The less common way to call APIs is by their url w/ the typesafe functions `scope.GET()`, `scope.POST()`, `scope.PUT()` & `scope.DELETE()`
-1. The more common way to call APIs is via **API functions**! 🙌
+1. With `Ace`, we call APIs via **API functions**! 🙌
     ```tsx
     function UpdateEmail() {
       const {store, refBind} = useStore() // refBind() allows us to add 2 way data binding between an input and a store. see newsletterForm @ atoms.ts above to see why we bind to newsletterForm.email
@@ -461,21 +460,24 @@
       </>
     }
     ```
-1. `onError()`
-    - On `FE`, IF `response.error` is truthy THEN `onError()` OR `defaultOnError()` will be called w/ `response.error`
-    - `defaultOnError()` => [`showErrorToast(error.message)`](#show-toast-notifications)
-1. `onResponse()`
-    - On `FE`, IF no errors AND `onResponse` provided THEN `onResponse` will be called w/ `Response`
 1. `onSuccess()`
-    - On `FE`, IF no errors AND `onSuccess` provided THEN `onSuccess` will be called w/ `response.data`
+    - On `FE`, IF no errors AND `onSuccess` provided THEN `onSuccess` will be called w/ `response.data`, which is set on the `BE` via `return scope.success({ example: true })`
+1. `onResponse()`
+    - On `FE`, IF no errors AND `onResponse` provided THEN `onResponse` will be called w/ `Response`, which is set on the `BE` via `return new Response('example')`
+1. `onError()`
+    - On `FE`, IF `response.error` is truthy THEN `onError()` OR `defaultOnError()` will be called w/ `response.error`, which is set on the `BE` via `return scope.error('🐛')` OR `throw new Error('❌')`
+    - `defaultOnError()` => [`showErrorToast(error.message)`](#show-toast-notifications)
 1. `queryType`
-    - If you specify a `queryType` then the API request will use Solid's `query()` function. Solid’s `query()` caches the response in the browser for a couple seconds and let's us call `reQuery()` to refresh the cached data (update the DOM). There are 3 different available `queryType's`:
+    - If you specify a `queryType` then we'll use [Solid's `query()` function](https://docs.solidjs.com/solid-router/reference/data-apis/query). `query()` accomplishes the following:
+        - Deduping on the server for the lifetime of the request
+        - Provides a reactive refetch mechanism based on key. Just call `reQuery()` w/ the key. The key matches the API name by default (ex: `apiGetSessin`) & can be altered w/ the `queryKey` API function prop!
+        - Provides a `back/forward cache` for browser navigation for up to **5 minutes**. Any user based navigation or link click bypasses this cache
     - 🚨 set the `queryType` to `stream` when you'd love this api call to happen while the component is rendering & this request **does NOT set cookies**. On refresh the request will start on the `BE` and on SPA navigation (on anchor click) the request will start on the `FE`
       ```ts
       import './Home.css'
       import { Route } from '@ace/route'
-      import { Title, Meta } from '@solidjs/meta'
       import { useStore } from '@src/store/store'
+      import { Title, Meta } from '@solidjs/meta'
       import { MarkdownItStatic } from '@ace/markdownItStatic'
       import { apiGetFinances, apiGetCashFlow, apiGetTransactions } from '@ace/apis'
 
@@ -546,7 +548,7 @@
         const {set, store} = useStore()
 
         const signOut = createOnSubmit(() => {
-          apiSignOut({
+          apiSignOut({ // API Function! ❤️
             queryType: 'direct',
             onSuccess () {
               set('apiGetSession', undefined)
@@ -573,7 +575,7 @@
       export function loadSession() {
         const {set} = useStore()
 
-        apiGetSession({
+        apiGetSession({ // API Function! ❤️
           queryType: 'maySetCookies',
           onSuccess: (d) => set('apiGetSession', d),
           onError: () => set('apiGetSession', undefined),
@@ -595,7 +597,7 @@
           bitKey: 'updateData', // while apis load scope.bits.get('updateData') is true
           keys: [
             'apiGetSession',
-            ['apiGetUser', 9], // 🚨 when calling an api a custom queryKey can be set as an array just like this
+            ['apiGetUser', store.user.id], // 🚨 when calling an api a custom queryKey can be set as an array just like this
           ]
         })
       }
@@ -617,7 +619,7 @@
 #### BE Breakpoints ✅
 1. @ `BE` code, place a `debugger` w/in your code and/or an `if (condition) debugger` (as seen in screenshot below)
 1. Refresh site and now in your editor you may `watch variables` & see the `call stack`!
-    ![Ace BE Breakpoint Example](https://i.imgur.com/WZXgN9x.png)
+    ![Ace BE Breakpoint Example](https://i.imgur.com/Tha1FSx.jpeg)
 #### FE Breakpoints ✅
 1. @ `FE` code, place a `debugger` w/in your code and/or an `if (condition) debugger` (as seen in screenshot below)
 1. In browser navigate to `Inpect` > `Sources`
@@ -721,8 +723,8 @@
         export default new Route('/')
           .component((scope) => {
             return <>
-              <Show when={scope.bits.get('apiExample')}>
-                <Loading />
+              <Show when={scope.bits.get('apiExample') === false} fallback={<Loading />}>
+                <Loaded />
               </Show>
             </>
           })
@@ -1088,8 +1090,8 @@ export default new Route404()
 ## Bits
 - Bits are boolean signals
   ```ts
-  <Show when={scope.bits.get('apiExample')} fallback={<Loaded />}>
-    <Loading />
+  <Show when={scope.bits.get('apiExample') === false} fallback={<Loading />}>
+    <Loaded />
   </Show>
   ```
 - To set a bit: `scope.bits.set(key, value)`
@@ -1500,7 +1502,7 @@ export function SignIn() {
 
 
 ## Create Password Hash
-### If you would love to deploy to Cloudflare, here's a way to hash on the edge! (works @ Node too btw)
+### Here's a way to hash @ the Edge (ex: Cloudflare Workers) or @ Node!
 1. `import { hashCreate } from @ace/hashCreate`
 1.  `hashCreate({ password, saltLength = 16, iterations = 99_999, hashFn = 'SHA-512' })()`
     - `@param props.password` - The plaintext password to hash
@@ -1550,7 +1552,7 @@ export function SignIn() {
       requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }, // Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
     })
     ```
-1. [& please see here](#deploy-on-cloudflare) for how to deploy your `Live Server` & `App` via **git push**!
+1. [& please see here](#deploy) for how to deploy your `Live Server` & `App` via **git push**!
 1. 🚨 IF you would love to accept messages from the browser `ws` THEN add an `onMessage` callback @ `createLiveDurableObject()`, example:
     ```ts
     import { createLiveWorker, createLiveDurableObject } from '@ace/liveServer'
@@ -1595,35 +1597,35 @@ export function SignIn() {
 
 
 ## Open Graph Demo
-#### ✅ Helpful when people post a link to your site on places like `Facebook`, `Discord` or `Slack` & you'd love an image / specific information to show
+#### ✅ Helpful when people post a link to your site on places like `Facebook`, `Discord` or `Slack` & you'd love an image & specific information to show
 1. Take a screenshot of the website OR use an existing image
     - Using an existing image makes sense if this is for example a product page so just use an existing product image
     - If using a screenshot, before adding it to your `/public` folder, we recommend [sqooshing](https://squoosh.app/editor) your image (reduces size by +70% & still looks really good), so it loads quickly & is accepted by the 3rd party showing your link
 1. Add `<Meta />` tags, [og meta tags info](https://ogp.me/)
-```ts
-import './Home.css'
-import { Route } from '@ace/route'
-import { buildOrigin } from '@ace/env'
-import { Title, Meta } from '@solidjs/meta'
+    ```ts
+    import './Home.css'
+    import { Route } from '@ace/route'
+    import { buildOrigin } from '@ace/env'
+    import { Title, Meta } from '@solidjs/meta'
 
 
-export default new Route('/')
-  .component(() => {
-    return <>
-      <Title>🏡 Home · Create Ace App</Title>
-      <Meta property="og:title" content="🏡 Home · Create Ace App" />
-      <Meta property="og:type" content="website" />
-      <Meta property="og:url" content={buildOrigin} />
-      <Meta property="og:image" content={buildOrigin + '/og/home.webp'} />
-      <Meta property="og:description" content="The home page for Create Ace App!" />
+    export default new Route('/')
+      .component(() => {
+        return <>
+          <Title>🏡 Home · Create Ace App</Title>
+          <Meta property="og:title" content="🏡 Home · Create Ace App" />
+          <Meta property="og:type" content="website" />
+          <Meta property="og:url" content={buildOrigin} />
+          <Meta property="og:image" content={buildOrigin + '/og/home.webp'} />
+          <Meta property="og:description" content="The home page for Create Ace App!" />
 
-      <main class="home">
-        <h1>Home Page</h1>
-      </main>
-    </>
-  })
-```
-
+          <main class="home">
+            <h1>Home Page</h1>
+          </main>
+        </>
+      })
+    ```
+1. [Preview](https://www.opengraph.xyz/) open graph, [deploy](#deploy) required btw!
 
 
 ## SVG Demo
@@ -2746,8 +2748,8 @@ export default new Route('/')
 
 
 
-## Deploy on Cloudflare
-### [Cloudflare](https://www.cloudflare.com/) offers 100,000 requests a day for [free](https://developers.cloudflare.com/workers/platform/pricing/)! 🥹
+## Deploy
+### Ace can be deployed to any Vite-compatible hosting provider (aka: Vite projects output a `dist` folder with `HTML`, `CSS`, and `JavaScript` files, so any hosting provider that can handle that, aka: everyone) 🚀 To deploy on `git push` to `Cloudflare Workers`:
 1. Create a GitHub account or Sign in
 1. Push to a public or private repository
 1. Create a Cloudlfare account or Sign in
@@ -2903,6 +2905,10 @@ export default new Route('/')
 
 
 ### 🔔 Errors
+1. `bash: ace: command not found`
+    - The way `npm` works, is if we wanna go into a `bash` terminal & use a command like `ace` then the package that provides this command **must be globally installed**
+    - This is b/c bash can navigate to any directory, so all that is required is to globally install is `npm i @acets-team/ace -g`
+    - 🚨 This is not a requirment @ `package.json` > `scripts`, which is why `ace` commands  work here w/o a global install but is a standard `npm` requirement w/in a bash terminal ❤️
 1. `TypeError: Comp is not a function at createComponent`
     - Ensure `app.tsx` has `import { createApp } from '@ace/createApp'` and `export default createApp()`
     - Standard Fix

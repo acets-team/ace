@@ -5,6 +5,16 @@
 
 
 
+## [0.7.3] - 2025-11-07
+
+### 🧠 Improved
+- `README.md`, `DEVELOPMENT.md` & `JSDoc` comments
+
+### 🐛 Fixed
+- `Ace Live Server` crashes on init w/ the following error: `!build.fsEnv`
+
+
+
 ## [0.7.2] - 2025-11-07
 
 ### 🧠 Improved

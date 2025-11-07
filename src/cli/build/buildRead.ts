@@ -5,7 +5,13 @@ import { BuildRoute, Build, type Writes, type ApiMethods } from './build.js'
 
 
 export async function buildRead(build: Build) {
-  build.fsVanillaTypes = await readFile(join(build.dirDistBuildJs, '../../../fundamentals/vanilla.d.txt'), 'utf-8')
+  const [fsEnv, fsVanillaTypes] = await Promise.all([
+    readFile(join(build.dirDistBuildJs, '../../../fundamentals/env.txt'), 'utf-8'),
+    readFile(join(build.dirDistBuildJs, '../../../fundamentals/vanilla.d.txt'), 'utf-8'),
+  ])
+
+  build.fsEnv = fsEnv
+  build.fsVanillaTypes = fsVanillaTypes
 
   if (build.config.plugins.solid) {
     if (!build.config.apiDir || typeof build.config.apiDir !== 'string') throw new Error('❌ When using the solid plugin, `config.apiDir` must be a truthy string')
@@ -13,15 +19,13 @@ export async function buildRead(build: Build) {
 
     await setTsconfigPaths(build)
 
-    const [fsEnv, fsSolidTypes, fsApp] = await Promise.all([
-      readFile(join(build.dirDistBuildJs, '../../../fundamentals/env.txt'), 'utf-8'),
+    const [fsSolidTypes, fsApp] = await Promise.all([
       readFile(join(build.dirDistBuildJs, '../../../fundamentals/types.d.txt'), 'utf-8'),
       readFile(join(build.dirDistBuildJs, '../../../fundamentals/createApp.txt'), 'utf-8'),
       readAPIDirectory(resolve(build.cwd, build.config.apiDir), build),
       readAppDirectory(resolve(build.cwd, build.config.appDir), build),
     ])
 
-    build.fsEnv = fsEnv
     build.fsApp = fsApp
     build.fsSolidTypes = fsSolidTypes
   }

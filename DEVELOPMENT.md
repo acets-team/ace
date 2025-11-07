@@ -67,13 +67,16 @@
 
 ### How to `dev`?
 1. `nvm use 24`
+1. `npm uninstall @acets-team/ace -g`
 1. Bash navigate to `@acets-team/ace`:
-    1. `npm link`
-    1. `npm run build`
+    - `npm link`
+    - `npm run build`
 1. Bash navigate to other project:
     1. `npm uninstall @acets-team/ace` - This will result in the error `Cannot find module '@acets-team/ace' or its corresponding type declarations` @ `ace.config.js` which is normal
     1. `npm run dev`
-- 🚨 IF code update @ `@acets-team/ace` THEN repeat steps `2.1`, `2.2` & `3.2`
+- 🚨 IF code update at `@acets-team/ace` THEN repeat following steps:
+    1. Bash navigate to `@acets-team/ace` > `npm run build`
+    1. Bash navigate to other project > `npm run dev`
 
 ---
 

@@ -315,14 +315,18 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * ### Helpful when you'd love to create a ws connection to an Ace Live Server
    * @example
       ```ts
-      const ws = scope.liveSubscribe({ stream: 'example' })
-  
-      ws.addEventListener('message', event => {
-        console.log(event.data)
-      })
-  
-      ws.addEventListener('close', () => {
-        console.log('ws closed')
+      onMount(() => {
+        const ws = scope.liveSubscribe({ stream: 'example' })
+
+        ws.addEventListener('message', event => {
+          console.log(event.data)
+        })
+
+        ws.addEventListener('close', () => {
+          console.log('ws closed')
+        })
+
+        onCleanup(() => scope.liveUnsubscribe(ws))
       })
       ```
    * @param props.stream - The `stream` to subscribe to. Events are grouped by stream.
@@ -339,8 +343,19 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
    * ### Closes a live WebSocket connection created via `liveSubscribe`
    * @example
       ```ts
-      const ws = scope.liveSubscribe({ stream: 'example' })
-      onCleanup(() => scope.liveUnsubscribe(ws))
+      onMount(() => {
+        const ws = scope.liveSubscribe({ stream: 'example' })
+
+        ws.addEventListener('message', event => {
+          console.log(event.data)
+        })
+
+        ws.addEventListener('close', () => {
+          console.log('ws closed')
+        })
+
+        onCleanup(() => scope.liveUnsubscribe(ws))
+      })
       ```
    * @param ws - The `ws` to unsubscribe
    */
