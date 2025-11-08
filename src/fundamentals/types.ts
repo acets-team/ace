@@ -271,7 +271,7 @@ export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<
 
 
 /**
- * - Used for `bitKey` (boolean signals) & `queryKey` (solid's `query()` key)
+ * - Used for `bitKey` (boolean signals) & `queryKey` (Solid's `query()` key)
  * - Allows you to send a string or something like `['example', 2]`
  */
 export type AceKey = string | (string | number)[]

@@ -5,6 +5,17 @@
 
 
 
+## [0.8.0] - 2025-11-08
+
+### 🗑️ Removed
+- Removed `reQuery()` in favor for `Echo`
+
+### 🐛 Fixed
+- `npm error You cannot publish over the previously published versions:`
+- IF sending `/event` to `Ace Live Server` on localhost THEN `fetch failed`
+
+
+
 ## [0.7.3] - 2025-11-07
 
 ### 🧠 Improved
@@ -161,6 +172,7 @@
 
 
 
+[0.8.0]: https://github.com/acets-team/ace/compare/v0.7.2...v0.8.0
 [0.7.2]: https://github.com/acets-team/ace/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/acets-team/ace/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/acets-team/ace/compare/v0.6.7...v0.7.0

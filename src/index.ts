@@ -56,7 +56,7 @@ export type AceConfig = {
   /**
    * - The key aligns w/ the keys @ `ace.config.js` > `origins`
    * - The value is the host url to the Ace Live Server when @ that `origin`
-   * - Host meaning no http:// like this: `liveHosts: { local: 'localhost:8787', prod: 'live.example.com' }`
+   * - 🚨 Host meaning no `http://` like this: `liveHosts: { local: 'localhost:8787', prod: 'live.example.com' }`
    */
   liveHosts?: Record<string, string>
   /** Would you like to log errors */

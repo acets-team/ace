@@ -56,7 +56,7 @@
 1. Publish to `NPM`
     - From project root directory:
         1. Login: `npm login`
-        1. Publish: `npm run publish`
+        1. Publish: `npm run pub`
 1. Verify Release @:
     1. [Tags](https://github.com/acets-team/ace/tags)
     1. [Releases](https://github.com/acets-team/ace/releases)

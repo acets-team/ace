@@ -19,7 +19,7 @@
   },
   "scripts": {
     "prepublishOnly": "npm run build",
-    "publish": "npm publish --access public",
+    "pub": "npm publish --access public",
     "build": "node ./src/fresh.js && tsc && tsc -p tsconfig.srcBuild.json && node ./src/srcBuild.js",
     "postbuild": "chmod +x dist/src/cli/cli.js || true"
   },

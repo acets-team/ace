@@ -140,7 +140,6 @@ export const fundamentals = new Map([
   ['refModel', new Fundamental('ts', 'solid', 'copy')],
   ['refs', new Fundamental('ts', 'solid', 'copy')],
   ['resolveAlias', new Fundamental('ts', 'solid', 'helper')],
-  ['reQuery', new Fundamental('ts', 'solid', 'copy')],
   ['route', new Fundamental('ts', 'solid', 'copy')],
   ['route404', new Fundamental('ts', 'solid', 'copy')],
   ['scopeBE', new Fundamental('ts', 'solid', 'copy')],

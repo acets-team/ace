@@ -207,6 +207,13 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
         data: { example: true },
         requestInit: { headers: { Auth: 'ABC' } },
       })
+
+      // ace.config.js
+      export const config = {
+        liveHosts: {
+          local: 'localhost:8787',
+        }
+      }
       ```
   * @param props.stream - The `stream` to subscribe to
   * @param props.data - Event data, the entire object will be provided to `/subscribe`
@@ -231,7 +238,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
       },
     }
 
-    return fetch(`https://${url}/event?stream=${encodeURIComponent(props.stream)}`, mergedInit)
+    return fetch(`http${url.includes('localhost') ? '' : 's'}://${url}/event?stream=${encodeURIComponent(props.stream)}`, mergedInit)
   }
 }
 

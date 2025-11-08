@@ -18,7 +18,8 @@ import type { ApiFnProps, Api2Function, Api2Response, RegexMapEntry, ApiName2Api
  */
 export function createApiFn<const T_Name extends keyof typeof regexApiNames>(apiName: T_Name): Api2Function<ApiName2Api<T_Name>> {
   return ((props?: ApiFnProps<ApiName2Api<T_Name>>) => { // when someone calls an API function this is what runs
-    (new ApiFn(apiName, props)).main()
+    const apiFn = new ApiFn(apiName, props) // using a class helps us not have to pass a bunch of variables between functions
+    apiFn.main()
   }) as unknown as Api2Function<ApiName2Api<T_Name>>
 }
 
@@ -80,6 +81,7 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
   }
 
 
+  /** When we're not using Solid's `query()` */
   async onNoQuery() {
     this.result = { query: await this.callApi() }
     await this.onResult()

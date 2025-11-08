@@ -15,6 +15,7 @@
 1. [Create a Route](#create-a-route)
 1. [Call APIs](#call-apis)
 1. [🙌 VS Code Extension](#vs-code-extension)
+1. [Echo](#echo)
 1. [Breakpoints](#breakpoints)
 1. [Scope](#scope)
 1. [Create a 404 Route](#create-a-404-route)
@@ -470,7 +471,6 @@
 1. `queryType`
     - If you specify a `queryType` then we'll use [Solid's `query()` function](https://docs.solidjs.com/solid-router/reference/data-apis/query). `query()` accomplishes the following:
         - Deduping on the server for the lifetime of the request
-        - Provides a reactive refetch mechanism based on key. Just call `reQuery()` w/ the key. The key matches the API name by default (ex: `apiGetSessin`) & can be altered w/ the `queryKey` API function prop!
         - Provides a `back/forward cache` for browser navigation for up to **5 minutes**. Any user based navigation or link click bypasses this cache
     - 🚨 set the `queryType` to `stream` when you'd love this api call to happen while the component is rendering & this request **does NOT set cookies**. On refresh the request will start on the `BE` and on SPA navigation (on anchor click) the request will start on the `FE`
       ```ts
@@ -582,26 +582,8 @@
         })
       }
       ```
-1. `reQuery()`
-    - If you specify a `queryType` then the API request will use Solid's `query()` function. Solid’s `query()` caches the response in the browser for a couple seconds and let's us call `reQuery()` to refresh the cached data (update the DOM)
-    - Simple `reQuery()` example:
-      ```ts
-      function updateSession() { // calls api > calls [ onSuccess(), onError(), onResponse() ] > updates DOM
-        reQuery({ key: 'apiGetSession' })
-      }
-      ```
-    - Complex `reQuery()` example:
-      ```ts
-      function updateData() {
-        reQuery({
-          bitKey: 'updateData', // while apis load scope.bits.get('updateData') is true
-          keys: [
-            'apiGetSession',
-            ['apiGetUser', store.user.id], // 🚨 when calling an api a custom queryKey can be set as an array just like this
-          ]
-        })
-      }
-      ```
+- See [VS Code Extension](#vs-code-extension) to see how to get links to `Ace API's` right **above API Function calls!**
+- See [Echo](#echo) to see how updating API data in Ace works
 
 
 
@@ -612,6 +594,227 @@
     - Extensions Search: `ace-vs-code`
     - The name of the package is `Ace for VS Code` and the author is `acets-team`
 - & please feel free click here to see [additional vs code helpful info](#vs-code-helpful-info)!
+
+
+
+## Echo
+- How does this `Echo` idea work?
+    1. An `API` endpoint updates some data
+    1. The `API` gathers the updated data consistently (same function every time)
+    1. The `API` echos the updated data to the `FE` w/in the `Response`
+    1. & if using `Ace Live Server`, the  `API` echos the updated data to all subscribers
+- 🤓 Kitchen Sink Example:
+    - `src/lib/vars.ts`
+      ```ts
+      export const streams = new Enums(['amsterdamRegistration']) // the streams our Ace Live Server supports
+      ```
+    - `src/lib/types.d.ts`
+      ```ts
+      import type { ApiName2Data } from '@ace/types'
+
+      export type LiveAmsterdamRegistrationData = { // subscribers will receive a toast message & the updated registration
+        message: string,
+        registration: ApiName2Data<'apiGetAmsterdamRegistration'>
+      }
+      ```
+    - `src/db/dbGetAmsterdamRegistration.ts`
+        ```ts
+        // our consistent (same function every time) way to get complex data (complex b/c multiple joins) 
+
+        import { eq, type SQL } from 'drizzle-orm'
+        import { amsterdamRegistrations, db, roommateOptions, users, voiceParts } from "./db";
+
+
+        export async function dbGetAmsterdamRegistration(where: SQL) {
+          const [registration] = await db
+            .select({
+              id: amsterdamRegistrations.id,
+              email: users.email, 
+              phone: amsterdamRegistrations.phone,
+              gender: amsterdamRegistrations.gender,
+              voicePart: voiceParts.name,
+              emergencyContact: amsterdamRegistrations.emergencyContact,
+              physicalLimitations: amsterdamRegistrations.physicalLimitations,
+              dietaryLimitations: amsterdamRegistrations.dietaryLimitations,
+
+              roommateOption: roommateOptions.name,
+              roommateName: amsterdamRegistrations.roommateName,
+              singleAgree: amsterdamRegistrations.roommateSingleAgree,
+
+              nameOnPassport: amsterdamRegistrations.name,
+              passportNumber: amsterdamRegistrations.passportNumber,
+              passportIssuedDate: amsterdamRegistrations.passportIssuedDate,
+              passportExpiredDate: amsterdamRegistrations.passportExpiredDate,
+              passportAuthority: amsterdamRegistrations.passportAuthority,
+              nationality: amsterdamRegistrations.nationality,
+            })
+            .from(amsterdamRegistrations)
+            .leftJoin(voiceParts, eq(amsterdamRegistrations.voicePartId, voiceParts.id))
+            .leftJoin(roommateOptions, eq(amsterdamRegistrations.roommateOptionId, roommateOptions.id))
+            .leftJoin(users, eq(users.id, amsterdamRegistrations.userId))
+            .where(where)
+            .limit(1)
+
+          return registration
+        }
+        ```
+    - `src/api/apiGetAmsterdamRegistration.ts`
+        ```ts
+        import { API } from '@ace/api'
+        import { eq } from 'drizzle-orm'
+        import { vNum } from '@ace/vNum'
+        import { vParse } from '@ace/vParse'
+        import { object, optional } from 'valibot'
+        import { sessionB4 } from '@src/auth/authB4'
+        import { amsterdamRegistrations } from '@src/db/db'
+        import { dbGetAmsterdamRegistration } from '@src/db/dbGetAmsterdamRegistration'
+
+
+        export const GET = new API('/api/get-amsterdam-registration/:registrationId?', 'apiGetAmsterdamRegistration')
+          .b4([sessionB4])
+          .pathParams(vParse(object({ registrationId: optional(vNum()) })))
+          .resolve(async (scope) => {
+            const where = scope.pathParams.registrationId // IF pathParam defined
+              ? eq(amsterdamRegistrations.id, scope.pathParams.registrationId) // get registration by pathParams.registrationId
+              : eq(amsterdamRegistrations.userId, scope.event.locals.session.userId) // get registration by current session user id
+
+            const registration = await dbGetAmsterdamRegistration(where)
+
+            return scope.success(registration)
+          })
+        ```
+    - `src/api/apiUpsertAmsterdamRegistration.ts`
+        ```ts
+        import { API } from '@ace/api'
+        import { streams } from '@src/lib/vars'
+        import { sessionB4 } from '@src/auth/authB4'
+        import { eq, type InferInsertModel } from 'drizzle-orm'
+        import { db, amsterdamRegistrations } from '@src/db/db'
+        import type { LiveAmsterdamRegistrationData } from '@src/lib/types'
+        import { dbGetAmsterdamRegistration } from '@src/db/dbGetAmsterdamRegistration'
+        import { upsertAmsterdamRegistrationParser } from '@src/parsers/upsertAmsterdamRegistrationParser'
+
+
+        export const POST = new API('/api/upsert-amsterdam-registration', 'apiUpsertAmsterdamRegistration')
+          .b4([sessionB4])
+          .body(upsertAmsterdamRegistrationParser)
+          .resolve(async (scope) => {
+            if (!process.env.LIVE_SECRET) throw new Error('!process.env.LIVE_SECRET')
+
+            const user = await db.query.users.findFirst({ where: (u, { eq }) => eq(u.id, scope.event.locals.session.userId) })
+            if (!user) throw new Error('Please sign in')
+
+            const voicePart = await db.query.voiceParts.findFirst({ where: (v, { eq }) => eq(v.name, scope.body.voicePart) })
+            if (!voicePart) throw new Error('Please include a valid voice part')
+
+            const roommateOption = await db.query.roommateOptions.findFirst({ where: (r, { eq }) => eq(r.name, scope.body.roommateOption) })
+            if (!roommateOption) throw new Error('Please include a valid roommate option')
+
+            const existingRegistration = await db.query.amsterdamRegistrations.findFirst({
+              where: (row, { eq }) => eq(row.userId, user.id)
+            })
+
+            const upsert: InferInsertModel<typeof amsterdamRegistrations> = { // ❤️ define 1 shape for insert AND update
+              userId: user.id,
+              phone: scope.body.phone,
+              gender: scope.body.gender,
+              voicePartId: voicePart.id,
+              emergencyContact: scope.body.emergencyContact,
+              physicalLimitations: scope.body.physicalLimitations || null,
+              dietaryLimitations: scope.body.dietaryLimitations || null,
+              roommateOptionId: roommateOption.id,
+              roommateName: scope.body.roommateName || null,
+              roommateSingleAgree: scope.body.roommateSingleAgree ? 1 : 0,
+              name: scope.body.name,
+              passportNumber: scope.body.passportNumber,
+              passportIssuedDate: new Date(scope.body.passportIssuedDate),
+              passportExpiredDate: new Date(scope.body.passportExpiredDate),
+              passportAuthority: scope.body.passportAuthority,
+              nationality: scope.body.nationality,
+            }
+
+            let data: undefined | LiveAmsterdamRegistrationData
+
+            if (existingRegistration) { // 🔄 update
+              await db
+                .update(amsterdamRegistrations)
+                .set(upsert)
+                .where(eq(amsterdamRegistrations.id, existingRegistration.id))
+
+              data = { // data is for Ace Live Server
+                message: `${scope.body.name} updated their Amsterdam Registration!`,
+                registration: await dbGetAmsterdamRegistration(eq(amsterdamRegistrations.id, existingRegistration.id)),
+              }
+            } else { // ✨ create
+              const [resultSet] = await db
+                .insert(amsterdamRegistrations)
+                .values(upsert)
+                .returning()
+
+              data = { // data is for Ace Live Server
+                message: `${scope.body.name} created their Amsterdam Registration!`,
+                registration: await dbGetAmsterdamRegistration(eq(amsterdamRegistrations.id, resultSet.id))
+              }
+            }
+
+            await scope.liveEvent({ // broadcast (echo) live event to all subscribers of the amsterdamRegistration stream
+              data,
+              stream: streams.keys.amsterdamRegistration,
+              requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }
+            })
+
+            return scope.success(`Registration ${existingRegistration ? 'updated' : 'saved'}!`)
+          })
+        ```
+    - `Component.tsx`
+        ```tsx
+        import { showToast } from '@ace/toast'
+        import { onCleanup, onMount } from 'solid-js'
+        import { LiveAmsterdamRegistrationData } from '@src/lib/types'
+
+        const {sync} = useStore()
+
+        onMount(() => {
+          const ws = scope.liveSubscribe({ stream: streams.keys.amsterdamRegistration }) // 🔔 subscribe to amsterdamRegistration stream
+
+          ws.addEventListener('message', async (event) => { // 💌 onMessage
+            const data: LiveAmsterdamRegistrationData = JSON.parse(event.data) // parse data
+            showToast({ type: 'success', value: data.message }) // show notfication
+            sync('apiGetAmsterdamRegistration', data.registration) // update FE data
+          })
+
+          onCleanup(() => scope.liveUnsubscribe(ws)) // 🔕 on leave => unsubscribe
+        })
+        ```
+    - `Ace Live Server` > `index.ts`
+        ```ts
+        import { jwtValidate } from '@ace/jwtValidate'
+        import { createLiveWorker, createLiveDurableObject, readCookie } from '@ace/liveServer'
+
+
+        export default createLiveWorker() satisfies ExportedHandler<Env>
+
+
+        export const LiveDurableObject = createLiveDurableObject({
+          onValidateEvent(request) { // only our server can post events
+            if (request.headers.get('LIVE_SECRET') !== process.env.LIVE_SECRET) {
+              return new Response('Unauthorized', { status: 400 })
+            }
+          },
+          async onValidateSubscribe(request) { // only our signed in customers can subscribe (we may share cookies if we put our live server on a subdomain of the app server (ex: live.example.com)
+            const jwt = readCookie(request, 'aceJWT')
+            const res = await jwtValidate({ jwt })
+            if (!res.isValid) return new Response('Unauthorized', { status: 400 })
+          }
+        })
+        ```
+- Why doesen't `Ace` use `revalidate()`?
+    - Solid's `revalidate()` relies on **signals** created by `query()` and `createAsync()`
+    - To **update** `state` with `Ace`, we don't **update** `query` signals, we **update** `state` signals
+- Why doesen't `Ace` use `Single Flight Mutations`?
+    - The `Response` that comes from a `Single Flight Mutation` is framework specific & not a `JSON` shape we define
+    - & b/c of how `RPC` functions are created, the `Request URL` may also be difficult to predict 
+    - We love **defined** & **typesafe**, `URLs` & `Responses`
 
 
 
@@ -1951,7 +2154,7 @@ export function SignIn() {
       /**
       * - The key aligns w/ the keys @ `ace.config.js` > `origins`
       * - The value is the host url to the Ace Live Server when @ that `origin`
-      * - Host meaning no http:// like this: `liveHosts: { local: 'localhost:8787', prod: 'live.example.com' }`
+      * - 🚨 Host meaning no `http://` like this: `liveHosts: { local: 'localhost:8787', prod: 'live.example.com' }`
       */
       liveHosts?: Record<string, string>
       /** Would you like to log errors */

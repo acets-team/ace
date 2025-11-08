@@ -322,12 +322,15 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
           console.log(event.data)
         })
 
-        ws.addEventListener('close', () => {
-          console.log('ws closed')
-        })
-
         onCleanup(() => scope.liveUnsubscribe(ws))
       })
+
+      // ace.config.js
+      export const config = {
+        liveHosts: {
+          local: 'localhost:8787',
+        }
+      }
       ```
    * @param props.stream - The `stream` to subscribe to. Events are grouped by stream.
    */
@@ -348,10 +351,6 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
 
         ws.addEventListener('message', event => {
           console.log(event.data)
-        })
-
-        ws.addEventListener('close', () => {
-          console.log('ws closed')
         })
 
         onCleanup(() => scope.liveUnsubscribe(ws))

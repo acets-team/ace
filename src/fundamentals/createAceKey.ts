@@ -7,11 +7,11 @@
 import type { AceKey } from './types'
 
 
-export function createAceKey(queryKey?: AceKey): string {
-  let result = ''
+export function createAceKey(key?: AceKey): string {
+  let res = ''
 
-  if (typeof queryKey === 'string') result = queryKey
-  else if (Array.isArray(queryKey)) result = queryKey.join(':')
+  if (typeof key === 'string') res = key
+  else if (Array.isArray(key)) res = key.join(':')
 
-  return result
+  return res
 }
