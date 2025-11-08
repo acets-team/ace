@@ -5,6 +5,13 @@
 
 
 
+## [0.8.1] - 2025-11-08
+
+### 🐛 Fixed
+- IF in production, a `/subscribe` to `Ace Live Server` throws an error b/c `wss` is not enabled yet
+
+
+
 ## [0.8.0] - 2025-11-08
 
 ### 🗑️ Removed

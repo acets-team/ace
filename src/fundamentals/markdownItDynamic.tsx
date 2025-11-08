@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - Plugin: `markdownIt`
+ *     - Plugin: markdownIt
  *     - import { MarkdownItDynamic } from '@ace/markdownItDynamic'
  *     - import type { MarkdownItDynamicProps } from '@ace/markdownItDynamic'
  */

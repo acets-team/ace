@@ -1,3 +1,12 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - Plugin: cf
+ *     - import { createLiveWorker, createLiveDurableObject, readCookie } from '@ace/liveServer'
+ *     - import type { CreateLiveDurableObjectProps } from '@ace/liveServer'
+ */
+
+
+
 import { env } from './env'
 import { DurableObject } from 'cloudflare:workers'
 

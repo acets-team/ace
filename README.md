@@ -2953,19 +2953,10 @@ export function SignIn() {
 
 ## Deploy
 ### Ace can be deployed to any Vite-compatible hosting provider (aka: Vite projects output a `dist` folder with `HTML`, `CSS`, and `JavaScript` files, so any hosting provider that can handle that, aka: everyone) 🚀 To deploy on `git push` to `Cloudflare Workers`:
-1. Create a GitHub account or Sign in
-1. Push to a public or private repository
-1. Create a Cloudlfare account or Sign in
-1. Navigate to `Workers & Pages`
-1. Click the `Create` button
-1. Click: `Import a Repository`
-1. Configure your Project
-    - Build Command: `npm run build`
-    - Deploy Command: `npx wrangler deploy`
-    - Save & Deploy
 1. Locally at your project root (where package.json is) create `wrangler.jsonc`, example:
     ```json
     {
+      "$schema": "node_modules/wrangler/config-schema.json",
       "name": "create-ace-app",
       "compatibility_date": "2025-11-04",
       "compatibility_flags": [
@@ -2976,12 +2967,24 @@ export function SignIn() {
       }
     }
     ```
-1. Update the `compatibility_date` to yesterday's date, example: `compatibility_date = "2025-01-30"`
+1. Update the `compatibility_date` to yesterday's date
+1. Setup GitHub
+    1. Create a GitHub account or Sign In
+    1. Create a `public or private` repository
+    1. Push all changes
+1. Create a Cloudlfare account or Sign in
+1. Navigate to `Workers & Pages`
+1. Click the `Create application` button
+1. Click: `Import a Repository`
+1. Configure your Project
+    - Build Command: `npm run build`
+    - Deploy Command: `npx wrangler deploy`
+    - Save & Deploy (🚨 the first deploy will fail b/c we're not done yet!)
 1. Locally navigate to `.env` at your project root
-1. For each item here, tell cloudflare about it, example: `npx wrangler secret put JWT_SECRET`
+1. For each item here, tell cloudflare about it in `bash`, example: `npx wrangler secret put JWT_SECRET`
 1. Navigate to `Workers & Pages` > `Your Project` > `Deployments`
 1. Find prod URL, by visiting site, or seeing logs
-1. Add prod url to your `ace.config.js`, example:
+1. Add prod url to your `ace.config.js` > `origins` > `prod`, example:
     ```js
     // @ts-check 
 

@@ -338,7 +338,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
     const host = config.liveHosts?.[env]
     if (!host) throw new Error(`ace.config.js > liveHosts > "${env}" is undefined`)
 
-    return new WebSocket(`ws://${host}/subscribe?stream=${encodeURIComponent(props.stream)}`);
+    return new WebSocket(`ws${host.includes('localhost') ? '' : 's'}://${host}/subscribe?stream=${encodeURIComponent(props.stream)}`);
   }
 
 
