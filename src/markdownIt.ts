@@ -12,17 +12,17 @@ export const defaultMarkdownOptions: MarkdownItOptions = {
 
 export function initMarkdownIt (props: {
   /** Optional,requested options will be merged w/ the `defaultMarkdownOptions` */
-  options?: MarkdownItOptions
+  markdownItOptions?: MarkdownItOptions
   /** Optional, to enable code highlighting pass a function here that registers highlight languages */
   registerHljs?: () => void
-  /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
+  /** Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here */
   setMD?: Setter<markdownit | undefined>
 }) {
   if (props.registerHljs) props.registerHljs()
 
   const md = markdownit({
     ...defaultMarkdownOptions,
-    ...props.options,
+    ...props.markdownItOptions,
   })
 
   props.setMD?.(md)

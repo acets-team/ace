@@ -205,10 +205,10 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
       const res = await scope.liveEvent({
         stream: 'example',
         data: { example: true },
-        requestInit: { headers: { Auth: 'ABC' } },
+        requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }, // Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
       })
 
-      // ace.config.js
+      // ace.config.js ❤️ Prerequisite
       export const config = {
         liveHosts: {
           local: 'localhost:8787',

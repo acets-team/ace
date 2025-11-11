@@ -1,7 +1,7 @@
 /**
  * 🧚‍♀️ How to access:
- *     - Plugin: `markdownIt`
- *     - import { MarkdownItStatic, defaultMarkdownOptions } from '@ace/markdownItStatic'
+ *     - Plugin: markdownIt & optionally hljs
+ *     - import { MarkdownItStatic } from '@ace/markdownItStatic'
  *     - import type { MarkdownItStaticProps } from '@ace/markdownItStatic'
  */
 
@@ -27,24 +27,24 @@ import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
 <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} />
 ```
  * @param content - Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()`
- * @param setMD - in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD`
- * @param options - Optional, requested options will be merged w/ the `defaultMarkdownOptions`
+ * @param setMD - Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here
+ * @param markdownItOptions - Optional, requested options will be merged w/ the `defaultMarkdownOptions`
  * @param $div - Optional, props passed to inner wrapper div
  * @param registerHljs - Optional, required when we want code highlighting, registers highlight languages
  */
 export const MarkdownItStatic = (props: {
   /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
   content: string,
-  /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
+  /** Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here */
   setMD?: Setter<markdownit | undefined>
   /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
-  options?: MarkdownItOptions
+  markdownItOptions?: MarkdownItOptions
   /** Optional, props passed to inner wrapper div */
   $div?: JSX.HTMLAttributes<HTMLDivElement>,
   /** Optional, to enable code highlighting pass a function here that registers highlight languages */
   registerHljs?: () => void
 }) => {
-  const md = initMarkdownIt({ options: props.options, registerHljs: props.registerHljs, setMD: props.setMD })
+  const md = initMarkdownIt({ markdownItOptions: props.markdownItOptions, registerHljs: props.registerHljs, setMD: props.setMD })
 
   return <div {...props.$div} innerHTML={md.render(props.content)} />
 }

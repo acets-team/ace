@@ -10,7 +10,7 @@ import { regexRoutes } from './regexRoutes'
 import { useLocation } from '@solidjs/router'
 import { pathnameToMatch } from '../pathnameToMatch'
 import type { Routes, RoutePath2PathParams, RoutePath2SearchParams } from './types'
-import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor } from 'solid-js'
+import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor, mergeProps } from 'solid-js'
 
 
 /**
@@ -18,6 +18,8 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
  * Add to `app.tsx` => `import '@ace/tabs.styles.css'` & then:
  * @example
   ```tsx
+  // route
+
   <Tabs
     mode="route"
     variant="pill"
@@ -30,6 +32,8 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
   ```
  * @example
   ```tsx
+  // scroll
+
   <Tabs
     name="nav"
     mode="scroll"
@@ -44,6 +48,8 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
   ```
  * @example
   ```tsx
+  // content
+
   <Tabs
     mode="content"
     variant="classic"
@@ -63,13 +69,29 @@ import { createSignal, createEffect, onMount, For, Show, type JSX, type Accessor
   ```
  * 
  * @param props.tabs - An array of `RouteTab`, `HashTab` or `ContentTab` objects. Place the Tabs component in a layout when using a mode of `route` to keep the animation smooth between routes
- * @param props.name - Name is helpful when you have multiple tabs on the same page and want to use `setActiveByTabIndex()`, `setActiveByPath()` or `setActiveByHash()`
+ * @param props.name - Optional, `name` is helpful when you have multiple tabs on the same page and want to use `setActiveByTabIndex()`, `setActiveByPath()` or `setActiveByHash()`
  * @param props.mode - `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected.
- * @param props.variant - `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons
- * @param props.scrollMargin - If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
+ * @param props.variant - Optional, defaults to `pill`, `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons
+ * @param props.scrollMargin - Optional, defaults to `0`, if `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
  * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  */
-export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scrollMargin = 0, $div }: TabsProps<Routes>) {
+export function Tabs(props: {
+  /** An array of `RouteTab`, `HashTab` or `ContentTab` objects. Place the Tabs component in a layout when using a mode of `route` to keep the animation smooth between routes */
+  tabs: Accessor<RouteTab<Routes>[] | HashTab[] | ContentTab[]>
+  /** Optional, `name` is helpful when you have multiple tabs on the same page and want to use `setActiveByTabIndex()`, `setActiveByPath()` or `setActiveByHash()` */
+  name?: string
+  /** `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected. */
+  mode: 'content' | 'scroll' | 'route'
+  /** Optional, defaults to `pill`, `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons */
+  variant?: 'underline' | 'pill' | 'classic'
+  /** Optional, defaults to `0`, if `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item */
+  scrollMargin?: number
+  /** Optional, set to add props in wrapper `<div />` w/in `<Tabs/>` */
+  $div?: JSX.HTMLAttributes<HTMLDivElement>
+}) {
+  const defaultTabsProps: Partial<TabsProps> = { scrollMargin: 0, mode: 'content', variant: 'pill' }
+  props = mergeProps(defaultTabsProps, props)
+
   const location = useLocation()
 
   const pathToTabIndex = new Map<Routes, number>()
@@ -78,7 +100,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   let initialContentIndex = 0
   let foundContentInitial = false
 
-  tabs()?.forEach((tab: any, i: number) => {
+  props.tabs()?.forEach((tab: any, i: number) => {
     if (tab instanceof RouteTab) pathToTabIndex.set(tab.path, i)
     else if (tab instanceof HashTab) hashToTabIndex.set(tab.hash, i)
     else if (tab instanceof ContentTab && tab.isInitiallyActive && !foundContentInitial) {
@@ -89,20 +111,20 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
   let initialIndex: number | undefined = undefined
 
-  if (mode === 'content') initialIndex = initialContentIndex
+  if (props.mode === 'content') initialIndex = initialContentIndex
 
   const [active, setActive] = createSignal<number | undefined>(initialIndex) // must be after tabs foreach 
   const [firstRender, setFirstRender] = createSignal(true)
 
   createEffect(async () => {
-    if (mode !== 'route') return
+    if (props.mode !== 'route') return
     const match = await pathnameToMatch(location.pathname, regexRoutes)
 
     if (!match) return
     const tabIndex = pathToTabIndex.get(match.handler.values.path as Routes)
 
-    if (tabIndex === undefined || !tabs()[tabIndex]) return
-    onTabClick(tabIndex, tabs()[tabIndex] as ContentTab)
+    if (tabIndex === undefined || !props.tabs()[tabIndex]) return
+    onTabClick(tabIndex, props.tabs()[tabIndex] as ContentTab)
   })
 
   let divTabs: HTMLDivElement | undefined
@@ -116,15 +138,18 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   let scrollEndTimeout = 0
 
   function computeScrollData() {
+    if (props.scrollMargin === undefined) return
+
     scrollData.length = 0
 
     for (const { el, idx } of hashCache.values()) {
       scrollData.push({ idx, top: el.offsetTop })
     }
+
     scrollData.sort((a, b) => a.top - b.top)
 
     let currentTabIndex = 0
-    const point = window.scrollY + scrollMargin
+    const point = window.scrollY + props.scrollMargin
 
     for (const { idx, top } of scrollData) {
       if (top <= point) currentTabIndex = idx
@@ -136,9 +161,10 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
   function onScrollRAF() {
     ticking = false
-    if (scrollingProgrammatic) return
 
-    const point = window.scrollY + scrollMargin
+    if (scrollingProgrammatic || props.scrollMargin === undefined) return
+
+    const point = window.scrollY + props.scrollMargin
     let newIdx = 0
 
     for (const { idx, top } of scrollData) {
@@ -174,14 +200,14 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
     divActiveIndicator.style.width = `${tabEl.offsetWidth}px`
     divActiveIndicator.style.transform = `translateX(${tabEl.offsetLeft}px)`
 
-    if (variant !== 'underline') {
+    if (props.variant !== 'underline') {
       divActiveIndicator.style.height = `${tabEl.offsetHeight}px`
     }
   }
 
   function onTabClick(i: number, tab: RouteTab<any> | HashTab | ContentTab, ev?: MouseEvent) {
-    if (mode === 'content' || mode === 'route') setActive(i)
-    else if (mode === 'scroll' && tab instanceof HashTab) {
+    if (props.mode === 'content' || props.mode === 'route') setActive(i)
+    else if (props.mode === 'scroll' && tab instanceof HashTab && props.scrollMargin !== undefined) {
       ev?.preventDefault()
       scrollingProgrammatic = true
       setActive(i)
@@ -189,7 +215,7 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
       if (!el) return
 
       const override = Number(el.dataset.tabsScrollMargin)
-      const margin = isNaN(override) ? scrollMargin : override
+      const margin = isNaN(override) ? props.scrollMargin : override
       const top = el.getBoundingClientRect().top + window.scrollY - margin
 
       window.scrollTo({ top, behavior: 'smooth' })
@@ -197,17 +223,17 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
   }
 
   onMount(() => {
-    if (name) {
-      indexToOnTabClick.set(name, i => onTabClick(i, tabs()[i]!))
+    if (props.name) {
+      indexToOnTabClick.set(props.name, i => onTabClick(i, props.tabs()[i]!))
 
-      pathToOnTabClick.set(name, r => {
+      pathToOnTabClick.set(props.name, r => {
         const i = pathToTabIndex.get(r)
-        if (i != null) onTabClick(i, tabs()[i]!)
+        if (i != null) onTabClick(i, props.tabs()[i]!)
       })
 
-      hashToOnTabClick.set(name, h => {
+      hashToOnTabClick.set(props.name, h => {
         const i = hashToTabIndex.get(h)
-        if (i != null) onTabClick(i, tabs()[i]!)
+        if (i != null) onTabClick(i, props.tabs()[i]!)
       })
     }
 
@@ -215,8 +241,8 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
     window.addEventListener('resize', positionIndicator)
 
-    if (mode === 'scroll') {
-      tabs()?.forEach((tab: any, i: number) => {
+    if (props.mode === 'scroll') {
+      props.tabs()?.forEach((tab: any, i: number) => {
         if (tab instanceof HashTab) {
           const el = document.querySelector<HTMLElement>(tab.hash)
           if (el) hashCache.set(tab.hash, { el, idx: i })
@@ -231,15 +257,15 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
     setTimeout(() => setFirstRender(false), 0)
 
     return () => { // onCleanup
-      if (name) {
-        indexToOnTabClick.delete(name)
-        pathToOnTabClick.delete(name)
-        hashToOnTabClick.delete(name)
+      if (props.name) {
+        indexToOnTabClick.delete(props.name)
+        pathToOnTabClick.delete(props.name)
+        hashToOnTabClick.delete(props.name)
       }
 
       window.removeEventListener('resize', positionIndicator)
 
-      if (mode === 'scroll') {
+      if (props.mode === 'scroll') {
         window.removeEventListener('resize', computeScrollData)
         window.removeEventListener('scroll', onScroll)
       }
@@ -248,24 +274,24 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
 
   createEffect(positionIndicator)
 
-  const accessibilityProps: JSX.HTMLAttributes<HTMLDivElement> = mode === 'content' ? { role: 'tablist', 'aria-orientation': 'horizontal' } : {}
+  const accessibilityProps: JSX.HTMLAttributes<HTMLDivElement> = props.mode === 'content' ? { role: 'tablist', 'aria-orientation': 'horizontal' } : {}
 
-  const baseClass = `ace-tabs ${variant}`
-  const mergedClass = $div?.class ? `${baseClass} ${$div.class}` : baseClass
+  const baseClass = `ace-tabs ${props.variant}`
+  const mergedClass = props.$div?.class ? `${baseClass} ${props.$div.class}` : baseClass
 
   return <>
-    <div {...$div} class={mergedClass}>
+    <div {...props.$div} class={mergedClass}>
       <div class="tabs" ref={divTabs} {...accessibilityProps}>
-        <For each={tabs()}>
+        <For each={props.tabs()}>
           {(tab, i) => {
             const isActive = () => i() === active()
 
             return <>
-              { tab instanceof HashTab && <a href={tab.hash} class={`tab ${isActive() ? 'active' : ''}`} aria-current={isActive() ? 'page' : undefined} onClick={ev => onTabClick(i(), tab, ev)}>{tab.label}</a> }
+              {tab instanceof HashTab && <a href={tab.hash} class={`tab ${isActive() ? 'active' : ''}`} aria-current={isActive() ? 'page' : undefined} onClick={ev => onTabClick(i(), tab, ev)}>{tab.label}</a>}
 
-              { tab instanceof RouteTab && <a href={buildUrl((tab as RouteTab<any>).path, {pathParams: (tab as RouteTab<any>).pathParams, searchParams: (tab as RouteTab<any>).searchParams})} class={`tab ${isActive() ? 'active' : ''}`} onClick={ev => onTabClick(i(), tab, ev)} > {tab.label} </a> }
+              {tab instanceof RouteTab && <a href={buildUrl((tab as RouteTab<any>).path, { pathParams: (tab as RouteTab<any>).pathParams, searchParams: (tab as RouteTab<any>).searchParams })} class={`tab ${isActive() ? 'active' : ''}`} onClick={ev => onTabClick(i(), tab, ev)} > {tab.label} </a>}
 
-              { tab instanceof ContentTab && <div id={`tab-${i()}`} role="tab" tabindex={isActive() ? 0 : -1} aria-selected={isActive()} aria-controls={`tab-content-${i()}`} class={`tab ${isActive() ? 'active' : ''}`} onClick={() => onTabClick(i(), tab)} > {tab.label} </div> }
+              {tab instanceof ContentTab && <div id={`tab-${i()}`} role="tab" tabindex={isActive() ? 0 : -1} aria-selected={isActive()} aria-controls={`tab-content-${i()}`} class={`tab ${isActive() ? 'active' : ''}`} onClick={() => onTabClick(i(), tab)} > {tab.label} </div>}
             </>
           }}
         </For>
@@ -273,9 +299,9 @@ export function Tabs({ tabs, name, mode = 'content', variant = 'underline', scro
         <div class="marker" ref={divActiveIndicator} style={{ transition: firstRender() ? 'none' : undefined, opacity: firstRender() ? '0' : '1' }}></div>
       </div>
 
-      <Show when={mode === 'content'}>
+      <Show when={props.mode === 'content'}>
         <div class="tab-contents">
-          <For each={tabs()}>
+          <For each={props.tabs()}>
             {(tab, i) => {
               return <>
                 <Show when={i() === active()}>
@@ -368,20 +394,7 @@ export class ContentTab {
 }
 
 
-export type TabsProps<T_Path extends Routes> = {
-  /** An array of `RouteTab`, `HashTab` or `ContentTab` objects. Place the Tabs component in a layout when using a mode of `route` to keep the animation smooth between routes */
-  tabs: Accessor<RouteTab<T_Path>[] | HashTab[] | ContentTab[]>
-  /** Name is helpful when you have multiple tabs on the same page and want to use `setActiveByTabIndex()`, `setActiveByPath()` or `setActiveByHash()` */
-  name?: string
-  /** `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected. */
-  mode: 'content' | 'scroll' | 'route'
-  /** `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons */
-  variant: 'underline' | 'pill' | 'classic'
-  /** If `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item */
-  scrollMargin?: number
-  /** Optional, set to add props in wrapper `<div />` w/in `<Tabs/>` */
-  $div?: JSX.HTMLAttributes<HTMLDivElement>
-}
+export type TabsProps = Parameters<typeof Tabs>[0]
 
 
-export type Tabs = TabsProps<Routes>['tabs']
+export type Tabs = TabsProps['tabs']

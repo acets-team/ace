@@ -1,6 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
- *     - Plugin: markdownIt
+ *     - Plugin: markdownIt & optionally hljs
  *     - import { MarkdownItDynamic } from '@ace/markdownItDynamic'
  *     - import type { MarkdownItDynamicProps } from '@ace/markdownItDynamic'
  */
@@ -27,18 +27,18 @@ import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
 <MarkdownItDynamic content={() => store.buildStats} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} />
 ```
  * @param content - Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()`
- * @param setMD - in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD`
- * @param options - Optional, requested options will be merged w/ the `defaultMarkdownOptions`
+ * @param setMD - Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here
+ * @param markdownItOptions - Optional, requested options will be merged w/ the `defaultMarkdownOptions`
  * @param $div - Optional, props passed to inner wrapper div
  * @param registerHljs - Optional, required when we want code highlighting, registers highlight languages
  */
 export const MarkdownItDynamic = feComponent((props: {
   /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
   content: Accessor<string | undefined>
-  /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
+  /** Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here */
   setMD?: Setter<markdownit | undefined>
   /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
-  options?: MarkdownItOptions
+  markdownItOptions?: MarkdownItOptions
   /** Optional, props passed to inner wrapper div */
   $div?: JSX.HTMLAttributes<HTMLDivElement>,
   /** Optional, to enable code highlighting pass a function here that registers highlight languages */
@@ -47,7 +47,7 @@ export const MarkdownItDynamic = feComponent((props: {
   if (props.registerHljs) props.registerHljs()
 
   const html = createMemo(() => {
-    const md = initMarkdownIt({ options: props.options, registerHljs: props.registerHljs, setMD: props.setMD })
+    const md = initMarkdownIt({ markdownItOptions: props.markdownItOptions, registerHljs: props.registerHljs, setMD: props.setMD })
     const _content = props.content?.()
 
     return md && _content ? md.render(_content) : ''

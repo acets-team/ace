@@ -173,7 +173,7 @@ export type APIResolveFunction<
   T_Body extends ApiBody,
   T_Response_Data,
   T_Locals extends BaseEventLocals = {}
-> = (scope: ScopeBE<T_Params, T_Search, T_Body, T_Locals>) => Promise<AceResponse<T_Response_Data>>
+> = (scope: ScopeBE<T_Params, T_Search, T_Body, T_Locals>) => AceResponse<T_Response_Data> | Promise<AceResponse<T_Response_Data>>
 
 
 

@@ -17,7 +17,7 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
  * @example
   ```tsx
   <button onClick={() => showToast({ value: ['Dark', 'Info'], type: 'info' })}>Dark Info</button>
-  <button onClick={() => showToast({ value: ['Dark', 'Success'], type: 'success' })}>Dark Success</button>
+  <button onClick={() => showToast({ value: ['Dark', 'Success'], type: 'success', ms: Infinity })}>Dark Success</button>
   <button onClick={() => showToast({ value: 'Dark Danger', type: 'danger' })}>Dark Danger</button>
   ```
  * ### Light Mode:
@@ -40,7 +40,7 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
     ...toastStyleLight,
     '--ace-toast-bg': 'rgb(243, 232, 255)',
     '--ace-toast-text-color': 'rgb(76, 29, 149)',
-    '--ace-toast-border-color': 'rgb(192, 132, 252)',
+    '--ace-toast-border': '1px solid rgb(192, 132, 252)',
     '--ace-toast-icon-color': 'rgb(109, 40, 217)',
     '--ace-toast-icon-border': '1px solid rgb(192, 132, 252)',
     '--ace-toast-icon-bg': 'rgb(233, 213, 255)',
@@ -64,7 +64,7 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
   #ace-toast-wrapper {
     .toast.emerald {
       --ace-toast-bg: rgb(6, 95, 70);
-      --ace-toast-border-color: rgb(16, 185, 129);
+      --ace-toast-border: 1px solid rgb(16, 185, 129);
       --ace-toast-icon-color: rgb(6, 78, 59);
       --ace-toast-icon-border: 1px solid rgb(16, 185, 129);
       --ace-toast-icon-bg: rgb(209, 250, 229);
@@ -77,7 +77,7 @@ import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, t
  * 
  * @param props.type - Sets the `icon` and applies `$div.style`, setting an `icon` as well will overide the type icon and setting custom `$div.style` will merge w/ the type style
  * @param props.value - One string shows as `<span>` and multiple strings in an array shows as an unordered list
- * @param props.ms - How many ms to show the toast, defaults to `9000`
+ * @param props.ms - How many ms to show the toast, defaults to `9000`, to not close, set to `Infinity`
  * @param props.icon - The icon to display in the `toast`, if no icon is set we'll set the icon based on the type
  * @param props.animationSpeed - How many ms does it take for the toast to hide, defaults to 600 b/c in the css for `.toast` > `transition: var(--ace-toast-transition, all 0.6s ease);`
  * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
@@ -222,22 +222,24 @@ function defaultStyleForType(type?: ShowToastProps['type']): JSX.CSSProperties {
 
 export const toastStyleDark: JSX.CSSProperties = {
   '--ace-toast-text-color': 'rgb(214, 217, 223)',
-  '--ace-toast-border-color': 'rgb(55, 65, 81)',
   '--ace-toast-bg': 'rgb(31, 41, 55)',
+  '--ace-toast-box-shadow': '0 2px 10px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(255, 255, 255, 0.05) inset',
 
   '--ace-toast-close-color': 'rgb(156, 163, 175)',
   '--ace-toast-close-hover-border': 'rgb(117, 126, 139)',
   '--ace-toast-close-hover-bg': 'rgb(75, 85, 99)',
+  '--ace-toast-close-hover-box-shadow': '0 3px 10px rgba(0, 0, 0, 0.35), 0 0 6px rgba(255, 255, 255, 0.05) inset',
 }
 
 export const toastStyleLight: JSX.CSSProperties = {
   '--ace-toast-text-color': 'rgb(31, 41, 55)',
-  '--ace-toast-border-color': 'rgb(203, 213, 225)',
   '--ace-toast-bg': 'rgb(255, 255, 255)',
+  '--ace-toast-box-shadow': ` 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.6) inset `,
 
   '--ace-toast-close-color': 'rgb(107, 114, 128)',
   '--ace-toast-close-hover-border': 'rgb(156, 163, 175)',
-  '--ace-toast-close-hover-bg': 'rgb(229, 231, 235)'
+  '--ace-toast-close-hover-bg': 'rgb(229, 231, 235)',
+  '--ace-toast-close-hover-box-shadow': '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 6px rgba(255, 255, 255, 0.4) inset',
 }
 
 export const toastIconStyleSuccess: JSX.CSSProperties = {

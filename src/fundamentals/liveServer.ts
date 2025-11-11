@@ -22,28 +22,9 @@ import { DurableObject } from 'cloudflare:workers'
     ```ts
     // index.ts
 
-    import { jwtValidate } from '@ace/jwtValidate'
-    import { createLiveWorker, createLiveDurableObject, readCookie } from '@ace/liveServer'
-
+    import { createLiveWorker } from '@ace/liveServer'
 
     export default createLiveWorker() satisfies ExportedHandler<Env>
-
-
-    export const LiveDurableObject = createLiveDurableObject({
-      onMessage(props) {
-        console.log('onMessage > props', props)
-      },
-      onValidateEvent(request) {
-        if (request.headers.get('live_secret') !== process.env.LIVE_SECRET) { // to create a password "ace password" in bash ❤️ & place this password in the .env of your app & the .env of your live server, so that only your app can call /event
-          return new Response('Unauthorized', { status: 400 })
-        }
-      },
-      async onValidateSubscribe(request) {
-        const jwt = readCookie(request, 'aceJWT')
-        const res = await jwtValidate({ jwt })
-        if (!res.isValid) return new Response('Unauthorized', { status: 400 })
-      }
-    })
     ```
  */
 export function createLiveWorker() {
@@ -70,7 +51,9 @@ export function createLiveWorker() {
  *     - While the `env` is local (via `ace build local`) then an html is available for testing @ `http://localhost:8787`
  * @example
     ```ts
-    // index.ts
+    // IF valid => no return
+    // IF invalid => return Response
+
 
     import { jwtValidate } from '@ace/jwtValidate'
     import { createLiveWorker, createLiveDurableObject, readCookie } from '@ace/liveServer'
@@ -80,15 +63,16 @@ export function createLiveWorker() {
 
 
     export const LiveDurableObject = createLiveDurableObject({
-      onMessage(props) {
-        console.log('onMessage > props', props)
-      },
       onValidateEvent(request) {
         if (request.headers.get('live_secret') !== process.env.LIVE_SECRET) { // to create a password "ace password" in bash ❤️ & place this password in the .env of your app & the .env of your live server, so that only your app can call /event
           return new Response('Unauthorized', { status: 400 })
         }
       },
       async onValidateSubscribe(request) {
+        // cookies can be shared between App & Ace Live Server, IF:
+            // on localhost OR
+            // deployed to same domain, example: live.example.com AND cookie is set like this: 
+            // scope.setCookie('aceJWT', jwt, { domain: env == 'prod' ? '.example.com' : undefined, maxAge: ttlWeek })
         const jwt = readCookie(request, 'aceJWT')
         const res = await jwtValidate({ jwt })
         if (!res.isValid) return new Response('Unauthorized', { status: 400 })

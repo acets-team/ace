@@ -325,7 +325,7 @@ export class ScopeComponent<T_Path_Params extends UrlPathParams = {}, T_Search_P
         onCleanup(() => scope.liveUnsubscribe(ws))
       })
 
-      // ace.config.js
+      // ace.config.js ❤️ Prerequisite
       export const config = {
         liveHosts: {
           local: 'localhost:8787',

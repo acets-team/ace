@@ -25,6 +25,8 @@
 1. [Network Status Hook](#network-status-hook)
 1. [👩‍💻 Create Desktop Application](#create-desktop-application)
 1. [Enums](#enums)
+1. [Markdown](#markdown)
+1. [Code Highlight Markdown](#code-highlight-markdown)
 1. [Bits](#bits)
 1. [Modal Demo](#modal-demo)
 1. [🛠️ Bind DOM Elements](#bind-dom-elements)
@@ -51,12 +53,11 @@
 1. [Turso Demo](#turso-demo)
 1. [AgGrid Demo](#aggrid-demo)
 1. [Chart.js Demo](#chartjs-demo)
-1. [Markdown-It Demo](#markdown-it-demo)
-1. [Highlight.js Demo](#highlightjs-demo)
 1. [Send Brevo Emails](#send-brevo-emails)
 1. [🚀 Deploy](#deploy)
 1. [Add a custom domain](#add-a-custom-domain)
 1. [Resolve www DNS](#resolve-www-dns)
+1. [View Production Logs](#view-production-logs)
 1. [VS Code Helpful Info](#vs-code-helpful-info)
 1. [Error Dictionary](#error-dictionary)
 
@@ -440,13 +441,13 @@
 1. With `Ace`, we call APIs via **API functions**! 🙌
     ```tsx
     function UpdateEmail() {
-      const {store, refBind} = useStore() // refBind() allows us to add 2 way data binding between an input and a store. see newsletterForm @ atoms.ts above to see why we bind to newsletterForm.email
+      const {store, refBind} = useStore()
 
       const onSubmit = createOnSubmit(({ event }) => {
         apiUpdateEmail({ // API Function! ❤️
-          body: kParse(updateEmailParser, { email: store.newsletterForm.email }), // kParse() accepts a validating / parsing function (a parser) and an input and does the validating / parsing for us, it also reads the parser @ compile time and shows us in the editor if our input is missing any keys that this parser requires. So if the parser needs an email, this line will show an error till an email is provided. then at runtime the parser will check that email is the exact shape it should be
+          body: kParse(updateEmailParser, { email: store.newsletterForm.email }),
           onSuccess() {
-            event.currentTarget.reset() // resets the form & refFormReset() below will ensure that when we reset the form the store values will clear and the error messages @ <Messages /> will also clear
+            event.currentTarget.reset()
             showToast({ type: 'success', value: 'Updated!' }) // from @ace/toast
           }
         })
@@ -492,7 +493,7 @@
             onSuccess: (d) => sync('transactions', d)
           })
 
-          apiGetFinances({
+          apiGetFinances({ // on refresh => requests start on the BE 🤓
             queryType: 'stream',
             onSuccess(d) {
               sync('financeSummary', d.summary)
@@ -530,11 +531,6 @@
       ```
     - 🚨 set the `queryType` to `direct` when this api call does not happen while the component is rendering but does happen after, like based on some user interaction like an onClick
       ```ts
-      // the <Submit /> component will disable itself and show a loading indicator anytime the bitKey is true
-      // bits are boolean signals, anytime an api is called w/o a bitKey provided it automtically get's a bitKey that is the same name as it's api name
-      // bits makes it simple to know anywhere if an api is loading via scope.bits.get(key) & can be updated via scope.bits.set(key, value)
-
-
       import { Show } from 'solid-js'
       import { Submit } from '@ace/submit'
       import { apiSignOut } from '@ace/apis'
@@ -582,8 +578,14 @@
         })
       }
       ```
-- See [VS Code Extension](#vs-code-extension) to see how to get links to `Ace API's` right **above API Function calls!**
+- 🚨 See [VS Code Extension](#vs-code-extension) to see how to add links to `Ace API's` right **above API Function calls!**
 - See [Echo](#echo) to see how updating API data in Ace works
+-  `queryKey`:
+    - An optional prop that can be passed to api functions
+    - The unique identifier `Solid's query()` uses for all it's magic like deduplication
+    - IF `queryType` is set AND `queryKey` is undefined THEN the `queryKey` is set as the api function name (ex: `apiGetUsers`)
+    - Typically being undefined is ideal **unless** there is a query or search param that is sent in this request and we wanna `dedup` based on that `id` (ex: `['apiGetUser', id]`)
+    - So a `queryKey` can be `undefined` (typical), can be a string (uncommon), or an array (sometimes super helpful)
 
 
 
@@ -1243,6 +1245,176 @@ export default new Route404()
 
 
 
+## Markdown
+#### `<AceMarkdown />` ✅
+- Ideal for SEO
+- Supports `.md` files & markdown `Preview` @ [VsCodium](https://vscodium.com/)  ✅
+    ![Ace Markdown Example](https://i.imgur.com/cigzPqB.jpeg)
+- Example:
+    ```tsx
+    // How `.md?raw` works:
+      // at build-time, the markdown file is minified & bundled as a string literal 
+      // so at run-time, there's no file I/O b/c the markdown is an in memory string constant 
+
+    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
+
+    import { AceMarkdown } from '@ace/aceMarkdown'
+    import { Example } from '@src/Example/Example'
+    import mdAppInfo from '@src/md/mdAppInfo.md?raw'
+    import { registerHljs } from '@src/init/registerHljs'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
+
+    <AceMarkdown content={mdAppInfo} components={[Example]} registerHljs={registerHljs} markdownItOptions={{ highlight: hljsMarkdownItOptions }} />
+    ```
+- Requires: `npm i markdown-it -D`
+- Converts `markdown` to `html` AND supports `Directives`, added via `comments` that start with  `<!--{`, end with `}-->` and include `JSON` w/in
+- `Directives`:
+    - `$info`:
+        - Example: `<!--{ "$info": true, "$interpolate": true, "title": "What is Ace?", "slug": "what-is-ace" }-->`
+        - IF `$info.$interpolate` is `true` THEN `vars` from `$info` can be placed @ `markdown`, `component props`, `tab label` & `tab content`
+    - `$component`:
+        - Adds a Solid component into markdown 🙌
+        - Example: `<!--{ "$component": "Example", "title": "{title}" }-->`
+        - THEN pass the `component function` to `AceMarkdown`, example: `<AceMarkdown content={mdWhatIsAce} components={[Example]} />`
+    - ❤️ `$tabs`:
+        - Example: `<!--{ "$tabs": ["TS", "JS"] }-->`
+        - The value in the directive @ `$tabs` is the tab `labels`, so for this example there would be 2 labels, one is `TS` and the other is `JS`
+        - Place the tab content below the `Directive`
+        - 🚨 Add `---` at the end of each tab content to let us know where each tab content ends
+        - IF the number of `content items` does not match the number of `labels` THEN we'll throw an error
+        - ✅ Tab content may include, `markdown`, or `components`
+        - W/in the `Directive` these additional `TabsProps` can be provided of `{ name?: string, variant?: 'underline' | 'pill' | 'classic', $div?: JSX.HTMLAttributes<HTMLDivElement> }`
+            - Example: `<!--{ "$tabs": ["TS", "JS"], "variant": "underline" }-->`
+- Props:
+    ```ts
+    {
+      /** Ace Markdown Content, example: `import mdWhatIsAce from '@src/md/mdWhatIsAce.md?raw'`, then provide `mdWhatIsAce` here  */
+      content: string,
+      /** Components that are in the AceMarkdown, just passing the function names is perfect */
+      components?: (() => JSX.Element)[],
+      /** Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here */
+      setMD?: Setter<markdownit | undefined>
+      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
+      markdownItOptions?: MarkdownItOptions
+      /** Optional, props passed to inner wrapper div */
+      $div?: JSX.HTMLAttributes<HTMLDivElement>,
+      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
+      registerHljs?: () => void,
+    }
+    ```
+
+#### `<MarkdownItStatic />` ✅
+- Ideal for SEO
+- Does not support `<AceMarkdown />` directives
+- Supports `.md` files & markdown `Preview` @ [VsCodium](https://vscodium.com/)  ✅
+- Install: `npm i markdown-it -D`
+- Example:
+    ```ts
+    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
+
+    import mdAppInfo from '@src/md/mdAppInfo.md?raw'
+    import { registerHljs } from '@src/init/registerHljs'
+    import { MarkdownItStatic } from '@ace/markdownItStatic'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
+
+    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs}  options={{ highlight: hljsMarkdownItOptions }} />
+    ```
+- Props:
+    ```ts
+    {
+      /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
+      content: string,
+      /** Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here */
+      setMD?: Setter<markdownit | undefined>
+      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
+      markdownItOptions?: MarkdownItOptions
+      /** Optional, props passed to inner wrapper div */
+      $div?: JSX.HTMLAttributes<HTMLDivElement>,
+      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
+      registerHljs?: () => void
+    }
+    ```
+
+
+#### `<MarkdownItDynamic />` ✅
+- Ideal for dynamic markdown (from `DB`) or `FE` alterable markdown (from `textarea`)
+- Does not support `<AceMarkdown />` directives
+- Install: `npm i markdown-it -D`
+- Example:
+    ```ts
+    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
+
+    import { registerHljs } from '@src/init/registerHljs'
+    import { MarkdownItDynamic } from '@ace/markdownItDynamic'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
+
+    <MarkdownItDynamic content={() => store.buildStats} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} $div={{ class: 'markdown' }} />
+    ```
+- Props:
+    ```ts
+    {
+      /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
+      content: Accessor<string | undefined>
+      /** Helpful when you'd love the markdownIt instance, example: `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` here */
+      setMD?: Setter<markdownit | undefined>
+      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
+      markdownItOptions?: MarkdownItOptions
+      /** Optional, props passed to inner wrapper div */
+      $div?: JSX.HTMLAttributes<HTMLDivElement>,
+      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
+      registerHljs?: () => void
+    }
+    ```
+
+#### `defaultMarkdownOptions` ✅
+- Requested `markdownItOptions` @ `<AceMarkdown />`, `<MarkdownItStatic />` & `<MarkdownItDynamic />` will be merged w/ these `defaultMarkdownOptions`
+    ```ts
+    import type { Options as MarkdownItOptions } from 'markdown-it'
+
+    const defaultMarkdownOptions: MarkdownItOptions = {
+      html: true,
+      linkify: true,
+      typographer: true
+    }
+    ```
+
+
+
+## Code Highlight Markdown
+1. Install: `npm i highlight.js -D`
+1. Install: `npm i @highlightjs/cdn-assets -D`
+1. @ `app.css` add: `@import '@highlightjs/cdn-assets/styles/github-dark.min.css';`
+    - [All available styles](https://github.com/highlightjs/highlight.js/tree/main/src/styles)
+1. Add `hljs: true` @ [`ace.config.js`](#ace-config) > `plugins` & then run `npm run dev` to get the `hljs` fundamentals
+1. @ `src/init/registerHljs.ts` register the languages you'd love to support, example:
+    ```ts
+    import xml from '@ace/hljs/xml'
+    import hljs from '@ace/hljs/core'
+    import typescript from '@ace/hljs/typescript'
+
+    let registered = false
+
+    export function registerHljs() {
+      if (!registered) { // Register typescript & xml for tsx (& then for tsx just use the language "ts") ❤️
+        hljs.registerLanguage('xml', xml)
+        hljs.registerLanguage('typescript', typescript)
+
+        registered = true
+      }
+    }
+    ```
+1. The component props `registerHljs` & `markdownItOptions` are the same @ `<AceMarkdown />`, `<MarkdownItStatic />` & `<MarkdownItDynamic />` & bound like this:
+    ```ts
+    import { AceMarkdown } from '@ace/aceMarkdown'
+    import mdAppInfo from '@src/md/mdAppInfo.md?raw'
+    import { registerHljs } from '@src/init/registerHljs'
+    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
+
+    <AceMarkdown content={mdAppInfo} registerHljs={registerHljs} markdownItOptions={{ highlight: hljsMarkdownItOptions }} $div={{ class: 'markdown' }} />
+    ```
+
+
+
 ## Enums
 1. Simple:
     ```ts
@@ -1397,36 +1569,13 @@ export default new Route('/spark')
 
 
 ## Form Demo
-- ✅ FE & BE Validation uses the same schema
-- ✅ No BE request is made unless FE validation passes
-- ✅ Error messages for each input show up next to that input
-- ✅ IF input has error(s) AND start typing in input THEN clear that inputs error(s)
-- ✅ Save input value on refresh OR on offline thanks to `refBind()` syncing our store (atom that can persist to indexdb) w/ the input
+- ✅ `FE` & `BE` validation shares the same `signInParser` schema
+- ✅ No `Request` is made to the `BE` unless `FE` validation passes
+- ✅ Error messages for each `input` show up next to that `input`
+- ✅ IF `input` has error(s) AND start typing in `input` THEN clear that `inputs` error(s)
+- ✅ Save `input` value on refresh OR on offline thanks to `refBind()` syncing our store (atom that can persist to indexdb) w/ the `input`
 
 ```ts
-// useStore() provides a reference to an object that has helpful store items
-// store provides access to atoms (ex: store.count)
-// refBind() provides 2 way data binding between stores and inputs, textareas and/or selects 
-
-// kParse() (the k stands for keys)
-// In Ace a parser is a function that validates & also potentially parses data
-// kParse() is helpful when you wanna use a parser and get autocomplete for what keys this parser requires
-// So w/ this example our IDE will error till email is a prop on the input object to kParse()
-// The parser will check the particulars of the input object but kParse will just enforce at compile time all the keys the parser requires are present which is helpful when building objects for api's
-
-// createOnSubmit() wraps our callback in a try catch for us + default error handling we can set
-// IF the fe signInParser validation have an error w/ the "email" object prop that'll match the <Messages name="email" /> in the DOM & show them
-
-// refFormReset() will ensure <Messages /> clear when event.currentTarget.reset() is called
-// A ref function is a way to define what you'd love an element to do w/in a function, like add and remove event listeners for example
-
-// showToast() is an ace fundamental w/ loads of styling options
-
-// <Submit /> will show <Loading /> when the apiUpdateEmail is true
-// bitKey's in Ace are boolean signals and when an api function is called w/o and explicit bit key it's given one as is name which makes knowing when it's loading easy
-// $button forwards props to the inner <button />
-        
-
 import { Submit } from '@ace/submit'
 import { kParse } from '@ace/kParse'
 import { apiSignIn } from '@ace/apis'
@@ -1460,6 +1609,33 @@ export function SignIn() {
   </>
 }
 ```
+- Notes:
+    - `useStore().store`
+        - Provides access to atoms (ex: `store.signInFormEmail`)
+    - `useStore().refBind()`
+        - Provides 2 way data binding between inputs, textareas and/or selects AND a `store`
+        - Way 1: on init THEN set `input` value w/ `store` value
+        - Way 2: on `input` change THEN set `store` value w/ `input` value
+        - Way 1 Plus 😎: on store value change THEN set `input` value w/ `store` value
+        - Also adds a feature thanks to `refClear()` so that on input error messages @ `<Messages />` clear
+    - `kParse()`
+        - The `k` stands for `keys`
+        - In Ace a `parser` is a function that `validates` & also potentially `parses` data
+        - We pass to `kParse()` the `input` object (data to give to the parser) & the parser
+        - At compile-time `kParse()` reads the parser and gives us autocomplete hints for the keys this parser requires
+        - So w/ the example above, our IDE will error till `email` is a `key` in the `input` object
+        - At run-time the parser will validate the `input` object completely
+        - This helps us build our `input` object correctly
+    - `createOnSubmit()`
+        - Wraps our callback in a `try/catch` for us 
+        - On FE or BE errors => Routes errors to `<Messages />` components by the `name` property
+    - `refFormReset()`
+        - A [`ref` function](#bind-dom-elements) is a way to define what we'd love an element to do w/in a function
+        - Ensures `<Messages />` clear when `event.currentTarget.reset()` is called
+    - `<Submit />`
+        - Show the `<Loading />` when `scope.bits.get(bitKey)` is `true`
+        - `$button` forwards props to the inner `<button />`
+
 
 
 ## Magic Link Demo
@@ -1721,42 +1897,42 @@ export function SignIn() {
 
 ## Live Data without Browser Refresh
 ![Ace Live Server](https://i.imgur.com/BtKtzWk.png)
-1. Create an **Ace Live Server**, bash:
+1. Create an **Ace Live Server** (`Cloudflare Worker` + `Cloudflare Durable Object` that uses [hibernating web sockets](https://developers.cloudflare.com/durable-objects/best-practices/websockets)), bash:
     ```bash
     npx create-ace-live-server@latest
     ```
-    - This will create an `Ace Live Server` which is a `Cloudflare Worker` + `Cloudflare Durable Object` & the `index.ts` will look like this:
-        ```ts
-        import { createLiveWorker, createLiveDurableObject } from '@ace/liveServer'
-
-
-        export default createLiveWorker() satisfies ExportedHandler<Env>
-
-
-        export const LiveDurableObject = createLiveDurableObject()
+1. Start your `Ace Live Server` via `npm run dev`
+1. Now back @ your Website code:
+    1. Add `liveHosts` to `ace.config.js`
+        ```js
+        export const config = {
+          liveHosts: {
+            local: 'localhost:8787',
+            prod: 'live.example.com'
+          }
+        }
         ```
-1. Then back in your app, **subscribe** to events sent to live server:
-    ```ts
-    const ws = scope.liveSubscribe({ stream: 'example' }) // ScopeComponent
+    1. **Subscribe** to events w/ [ScopeComponent](#scope):
+        ```ts
+        onMount(() => {
+          const ws = scope.liveSubscribe({ stream: 'example' })
 
-    ws.addEventListener('message', event => {
-      console.log(event.data)
-    })
+          ws.addEventListener('message', event => {
+            console.log(event.data)
+          })
 
-    ws.addEventListener('close', () => {
-      console.log('ws closed')
-    })
-    ```
-1. & lastly in your app, **create events**:
-    ```ts
-    const res = await scope.liveEvent({ // ScopeBE
-      stream: 'example',
-      data: { example: true }, // Event data, the entire object will be provided to `/subscribe`
-      requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }, // Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
-    })
-    ```
-1. [& please see here](#deploy) for how to deploy your `Live Server` & `App` via **git push**!
-1. 🚨 IF you would love to accept messages from the browser `ws` THEN add an `onMessage` callback @ `createLiveDurableObject()`, example:
+          onCleanup(() => scope.liveUnsubscribe(ws))
+        })
+        ```
+    1. **Create Events** w/ [ScopeBE](#scope):
+        ```ts
+        const res = await scope.liveEvent({ // ScopeBE
+          stream: 'example',
+          data: { aloha: true }, // Event data, the entire object will be provided to `/subscribe`
+          requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }, // Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
+        })
+        ```
+1. 🚨 IF you would love to send messages from the browser `ws` THEN add an `onMessage` callback @ `createLiveDurableObject()`, example:
     ```ts
     import { createLiveWorker, createLiveDurableObject } from '@ace/liveServer'
 
@@ -1770,12 +1946,8 @@ export function SignIn() {
       }
     })
     ```
-1. 🚨 & if you would love to secure your Live Server, example:
+1. 🚨 & IF you would love to secure your `Ace Live Server`, example:
     ```ts
-    // IF valid => no return
-    // IF invalid => return Response
-
-
     import { jwtValidate } from '@ace/jwtValidate'
     import { createLiveWorker, createLiveDurableObject, readCookie } from '@ace/liveServer'
 
@@ -1784,19 +1956,48 @@ export function SignIn() {
 
 
     export const LiveDurableObject = createLiveDurableObject({
-      onValidateEvent(request) {
+      onValidateEvent(request) { // IF valid THEN no return AND IF invalid THEN return Response
         if (request.headers.get('live_secret') !== process.env.LIVE_SECRET) { // to create a password "ace password" in bash ❤️ & place this password in the .env of your app & the .env of your live server, so that only your app can call /event
           return new Response('Unauthorized', { status: 400 })
         }
       },
-      async onValidateSubscribe(request) { // cookies between app & liverserver can be shared as long as the live server is @ the same domain, example: live.example.com & locally cookies are shared between ports
+      async onValidateSubscribe(request) { // IF valid THEN no return AND IF invalid THEN return Response
         const jwt = readCookie(request, 'aceJWT')
         const res = await jwtValidate({ jwt })
         if (!res.isValid) return new Response('Unauthorized', { status: 400 })
       }
     })
     ```
+  - 🚨  Cookies can be shared between `Website` & `Ace Live Server`, IF:
+      - on `localhost` OR
+      - `Ace Live Server` is deployed to a website sub-domain AND the cookie is set like this: 
+          ```ts
+          import { env } from '@ace/env'
+          import { msWeek } from '@ace/ms'
+          import { sessionCookieName } from '@src/lib/vars'
 
+          const maxAge = msWeek / 1000 // session maxAge is in seconds
+
+          scope.setCookie(sessionCookieName, jwt, {
+            maxAge,
+            domain: env == 'prod'
+              ? '.example.com' // allows us to set cookies @ example.com & read cookie @ live.example.com
+              : undefined
+          })
+          ```
+1. To deploy your `Ace Live Server` w/ **git push**, follow our [deploy directions here](#deploy)!
+1. 🚨 To place `Ace Live Server` @ a subdomain so you may share cookies w/ your `App`, in your `wrangler.jsonc` set `routes` to: 
+    ```json
+    {
+        "routes": [
+        {
+          "pattern": "live.example.com",
+          "zone_id": "123456789",
+          "custom_domain": true
+        }
+      ]
+    }
+    ```
 
 
 ## Open Graph Demo
@@ -1939,7 +2140,7 @@ export function SignIn() {
   #ace-toast-wrapper {
     .toast.emerald {
       --ace-toast-bg: rgb(6, 95, 70);
-      --ace-toast-border-color: rgb(16, 185, 129);
+      --ace-toast-border: 1px solid rgb(16, 185, 129);
       --ace-toast-icon-color: rgb(6, 78, 59);
       --ace-toast-icon-border: 1px solid rgb(16, 185, 129);
       --ace-toast-icon-bg: rgb(209, 250, 229);
@@ -1971,7 +2172,7 @@ export function SignIn() {
         ...toastStyleLight,
         '--ace-toast-bg-color': 'rgb(243, 232, 255)',
         '--ace-toast-text-color': 'rgb(76, 29, 149)',
-        '--ace-toast-border-color': 'rgb(192, 132, 252)',
+        '--ace-toast-border': '1px solid rgb(192, 132, 252)',
         '--ace-toast-icon-color': 'rgb(109, 40, 217)',
         '--ace-toast-icon-border': '1px solid rgb(192, 132, 252)',
         '--ace-toast-icon-bg': 'rgb(233, 213, 255)',
@@ -2812,124 +3013,6 @@ export function SignIn() {
 
 
 
-## Markdown-It Demo
-#### `<MarkdownItStatic />` ✅
-- Ideal for SEO
-- Supports `.md` files & markdown `Preview` @ [VsCodium](https://vscodium.com/)  ✅
-    ![Ace Markdown Example](https://i.imgur.com/cigzPqB.jpeg)
-- Install: `npm i markdown-it -D`
-- Example:
-    ```ts
-    // How `.md?raw` works:
-      // at build time, the markdown file is bundled as a string literal 
-      // the markdown file is cached, minified, and tree-shaken like any other module
-      // so at runtime, there's no file I/O b/c the markdown is an in memory string constant 
-
-    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
-
-    import mdAppInfo from '@src/md/mdAppInfo.md?raw'
-    import { registerHljs } from '@src/init/registerHljs'
-    import { MarkdownItStatic } from '@ace/markdownItStatic'
-    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
-
-    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs}  options={{ highlight: hljsMarkdownItOptions }} />
-    ```
-- Props:
-    ```ts
-    {
-      /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
-      content: string,
-      /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
-      setMD?: Setter<markdownit | undefined>
-      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
-      options?: MarkdownItOptions
-      /** Optional, props passed to inner wrapper div */
-      $div?: JSX.HTMLAttributes<HTMLDivElement>,
-      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
-      registerHljs?: () => void
-    }
-    ```
-
-
-#### `<MarkdownItDynamic />` ✅
-- Ideal for dynamic data (from `DB`) 
-- Ideal for `FE` alterable markdown (ex: source = `textarea`)
-- Install: `npm i markdown-it -D`
-- Example:
-    ```ts
-    // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
-
-    import { registerHljs } from '@src/init/registerHljs'
-    import { MarkdownItDynamic } from '@ace/markdownItDynamic'
-    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
-
-    <MarkdownItDynamic content={() => store.buildStats} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} $div={{ class: 'markdown' }} />
-    ```
-- Props:
-    ```ts
-    {
-      /** Content to render from markdown to html, can also pass content later by updating the passed in content prop or `md()?.render()` */
-      content: Accessor<string | undefined>
-      /** in parent `const [md, setMD] = createSignal<MarkdownIt>()` and then pass `setMD` */
-      setMD?: Setter<markdownit | undefined>
-      /** Optional, requested options will be merged w/ the `defaultMarkdownOptions` */
-      options?: MarkdownItOptions
-      /** Optional, props passed to inner wrapper div */
-      $div?: JSX.HTMLAttributes<HTMLDivElement>,
-      /** Optional, to enable code highlighting pass a function here that registers highlight languages */
-      registerHljs?: () => void
-    }
-    ```
-
-#### `defaultMarkdownOptions` ✅
-- Requested options @ `<MarkdownItStatic />` OR `<MarkdownItDynamic />` will be merged w/ these `defaultMarkdownOptions`
-    ```ts
-    import type { Options as MarkdownItOptions } from 'markdown-it'
-
-    const defaultMarkdownOptions: MarkdownItOptions = {
-      html: true,
-      linkify: true,
-      typographer: true
-    }
-    ```
-
-
-
-## Highlight.js Demo
-1. Install: `npm i highlight.js -D`
-1. Install: `npm i @highlightjs/cdn-assets -D`
-1. @ `app.css` add: `@import '@highlightjs/cdn-assets/styles/github-dark.min.css';`
-    - [All available styles](https://github.com/highlightjs/highlight.js/tree/main/src/styles)
-1. Add `hljs: true` @ [`ace.config.js`](#ace-config) > `plugins` & then run `npm run dev` to get the `hljs` fundamentals
-1. @ `src/init/registerHljs.ts` register the languages you'd love to support, example:
-    ```ts
-    import xml from '@ace/hljs/xml'
-    import hljs from '@ace/hljs/core'
-    import typescript from '@ace/hljs/typescript'
-
-    let registered = false
-
-    export function registerHljs() {
-      if (!registered) { // Register typescript & xml for tsx (& then for tsx just use the language "ts") ❤️
-        hljs.registerLanguage('xml', xml)
-        hljs.registerLanguage('typescript', typescript)
-
-        registered = true
-      }
-    }
-    ```
-1. @ the `<MarkdownItStatic />` OR `<MarkdownItDynamic />`, add `registerHljs`, example:
-    ```ts
-    import mdAppInfo from '@src/md/mdAppInfo.md?raw'
-    import { registerHljs } from '@src/init/registerHljs'
-    import { MarkdownItStatic } from '@ace/markdownItDynamic'
-    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
-
-    <MarkdownItStatic content={mdAppInfo} registerHljs={registerHljs} options={{ highlight: hljsMarkdownItOptions }} />
-    ```
-
-
-
 ## Send Brevo Emails
 1. [Brevo](https://www.brevo.com/) offers **300** marketing / API emails a day for [free](https://www.brevo.com/pricing/), has a super easy integration w/ Cloudflare, and allows people to reply to your emails, so you get a free email inbox too!
 1. [Setup DNS between Brevo & Cloudflare](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC)
@@ -3028,25 +3111,51 @@ export function SignIn() {
 1. Copy Nameservers and paste them where you bought the domain. For namecheap this is @ `Domain List` > `Nameservers` > `Custom DNS`
 1. In Cloudflare click continue
 1. In Cloudflare copy the `Zone ID`
-1. In your wrangler.toml add 
-  ```toml
-  routes = [
-    { pattern = "example.com", zone_id = "123456789", custom_domain = true }
-  ]
-  ```
+1. In your `wrangler.jsonc` add:
+    ```json
+    {
+        "routes": [
+        {
+          "pattern": "example.com",
+          "zone_id": "123456789",
+          "custom_domain": true
+        }
+      ]
+    }
+    ```
 1. Update your `ace.config.js` file with your new `env`
 1. When you get an email from cloudflare that your domain is ready, push to Github and the deploy will now go to your custom domain! 💚
 
 
 
-### Resolve www DNS
-1. In your wrangler.toml update to: 
-  ```toml
-  routes = [
-    { pattern = "example.com", zone_id = "123456789", custom_domain = true },
-    { pattern = "www.example.com", zone_id = "123456789", custom_domain = true }
-  ]
-  ```
+## Resolve www DNS
+1. IF you'd love your site to still work when people do `www.example.com` THEN in your `wrangler.jsonc` add a `www` subdomain, example:
+    ```json
+    {
+        "routes": [
+        {
+          "pattern": "example.com",
+          "zone_id": "123456789",
+          "custom_domain": true
+        },
+        {
+          "pattern": "www.example.com",
+          "zone_id": "123456789",
+          "custom_domain": true
+        }
+      ]
+    }
+    ```
+
+
+
+## View Production Logs
+- IF deployed as a `Cloudflare Worker` THEN to view production logs @:
+    - Local Terminal
+        - `npx wrangler tail`
+    - Dashboard
+        1. Ensure `observability` > `enabled` is set to `true` @ `wrangler.jsonc`
+        1. Navigate to `Workers & Pages` > `Click Site` > `Observability`
 
 
 

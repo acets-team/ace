@@ -28,6 +28,7 @@ class Fundamental {
 export const fundamentals = new Map([
   ['a', new Fundamental('tsx', 'solid', 'copy')],
   ['aceError', new Fundamental('ts', 'solid', 'copy')],
+  ['aceMarkdown', new Fundamental('tsx', 'solid', 'copy')],
   ['agBooleanFilter', new Fundamental('ts', 'agGrid', 'copy')],
   ['agGrid.types', new Fundamental('ts', 'agGrid', 'copy')],
   ['agGrid', new Fundamental('tsx', 'agGrid', 'copy')],

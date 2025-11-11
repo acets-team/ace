@@ -78,8 +78,8 @@ export type RegexMapEntry<Kind extends 'route' | 'api', T_Module> = Kind extends
 */
 export type RegexApiMapAndPath2API<T_Map extends RegexMap<'api'>, T_Path extends keyof T_Map> = T_Map[T_Path] extends { loader: () => Promise<infer T_API> } // infer whatever the loader() promised
   ? T_API extends API<any, any, any, any, any> // only keep it if it’s actually a new API()
-    ? T_API
-    : never
+  ? T_API
+  : never
   : never;
 
 
@@ -89,8 +89,8 @@ export type RegexApiMapAndPath2API<T_Map extends RegexMap<'api'>, T_Path extends
 */
 export type RegexRouteMapAndPath2Route<T_Map extends RegexMap<'route'>, T_Path extends keyof T_Map> = T_Map[T_Path] extends { loader: () => Promise<infer T_Route> } //  infer the Raw loader return
   ? T_Route extends AnyRoute // only keep it if it’s actually a new Route()
-    ? T_Route
-    : never
+  ? T_Route
+  : never
   : never
 
 
@@ -139,8 +139,8 @@ export type Api2Response<T_API> = T_API extends API<any, any, any, any, any>
 */
 export type Api2Data<T_API> = T_API extends API<any, any, any, infer T_Response, any>
   ? T_Response extends ApiResponse<infer T_Data>
-    ? Exclude<T_Data, null>
-    : never
+  ? Exclude<T_Data, null>
+  : never
   : never
 
 
@@ -148,7 +148,7 @@ export type Api2Data<T_API> = T_API extends API<any, any, any, infer T_Response,
  * - Receives: API
  * - Gives: Request body type
 */
-export type Api2Body<T_API extends API<any,any,any,any,any>> = T_API extends API<any, any, infer T_Body, any, any>
+export type Api2Body<T_API extends API<any, any, any, any, any>> = T_API extends API<any, any, infer T_Body, any, any>
   ? GetPopulated<T_Body>
   : undefined
 
@@ -157,7 +157,7 @@ export type Api2Body<T_API extends API<any,any,any,any,any>> = T_API extends API
  * - Receives: API
  * - Gives: Request params type
 */
-export type Api2PathParams<T_API extends API<any,any,any,any,any>> = T_API extends API<infer T_Params, any, any, any, any>
+export type Api2PathParams<T_API extends API<any, any, any, any, any>> = T_API extends API<infer T_Params, any, any, any, any>
   ? GetPopulated<T_Params>
   : undefined
 
@@ -166,7 +166,7 @@ export type Api2PathParams<T_API extends API<any,any,any,any,any>> = T_API exten
  * - Receives: API
  * - Gives: Request search params type
 */
-export type Api2SearchParams<T_API extends API<any,any,any,any,any>> = T_API extends API<any, infer T_Search, any, any, any>
+export type Api2SearchParams<T_API extends API<any, any, any, any, any>> = T_API extends API<any, infer T_Search, any, any, any>
   ? GetPopulated<T_Search>
   : undefined
 
@@ -203,8 +203,8 @@ export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name]
 */
 export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
   ? T_API extends API<any, any, any, any, any>
-    ? T_API
-    : never
+  ? T_API
+  : never
   : never
 
 
@@ -219,14 +219,14 @@ export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] 
     ```
 */
 export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API> // Get module type T_API from the RegexMapEntry
-  ? T_API extends API< infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals > // ensure T_API is indeed an API<…>
-    ? BaseAPIFnProps<API<T_PathParams,T_SearchParams,T_Body,T_Response,T_Locals>> & { bitKey?: string } // build props type
-    : never
+  ? T_API extends API<infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals> // ensure T_API is indeed an API<…>
+  ? BaseAPIFnProps<API<T_PathParams, T_SearchParams, T_Body, T_Response, T_Locals>> & { bitKey?: string } // build props type
+  : never
   : never
 
 
 /** Building an options object whose properties are only present if they have keys */
-export type BaseAPIFnProps<T_API extends API<any,any,any,any,any>> =
+export type BaseAPIFnProps<T_API extends API<any, any, any, any, any>> =
   OptionalIfNoRequired<'body', Api2Body<T_API>> &
   OptionalIfNoRequired<'pathParams', Api2PathParams<T_API>> &
   OptionalIfNoRequired<'searchParams', Api2SearchParams<T_API>>
@@ -241,11 +241,11 @@ export type Api2Function<T_API extends API<any, any, any, any, any>> = RequiredK
   ? (options?: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
   : (options: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
 
-  
+
 /** 
  * - The props (arguments / options) that are sent to an api function
 */
-export type ApiFnProps<T_API extends API<any,any,any,any,any>> = BaseAPIFnProps<T_API> & {
+export type ApiFnProps<T_API extends API<any, any, any, any, any>> = BaseAPIFnProps<T_API> & {
   /** 
    * - Optional, bits are boolean signals, we identify them by bitKey, lovely for loading indicators
    * - IF `bitKey` = `undefined` AND `onLoadChange` = `undefined` THEN `bitKey` <- `apiName`
@@ -319,7 +319,7 @@ export type PUTPath2Api<T_Path extends PUTPaths> = RegexApiMapAndPath2API<typeof
 */
 export type DELETEPath2Api<T_Path extends DELETEPaths> = RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>
 
-  
+
 /** 
  * - Receives: Route
  * - Gives: Route path params type
@@ -468,8 +468,8 @@ type AllowAnyValue<T> = { [K in keyof T]: unknown }
  */
 type ExactKeys<T, U> = Exclude<keyof U, keyof T> extends never
   ? Exclude<keyof T, keyof U> extends never
-    ? U
-    : never
+  ? U
+  : never
   : never;
 
 
@@ -507,7 +507,7 @@ export type AtomIs = InferEnums<typeof atomIs>
 
 
 export type RefFn = (el: HTMLElement | null) => void
- 
+
 
 export type Atoms = Record<string, Atom<any>>
 
@@ -549,50 +549,50 @@ export type StoreRefBind<T extends Atoms> = {
   <K1 extends keyof T>(k1: K1): RefFn
 
   <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>>(
-    k1: K1, k2: K2 ): RefFn
+    k1: K1, k2: K2): RefFn
 
   <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>, K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>>(
-    k1: K1, k2: K2, k3: K3 ): RefFn
+    k1: K1, k2: K2, k3: K3): RefFn
 
   <K1 extends keyof T,
-   K2 extends keyof InferAtom<T[K1]>,
-   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
-  >( k1: K1, k2: K2, k3: K3, k4: K4 ): RefFn
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4): RefFn
 
   <K1 extends keyof T,
-   K2 extends keyof InferAtom<T[K1]>,
-   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
-  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5 ): RefFn
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): RefFn
 
   <K1 extends keyof T,
-   K2 extends keyof InferAtom<T[K1]>,
-   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-   K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
-  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6 ): RefFn
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6): RefFn
 
   <K1 extends keyof T,
-   K2 extends keyof InferAtom<T[K1]>,
-   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-   K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-   K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
-  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7 ): RefFn
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7): RefFn
 
   <K1 extends keyof T,
-   K2 extends keyof InferAtom<T[K1]>,
-   K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-   K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-   K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-   K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-   K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
-   K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
-  >( k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8 ): RefFn
+    K2 extends keyof InferAtom<T[K1]>,
+    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
+    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
+    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
+    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
+    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
+    K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
+  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8): RefFn
 }
 
 
