@@ -7,7 +7,9 @@
     const swIsActive = Boolean(navigator.serviceWorker.controller) // points to the Service Worker that is currently controlling the page
 
     const showPage = () => { // if we just add the class immediately the browser may batch the style changes together & skip the animation
-      requestAnimationFrame(() => document.body.classList.add('sw-ready'))
+      window.addEventListener('load', () => {
+        requestAnimationFrame(() => document.body.classList.add('sw-ready'))
+      })
     }
 
     if (swIsActive) showPage()
