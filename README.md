@@ -1383,9 +1383,10 @@ export default new Route404()
 ## Code Highlight Markdown
 1. Install: `npm i highlight.js -D`
 1. Install: `npm i @highlightjs/cdn-assets -D`
+1. Add `hljs: true` @ [`ace.config.js`](#ace-config) > `plugins` & then run `ace build local` OR `npm run dev` to get the `hljs` fundamentals
+1. @ `src/global.d.ts` add `/// <reference path="../.ace/fundamentals/hljsDeclare.d.ts" />`
 1. @ `app.css` add: `@import '@highlightjs/cdn-assets/styles/github-dark.min.css';`
     - [All available styles](https://github.com/highlightjs/highlight.js/tree/main/src/styles)
-1. Add `hljs: true` @ [`ace.config.js`](#ace-config) > `plugins` & then run `npm run dev` to get the `hljs` fundamentals
 1. @ `src/init/registerHljs.ts` register the languages you'd love to support, example:
     ```ts
     import xml from '@ace/hljs/xml'
@@ -1403,15 +1404,16 @@ export default new Route404()
       }
     }
     ```
-1. The component props `registerHljs` & `markdownItOptions` are the same @ `<AceMarkdown />`, `<MarkdownItStatic />` & `<MarkdownItDynamic />` & bound like this:
-    ```ts
-    import { AceMarkdown } from '@ace/aceMarkdown'
-    import mdAppInfo from '@src/md/mdAppInfo.md?raw'
-    import { registerHljs } from '@src/init/registerHljs'
-    import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
+1. Use Example:
+    - 🚨 The components `<AceMarkdown />`, `<MarkdownItStatic />` & `<MarkdownItDynamic />` all use the props `registerHljs` & `markdownItOptions` the exact same way:
+        ```ts
+        import { AceMarkdown } from '@ace/aceMarkdown'
+        import mdAppInfo from '@src/md/mdAppInfo.md?raw'
+        import { registerHljs } from '@src/init/registerHljs'
+        import { hljsMarkdownItOptions } from '@ace/hljsMarkdownItOptions'
 
-    <AceMarkdown content={mdAppInfo} registerHljs={registerHljs} markdownItOptions={{ highlight: hljsMarkdownItOptions }} $div={{ class: 'markdown' }} />
-    ```
+        <AceMarkdown content={mdAppInfo} registerHljs={registerHljs} markdownItOptions={{ highlight: hljsMarkdownItOptions }} $div={{ class: 'markdown' }} />
+        ```
 
 
 

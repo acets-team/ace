@@ -5,6 +5,13 @@
 
 
 
+## [0.9.2] - 2025-11-11
+
+### 🧠 Improved
+- Added important / missing items about `hljs` to `README.md`
+
+
+
 ## [0.9.1] - 2025-11-11
 
 ### 🐛 Fixed
@@ -203,6 +210,7 @@
 
 
 
+[0.9.2]: https://github.com/acets-team/ace/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/acets-team/ace/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/acets-team/ace/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/acets-team/ace/compare/v0.8.0...v0.8.1
