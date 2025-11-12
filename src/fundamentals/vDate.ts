@@ -15,8 +15,9 @@ import { date, pipe, string, number, union, transform, nonNullish, type BaseIssu
  *     - String is passed to `new Date()`
  *     - Number is `epoch` and passed to `new Date()` assumed to be in milliseconds
  * - Gives: Parsed date in the format requested by the `to` prop
- * @param param.to - Optional, defaults to `iso`, what type of date are we parsing to
- * @param param.includeIsoTime - Optional, defaults to `true`, when true => `2025-08-01T00:50:28.809Z` when false => `2025-08-01`
+ * @param props.error - The error to return when the input is invalid 
+ * @param props.to - Optional, defaults to `iso`, what type of date are we parsing to, `'date' | 'ms' | 'sec' | 'iso'`
+ * @param props.includeIsoTime - Optional, defaults to `true`, when true => `2025-08-01T00:50:28.809Z` when false => `2025-08-01`
  * @returns 
  */
 export function vDate<T_To extends 'date' | 'ms' | 'sec' | 'iso' = 'iso'>({to = 'iso' as T_To, includeIsoTime = true, error: errorMessage }: { to?: T_To; includeIsoTime?: boolean, error?: string } = {}): GenericSchema<string | number | Date, vDateOutput<T_To>, BaseIssue<unknown>> {

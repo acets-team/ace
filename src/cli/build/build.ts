@@ -37,6 +37,7 @@ export class Build {
   dirDistBuildJs: string
   fsVanillaTypes?: string
   dirWriteFundamentals: string
+  fsParseMarkdownFolders?: string
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions

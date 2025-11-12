@@ -5,6 +5,18 @@
 
 
 
+## [0.9.5] - 2025-11-12
+
+### ✨ Added
+- `parseMarkdownFolders()`
+- `ace.config.js > mdFolders`
+
+### 🐛 Fixed
+- `aceMarkdown > getInfo()` returns `undefined` when a valid `Ace Markdown Directive` is provided
+- `vBool()` throws `invalid` when `true` or `false` is provided
+
+
+
 ## [0.9.4] - 2025-11-11
 
 ### 🐛 Fixed
@@ -224,6 +236,7 @@
 
 
 
+[0.9.5]: https://github.com/acets-team/ace/compare/v0.9.4...v0.9.5
 [0.9.4]: https://github.com/acets-team/ace/compare/v0.9.3...v0.9.4
 [0.9.3]: https://github.com/acets-team/ace/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/acets-team/ace/compare/v0.9.1...v0.9.2

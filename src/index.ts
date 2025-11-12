@@ -61,6 +61,7 @@ export type AceConfig = {
   liveHosts?: Record<string, string>
   /** Would you like to log errors */
   logCaughtErrors?: boolean,
+  mdFolders?: { id: string, path: string }[]
 }
 
 

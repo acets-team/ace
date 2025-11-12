@@ -13,6 +13,10 @@ export async function buildRead(build: Build) {
   build.fsEnv = fsEnv
   build.fsVanillaTypes = fsVanillaTypes
 
+  if (build.config.plugins.markdownIt && build.config.mdFolders) {
+    build.fsParseMarkdownFolders = await readFile(join(build.dirDistBuildJs, '../../../fundamentals/parseMarkdownFolders.txt'), 'utf-8')
+  }
+
   if (build.config.plugins.solid) {
     if (!build.config.apiDir || typeof build.config.apiDir !== 'string') throw new Error('❌ When using the solid plugin, `config.apiDir` must be a truthy string')
     if (!build.config.appDir || typeof build.config.appDir !== 'string') throw new Error('❌ When using the solid plugin, `config.appDir` must be a truthy string')

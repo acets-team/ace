@@ -1,7 +1,7 @@
 /**
  * 🧚‍♀️ How to access:
  *     - Plugin: markdownIt & optionally hljs
- *     - import { AceMarkdown, parseAceMarkdown, getInfo, interpolate } from '@ace/aceMarkdown'
+ *     - import { AceMarkdown, getInfo } from '@ace/aceMarkdown'
  *     - import type { AceMarkdownProps } from '@ace/aceMarkdown'
  */
 
@@ -128,7 +128,7 @@ export function AceMarkdown(props: {
  * @param str - `Ace Markdown String`
  * @param $info - When calling for the first time probably undefined, but when we gather the `$info` from the `Ace Markdown String` and then need to also parse a `Ace Tabs Content` we will recall `parseAceMarkdown()` w/ `$info`
  */
-export function parseAceMarkdown(str: string, $info: Record<string, any> = {}): AceMarkdownItem[] {
+function parseAceMarkdown(str: string, $info: Record<string, any> = {}): AceMarkdownItem[] {
   let strIndex = /** tracks where we are in the `str` */ (0)
   const results: AceMarkdownItem[] = /** holds items of `$type`: (`markdown`, `tabs` & `component`) */ ([])
   const pattern = /** match `$info`, `$tabs` & `$component` directives */ (/([\s\S]*?)<!--\{([\s\S]*?)\}-->/g)
@@ -225,7 +225,7 @@ export function parseAceMarkdown(str: string, $info: Record<string, any> = {}): 
  * @returns IF `$info` is not found THEN returns `undefined` ELSE returns `$info` as a `Record<string, any>`
  */
 export function getInfo(str: string): undefined | Record<string, any> {
-  const pattern = /<!--\{([\s\S]*?\$info\s*:\s*true[\s\S]*?)\}-->/ // match the first directive that contains "$info": true
+  const pattern = /<!--\{([\s\S]*?["']?\$info["']?\s*:\s*true[\s\S]*?)\}-->/ // match the first directive that contains "$info": true
 
   const match = str.match(pattern)
   if (!match) return undefined
@@ -251,7 +251,7 @@ console.log(res) // # What is Ace? ❤️
  * @param $info - `$info` & `$interpolate` are Ace specific, all else is custom info about markdown
  * @returns - String w/ vars replaced by values
  */
-export function interpolate(str: string, $info: Record<string, any>) {
+function interpolate(str: string, $info: Record<string, any>) {
   return $info.$interpolate === true
     ? str.replace(/\{\s*(\w+)\s*\}/g, (_, key) => ($info[key] ?? `{${key}}`))
     : str

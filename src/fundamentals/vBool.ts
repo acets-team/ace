@@ -4,23 +4,25 @@
  */
 
 
-import { pipe, string, regex, boolean, transform, nonNullish } from 'valibot'
+import { pipe, string, regex, boolean, transform, nonNullish, union } from 'valibot'
 
 
 /**
- * - Turns 0 to false and 1 to true
- * - Turns true of any case to true
- * - Turns false of any case to false
+ * - Parses `1` to `true`
+ * - Parses `0` to `false`
+ * - Parses `true` of any case to `true`
+ * - Parses `false` of any case to `false`
  * @param errorMessage Optional, default is whataver valibot says for a specific case
  */
 export function vBool(errorMessage?: string) {
+  const stringToBool = pipe(
+    string(),
+    regex(/^(true|false|1|0)$/i),
+    transform((input) => input === '1' || input.toLowerCase() === 'true')
+  )
+
   return nonNullish(
-    pipe(
-      string(errorMessage),
-      regex(/^(true|false|1|0)$/i),
-      transform((input) => input === '1' || input.toLowerCase() === 'true'),
-      boolean(errorMessage)
-    ),
+    union([boolean(), stringToBool]),
     errorMessage
   )
 }

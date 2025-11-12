@@ -127,6 +127,7 @@ export const fundamentals = new Map([
   ['messages', new Fundamental('tsx', 'solid', 'copy')],
   ['onAPIEvent', new Fundamental('ts', 'solid', 'copy')],
   ['parseResponse', new Fundamental('ts', 'solid', 'helper')],
+  ['parseMarkdownFolders', new Fundamental('ts', 'solid', 'custom')],
   ['pathnameToMatch', new Fundamental('ts', 'solid', 'helper')],
   ['pathnameToPattern', new Fundamental('ts', 'solid', 'copy')],
   ['pick', new Fundamental('ts', 'vanilla', 'copy')],

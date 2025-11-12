@@ -30,6 +30,12 @@ function getPromises(build: Build) {
     }
   }
 
+  if (build.fsParseMarkdownFolders) {
+    promises.push(
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderParseMarkdownFolders(build), fileName: 'parseMarkdownFolders.ts' }),
+    )
+  }
+
   if (build.config.plugins.solid) {
     promises.push(
       fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsSolidTypes || '', fileName: 'types.d.ts' }),
@@ -158,6 +164,28 @@ function renderCreateApp(build: Build) {
   if (!build.fsApp) throw new Error('!build.fsApp')
 
   return build.fsApp.replace('{/* gen */}', walkTree(build, build.tree).trimEnd())
+}
+
+
+function renderParseMarkdownFolders(build: Build) {
+  if (!build.fsParseMarkdownFolders || !build.config.mdFolders?.length) return ''
+
+  let map = ''
+
+  let imports = ''
+  
+  for (const folderInfo of build.config.mdFolders) {
+    map += `${folderInfo.id}, `
+    imports += `const ${folderInfo.id} = import.meta.glob('${ build.fsPath2Relative(join(build.cwd, folderInfo.path)).slice(1, -1) }/*.md', { query: '?raw', import: 'default', eager: true })\n\n`
+  }
+
+  const marker = /\/\/\s*gen/
+
+  const regex = new RegExp(`(\\s*${marker.source}\\s*)[\\s\\S]*?(\\s*${marker.source}\\s*)`, 'g')
+
+  const replaceStr = `${imports}\nconst map = { ${map.slice(0, -2)} } as const\n\n`
+
+  return build.fsParseMarkdownFolders.replace(regex, `\n\n\n${replaceStr}\n`)
 }
 
 

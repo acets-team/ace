@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
     "strictNullChecks": true,
@@ -17,6 +17,9 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
+    "types": [
+      "vinxi/types/client"
+    ],
     "paths": {
       "acets": ["./src/index.ts"],
       "ace.config": ["./ace.config.js"],

@@ -1,5 +1,6 @@
 /**
 * 🧚‍♀️ How to access:
+*     - Plugin: solid
 *     - import { createApp } from '@ace/createApp'
 *     - import type { ParentComponentEntry, ParentComponentEntryWithProps } from '@ace/createApp'
 */

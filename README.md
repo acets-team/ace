@@ -72,7 +72,7 @@
   1. **[Cloudflare](https://www.cloudflare.com/)** (Region: Earth)
   1. **[AgGrid](https://www.ag-grid.com/)** (Scrollable, filterable & sortable tables)
   1. **[Charts.js](https://www.chartjs.org/)** (Evergreen charting library)
-  1. **[Valibot](https://valibot.dev/)** (Small bundle Zod)
+  1. **[Valibot](https://valibot.dev/guides/comparison/)** (Small bundle Zod)
   1. **[Brevo](https://www.brevo.com/)** (300 emails a day for free)
   1. **[Markdown-It](https://markdown-it.github.io/markdown-it/)** (Markdown to HTML)
   1. **[Highlight.js](https://github.com/highlightjs/highlight.js)** (Highlight code in Markdown)
@@ -268,14 +268,8 @@
       if (!scope.event.locals.session.isAdmin) throw new Error('Unauthorized') // ❌
     }
     ```
-1. Create a parser: `src/parsers/updateEmailParser.ts`
+1. Create a [parser](#parser): `src/parsers/updateEmailParser.ts`
       ```ts
-      // vParse() helps us create valibot parsers
-      // In Ace a parser is a function that validates & also potentially parses data
-      // Within these functions any prefered schema library may be used 🙌
-      // 🚨 Body parsers are typically in their own file, b/c they are used on the FE & on the BE. If this parser was exported from the API file above and we imported it into a FE component, then there is a risk that API content could be in our FE build. So to avoid this, when we have code that works in both environments, it's best practice to put the export in it's own file (or a file that is as a whole good in both environments like src/lib/vars.ts), and ensure the imports into this file are optimal in both environments!
-
-
       import { object } from 'valibot'
       import { vParse } from '@ace/vParse'
       import { vEmail } from '@ace/vEmail'
@@ -328,18 +322,101 @@
         return success({ body, searchParams })
       })
     ```
-1. [All valibot helpers that can be used w/in `vParse(object(())`](#valibot-helpers)
+1. [All valibot helpers that can be used w/in `vParse(object(())`](#parsers)
 
 
 
-## Valibot Helpers
-1. All valibot helpers that can be used w/in `vParse(object(())`
+## Parser
+- In `Ace` a `Parser` is a `function` that `validates` & also optionally `parses` data
+- This function accepts an `input`, will `throw` if invalid, and `return` data if valid that's potentially but not required to be parsed (your call) (all `vParse` helpers below validate + parse)
+- Within a `Parser` function any prefered schema library may be used 🙌
+- We reccomend [Valibot](https://valibot.dev/guides/comparison/)!
+- To create a valibot parser use `vParse` + one/many of these helpers:
     - `{ token: vString('Please provide a token') }`
     - `{ modal: vBool('Please provide a modal param') }`
     - `{ email: vEmail('Please provide a valid email') }`
     - `{ value: vNum('Please provide a value as a number') }`
     - `{ voicePart: vEnums(new Enums(['Bass', 'Alto', 'Soprano'])) }`
     - `{ passportIssuedDate: vDate({error: 'Please provide date passport issued'}) }`
+- Any of the helpers can be wrapped in valibot's `optional()` btw!
+- Example:
+    ```js
+    vParse(object({ amount: optional(vNum()), allGood: vBool() }))
+    ```
+- `vBool()`
+    - Parses `1` to `true`
+    - Parses `0` to `false`
+    - Parses `true` of any case to `true`
+    - Parses `false` of any case to `false`
+- `vDate()`
+    - Can receive a data as a `Date` | `iso string` or `ms number`
+    - Parses based on requested `to` prop
+    - `@param props.to` - Optional, defaults to `iso`, what type of date are we parsing to, options are `'date' | 'ms' | 'sec' | 'iso'`
+    - `props.includeIsoTime` - Optional, defaults to `true`, when true => `2025-08-01T00:50:28.809Z` when false => `2025-08-01`
+    - `@param props.error` - The error to return when the input is invalid 
+- 🚨 `Body Parsers` or parsers that validate request bodies are typically in their own file, b/c they are used on the `FE` & on the `BE`. If this parser was exported from the API file above and we imported it into a `FE` component, then there is a risk that` API content` could be in our `FE` build. So to avoid this, when we have **code that works in both environments**, it's `best practice` to put the export in it's `own file` (or a file that is as a whole good in both environments like `src/lib/vars.ts`), and ensure the **imports into this file** are `optimal` in **both** environments, example:
+    ```ts
+    // src/parsers/updateEmailParser.ts
+    import { object } from 'valibot'
+    import { vParse } from '@ace/vParse'
+    import { vEmail } from '@ace/vEmail'
+
+
+    export const updateEmailParser = vParse(
+      object({
+        email: vEmail('Please provide a valid email'),
+      })
+    )
+
+    // src/api/apiUpdateEmail.ts
+    import { API } from '@ace/api'
+    import { eq } from 'drizzle-orm'
+    import { db, users } from '@src/lib/db'
+    import { sessionB4 } from '@src/auth/authB4'
+    import { updateEmailParser } from '@src/parsers/updateEmailParser'
+
+
+    export const POST = new API('/api/update-email', 'apiUpdateEmail')
+      .b4([sessionB4])
+      .body(updateEmailParser)
+      .resolve(async (scope) => {
+        await db
+          .update(users)
+          .set({ email: scope.body.email })
+          .where(eq(users.id, scope.event.locals.session.userId))
+
+        return scope.success()
+      })
+
+    // FE component
+    const {store} = useStore()
+
+    const onSubmit = createOnSubmit(({ event }) => {
+      apiUpdateEmail({
+        body: kParse(updateEmailParser, { email: store.newsletterForm.email }),
+        onSuccess() {
+          event.currentTarget.reset()
+          showToast({ type: 'success', value: 'Updated!' })
+        }
+      })
+    })
+    ```
+- `kParse()`
+    - The `k` stands for `keys`
+    - We pass to `kParse()` the `input` object (data to give to the parser) & the parser
+    - At compile-time `kParse()` reads the parser and gives us autocomplete hints for the keys this parser requires
+    - So w/ the example above, our IDE will error till `email` is a `key` in the `input` object
+    - At run-time the parser will validate the `input` object completely
+    - This helps us build our `input` object correctly
+- [`createOnSubmit()`](#form-demo)
+- Parsers for `path` and/or `search` params can be in their own file but are typically inline b/c they are only needed in that one place (most often but sometimes shared so then a file like above is ideal), example:
+    ```ts
+    export const POST = new API('/api/test', 'apiTest')
+      .searchParams(vParse(object({ ready: vBool() })))
+      .resolve(({ success, searchParams }) => {
+        return success({ searchParams })
+      })
+    ```
 
 
 
@@ -1303,6 +1380,45 @@ export default new Route404()
     }
     ```
 
+
+#### `parseMarkdownFolders()` ✅
+- Helpful when we have a folder of `.md` files and we'd love to get `typesafe` info about all of the markdowns w/in the folder
+- Example: We've got a folder for posts and we wanna show each post title & link to it w/in a component
+    - `Ace Markdown Directive`:
+        ```html
+        <!--{ "$info": true, "title": "What is Ace?", "slug": "what-is-ace" }-->
+        ```
+    - `ace.config.js`
+        ```ts
+        export const config = {
+          mdFolders: [
+            { id: 'mdFolder', path: 'src/md' },
+            { id: 'contentFolder', path: 'src/content' },
+          ],
+        }
+        ```
+    - `./src/parsers/mdParser`
+        ```ts
+        export const mdParser = vParse(object({ 
+          $info: vBool(),
+          slug: vString(),
+          title: vString()
+        }))
+        ```
+    - `Component`
+        ```ts
+        import { parseMarkdownFolders } from '@ace/parseMarkdownFolders'
+
+        const mdFolder = parseMarkdownFolders('mdFolder', mdParser)
+        const contentFolder = parseMarkdownFolders('contentFolder', parser)
+
+        console.log({
+          mdFolder, contentFolder, // { path: string, raw: string, info: T }[]
+          whatIsAce: mdFolder.find(md => md.info.slug === 'what-is-ace')
+        })
+        ```
+
+
 #### `<MarkdownItStatic />` ✅
 - Ideal for SEO
 - Does not support `<AceMarkdown />` directives
@@ -1620,14 +1736,7 @@ export function SignIn() {
         - Way 2: on `input` change THEN set `store` value w/ `input` value
         - Way 1 Plus 😎: on store value change THEN set `input` value w/ `store` value
         - Also adds a feature thanks to `refClear()` so that on input error messages @ `<Messages />` clear
-    - `kParse()`
-        - The `k` stands for `keys`
-        - In Ace a `parser` is a function that `validates` & also potentially `parses` data
-        - We pass to `kParse()` the `input` object (data to give to the parser) & the parser
-        - At compile-time `kParse()` reads the parser and gives us autocomplete hints for the keys this parser requires
-        - So w/ the example above, our IDE will error till `email` is a `key` in the `input` object
-        - At run-time the parser will validate the `input` object completely
-        - This helps us build our `input` object correctly
+    - [`kParse()`](#parser)
     - `createOnSubmit()`
         - Wraps our callback in a `try/catch` for us 
         - On FE or BE errors => Routes errors to `<Messages />` components by the `name` property
