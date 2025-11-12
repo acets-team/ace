@@ -23,7 +23,7 @@
         ### 🗑️ Removed
         ### 👮 Security
         ```
-    1. Append new link (above all other links) at the bottom of page
+    1. Append new link (above all other links) at the bottom of page 🚨 Use VSCode markdown preview to ensure link works. This is not a link for text just added to the bottom of the page. This should add a link to the `## [0.6.3] - 2025-11-07` at the top of the page ✅
         ```
         [0.6.3]: https://github.com/acets-team/ace/compare/v0.6.2...v0.6.3 
         ```
@@ -62,6 +62,11 @@
     1. [Releases](https://github.com/acets-team/ace/releases)
     1. [npm Package](https://www.npmjs.com/package/@acets-team/ace)
     1. [`CHANGELOG.md`](https://github.com/acets-team/ace/blob/main/README.md)
+1. `npm unlink @acets-team/ace -g`
+1. @ `create-ace-app` & `create-ace-live-server`
+    1. `npm uninstall @acets-team/ace && npm i @acets-team/ace -D`
+    1. Update `cli.ts` to latest version
+    1. Follow these deploy directions for those environemnts
 
 ---
 

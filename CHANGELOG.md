@@ -5,6 +5,13 @@
 
 
 
+## [0.9.1] - 2025-11-11
+
+### 🐛 Fixed
+- IF using the `hljs` plugin AND running `npm run typesafe` THEN typesafety errors
+
+
+
 ## [0.9.0] - 2025-11-11
 
 ### ✨ Added
@@ -19,6 +26,7 @@
 - Removed `--ace-toast-border-color` & added `--ace-toast-border` @ toast css variables
 - Removed `smoothFor.scrollParentToBottom()` & added `smoothFor.scrollParent('top' | 'bottom')`
 - Removed `smoothFor.postSync({ scrollParentToBottom: boolean })` & added `smoothFor.postSync({ scrollParent: 'top' | 'bottom' })`
+
 
 
 ## [0.8.1] - 2025-11-08
@@ -195,6 +203,7 @@
 
 
 
+[0.9.1]: https://github.com/acets-team/ace/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/acets-team/ace/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/acets-team/ace/compare/v0.8.0...v0.8.1
 [0.8.1]: https://github.com/acets-team/ace/compare/v0.8.0...v0.8.1
