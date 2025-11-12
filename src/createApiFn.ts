@@ -119,6 +119,11 @@ class ApiFn<T_API extends API<any, any, any, any, any>> {
     if (res instanceof Response && isServer) { // dip out early on redirect
       const goUrl = res.headers.get(goHeaderName)
       if (goUrl) throw redirect(goUrl)
+
+      if (this.props?.queryType === 'stream') { // returning a Response during stream can lead to this error "Cannot set headers after they are sent to the client" b/c the API Response headers may get attempted to be added to the Page headers, returning an {} stops this 
+        const parsed = await parseResponse(res)
+        return parsed
+      }
     }
 
     return res
