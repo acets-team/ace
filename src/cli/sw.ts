@@ -4,10 +4,10 @@ import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 
 
 /**
- * - Copy sw files to /public so we may import them
- * - Keep `app` version & `cache` version **aligned**
- * - Reads the `version` from `package.json` and adds it into `public/sw.js`
- * - Looks for a line in `sw.js` that starts w/ `const packageDotJsonVersion =` and adds the `version` there!
+ * - Keeps `app` version (within `package.json`) & `cache` version (within `sw.js`) **aligned**
+ *     - Reads the `version` from `package.json` and adds it into `public/sw.js`
+ *     - Looks for a line in `sw.js` that starts w/ `const packageDotJsonVersion =` and adds the `version` there!
+ * - Adds `public/.ace/swAddOffLineSupport.js` so that it may be used @ `public/sw.js`
  * @param cwd The current working directory
  */
 export async function sw(cwd: string) {

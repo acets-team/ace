@@ -5,9 +5,9 @@
  */
 
 
-import { AceError } from './aceError'
 import type { FlatMessages } from './types'
-import { z, type ZodError, type ZodTypeAny } from 'zod'
+import { z, type ZodError, type ZodType } from 'zod'
+import { issuesErrorCauseKey } from './vars'
 
 
 
@@ -19,20 +19,20 @@ import { z, type ZodError, type ZodTypeAny } from 'zod'
  * @param schema - Zod schema to validate against
  * @returns a function that takes unknown input and returns parsed output or throws AceError
  */
-export function zParse<T_Schema extends ZodTypeAny>(schema: T_Schema): (input: unknown) => z.infer<T_Schema> {
+export function zParse<T_Schema extends ZodType<any>>(schema: T_Schema): (input: unknown) => z.infer<T_Schema> {
   return (input: unknown) => zParseInner(input, schema)
 }
 
 
 
 /** @returns valid parsed input or `AceError` */
-function zParseInner<T_Schema extends ZodTypeAny>(input: unknown, schema: T_Schema): z.infer<T_Schema> {
+function zParseInner<T_Schema extends ZodType<any>>(input: unknown, schema: T_Schema): z.infer<T_Schema> {
   const result = schema.safeParse(input)
 
   if (result.success) return result.data
 
   const messages = flattenErrors(result.error)
-  throw new AceError({ messages })
+  throw new Error('Please provide valid data', { cause: { [issuesErrorCauseKey]: flattenErrors(result.error) }})
 }
 
 

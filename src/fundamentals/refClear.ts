@@ -13,8 +13,8 @@ import { scope } from './scopeComponent'
  * @param el - Element html input
  * @param value
  */
-export function refClear<T extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>() {
-  return (el: T | null) => {
+export function refClear<T extends null | HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>() {
+  return (el: T) => {
     if (!el) return
     let readyToClear = true
 

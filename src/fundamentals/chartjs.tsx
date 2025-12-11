@@ -8,7 +8,6 @@
 
 import { useChartJs } from './useChartJs'
 import { feComponent } from './feComponent'
-import type { ChartJsRegisterFn } from './types'
 import { onCleanup, type JSX, Setter } from 'solid-js'
 import type { Chart, ChartTypeRegistry } from 'chart.js'
 
@@ -19,7 +18,7 @@ function Source<T extends keyof ChartTypeRegistry>(props: {
   $canvas?: JSX.HTMLAttributes<HTMLCanvasElement>,
   map: Parameters<typeof useChartJs>[0]['map'],
   config: Parameters<typeof useChartJs>[0]['config'],
-  register?: ChartJsRegisterFn,
+  register?: () => void,
 }) {
 
   let canvasRef: HTMLCanvasElement | undefined

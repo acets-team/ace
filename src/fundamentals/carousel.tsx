@@ -6,6 +6,7 @@
  */
 
 
+import { mergeStrings } from './merge'
 import { onMount, createEffect, For, type JSX } from 'solid-js'
 
 
@@ -38,8 +39,20 @@ import { onMount, createEffect, For, type JSX } from 'solid-js'
  * @param props.duration Optional, default is `9`, how many seconds it will take to get to the end of the carousel
  * @param props.$section Optional, dom props to place onto wrapper `<section>`
  */
-export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $section }: CarouselProps<T>) {
-  if (duplicateCount < 2) duplicateCount = 2
+export function Carousel<T_Item>(props: {
+  /** Accessor (anonymous function) that returns an array of items to render */
+  items: () => T_Item[]
+  /** Function that gets the `item` and returns the JSX to render for each item */
+  render: (item: T_Item) => JSX.Element
+  /** Optional, default is `2`, minimum is `2`, We duplicate items to ensure that when we get to the end of the carousel there are still items to show */
+  duplicateCount?: number
+  /** Optional, default is `10`, how many seconds it will take to get to the end of the carousel */
+  duration?: number
+  /** Optional, dom props to place onto wrapper `<section>` */
+  $section?: JSX.HTMLAttributes<HTMLElement>
+}) {
+  const _duration = props.duration ? props.duration : 9
+  const _dupicateCount = (typeof props.duplicateCount !== 'number' || props.duplicateCount < 2) ? 2 : props.duplicateCount
 
   let rafId = 0
   let loopWidth = 0
@@ -55,19 +68,19 @@ export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $
 
     loopWidth = firstLoop.offsetWidth
     loopsEl.style.setProperty('--loop-width', `${loopWidth}px`)
-    loopsEl.style.setProperty('--loop-duration', `${duration}s`)
+    loopsEl.style.setProperty('--loop-duration', `${_duration}s`)
   }
 
   function startAutoScroll() {
     cancelAnimationFrame(rafId)
-    const pxPerFrame = loopWidth / (duration * 60)
+    const pxPerFrame = loopWidth / (_duration * 60)
 
     function step() {
       if (!loopsEl || paused) return
 
       loopsEl.scrollLeft += pxPerFrame
 
-      if (loopsEl.scrollLeft >= loopWidth * (duplicateCount - 1)) {
+      if (loopsEl.scrollLeft >= loopWidth * (_dupicateCount - 1)) {
         loopsEl.scrollLeft -= loopWidth
       }
 
@@ -101,7 +114,7 @@ export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $
   })
 
   createEffect(() => {
-    items()
+    props.items()
     queueMicrotask(measure)
   })
 
@@ -135,16 +148,13 @@ export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $
     }
   }
 
-  const baseClass = 'ace-carousel'
-  const mergedClass = $section?.class ? `${baseClass} ${$section.class}` : baseClass
-
   return <>
     <section
       role="region"
       aria-roledescription="carousel"
       aria-label="Image carousel"
-      {...$section}
-      class={mergedClass}
+      {...props.$section}
+      class={mergeStrings('ace-carousel', props.$section?.class)}
     >
       <div
         class="loops"
@@ -157,11 +167,11 @@ export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $
         onMouseLeave={onMouseLeave}
         aria-live="off"
       >
-        <For each={Array.from({ length: duplicateCount })}>{
+        <For each={Array.from({ length: _dupicateCount })}>{
           () => <>
             <div class="loop">
-              <For each={items()}>{
-                (item, i) => <div role="group" aria-roledescription="slide" aria-label={`Slide ${i() + 1}`} > {render(item)} </div>
+              <For each={props.items()}>{
+                (item, i) => <div role="group" aria-roledescription="slide" aria-label={`Slide ${i() + 1}`} > {props.render(item)} </div>
               }</For>
             </div>
           </>
@@ -172,15 +182,4 @@ export function Carousel<T>({ items, render, duplicateCount = 2, duration = 9, $
 }
 
 
-export type CarouselProps<T> = {
-  /** Accessor (anonymous function) that returns an array of items to render */
-  items: () => T[]
-  /** Function that gets the `item` and returns the JSX to render for each item */
-  render: (item: T) => JSX.Element
-  /** Optional, default is `2`, minimum is `2`, We duplicate items to ensure that when we get to the end of the carousel there are still items to show */
-  duplicateCount?: number
-  /** Optional, default is `10`, how many seconds it will take to get to the end of the carousel */
-  duration?: number
-  /** Optional, dom props to place onto wrapper `<section>` */
-  $section?: JSX.HTMLAttributes<HTMLElement>
-}
+export type CarouselProps<T_Item> = Parameters<typeof Carousel<T_Item>>[0]

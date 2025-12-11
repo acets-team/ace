@@ -56,7 +56,7 @@ const map = { mdFolder, contentFolder } as const
     })
     ```
  * @param folderId - Matches the `ace.config.js > mdFolders > id`
- * @param parser - Will throw an error if $info does not match the `parser` validations` and provides typesafety when valid
+ * @param parser - Will throw an error if $info does not match the `parser` validations` and provides type safety when valid
  */
 export function parseMarkdownFolders<T extends Record<string, any>>(folderId: keyof typeof map, parser: Parser<T>): ParsedMarkdownFolder<T>[] {
   const mdFiles = map[folderId]

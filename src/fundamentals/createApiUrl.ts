@@ -4,29 +4,26 @@
  */
 
 
-import { buildUrl } from '../buildUrl'
-import { regexApiNames } from './regexApiNames'
-import type { ApiNames, ApiName2Api, Api2PathParams, Api2SearchParams } from './types'
+import { mapApis } from './mapApis'
+import type { ApiNames, ApiName2SearchParams, ApiName2PathParams } from './types'
 
 
 /**
- * - Get typesafe autocomplete assistance when creating an api url
+ * - Get type-safe autocomplete assistance when creating an api url
  * @example
   ```ts
-  import {buildOrigin} from '@ace/env'
-
   return scope.success({
-    url: buildOrigin + createApiUrl('apiGetExample', { pathParams: {id} })
+    url: createApiUrl('apiGetExample', { absoluteUrl: true, pathParams: {id} })
   })
   ```
  * @param apiName - As defined at `new API()`
- * @param params.pathParams - Path params
- * @param params.searchParams - Search params
+ * @param props.absoluteUrl - Optional, IF `true` we will append the buildOrigin from `@ace/env` to the URL
+ * @param props.pathParams - Path params
+ * @param props.searchParams - Search params
  */
-export function createApiUrl<T_Name extends ApiNames>(apiName: T_Name, params?: { pathParams?: Api2PathParams<ApiName2Api<T_Name>>, searchParams?: Api2SearchParams<ApiName2Api<T_Name>> }): string {
-  const path = regexApiNames[apiName]?.path
+export function createApiUrl<T_Name extends ApiNames>(name: T_Name, props?: { absoluteUrl?: boolean, pathParams?: ApiName2PathParams<T_Name>, searchParams?: ApiName2SearchParams<T_Name> }): string {
+  const entry = mapApis[name]
+  if (!entry) return ''
 
-  return path
-    ? buildUrl(path, params)
-    : ''
+  return entry.buildUrl(props)
 }

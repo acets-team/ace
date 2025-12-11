@@ -2,6 +2,7 @@ import { parse } from 'tsconfck'
 import path, { join, resolve } from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
 import { BuildRoute, Build, type Writes, type ApiMethods } from './build.js'
+import { pathname2Segments } from '../../pathname2Segments.js'
 
 
 export async function buildRead(build: Build) {
@@ -26,7 +27,7 @@ export async function buildRead(build: Build) {
     const [fsSolidTypes, fsApp] = await Promise.all([
       readFile(join(build.dirDistBuildJs, '../../../fundamentals/types.d.txt'), 'utf-8'),
       readFile(join(build.dirDistBuildJs, '../../../fundamentals/createApp.txt'), 'utf-8'),
-      readAPIDirectory(resolve(build.cwd, build.config.apiDir), build),
+      readApiDirectory(resolve(build.cwd, build.config.apiDir), build),
       readAppDirectory(resolve(build.cwd, build.config.appDir), build),
     ])
 
@@ -57,64 +58,69 @@ async function setTsconfigPaths(build: Build) {
 }
 
 
-async function readAPIDirectory(dir: string, build: Build) {
+async function readApiDirectory(dir: string, build: Build) {
   const entries = await readdir(dir, { withFileTypes: true })
 
   for (const entry of entries) {
     const fsPath = join(dir, entry.name)
 
-    if (entry.isDirectory()) await readAPIDirectory(fsPath, build)
-    else if (entry.isFile() && fsPath.endsWith('.ts')) await setAPIWrites(fsPath, build)
+    if (entry.isDirectory()) await readApiDirectory(fsPath, build)
+    else if (entry.isFile() && fsPath.endsWith('.ts')) await readApiFile(fsPath, build)
   }
 }
 
 
-async function setAPIWrites(fsPath: string, build: Build): Promise<void> {
+async function readApiFile(fsPath: string, build: Build): Promise<void> {
   const content = removeComments(await readFile(fsPath, 'utf-8'))
 
-  /**
-   * - Captures:
-   *     - [1] → method
-   *     - [3] → path
-   *     - [5] → optional function name
-   */
-  const regex = /export\s+const\s+(GET|POST|PUT|DELETE)\s*=\s*new\s+API\(\s*(['"])(.+?)\2(?:\s*,\s*(['"])([A-Za-z_]\w*)\4)?\s*\)/g
+  const createApiRegex = /export\s+default\s+createApi\s*\(\s*(?:(['"`])([^'"`]+)\1|([A-Za-z0-9_$\.]+))\s*,\s*([A-Za-z0-9_$\.]+)\s*,\s*([A-Za-z0-9_$\.]+)\s*\)/
 
-  for (const matches of content.matchAll(regex)) {
-    const apiMethod = matches[1]
-    const apiPath = matches[3]
-    const fnName = matches[5]  
+  const createApiMatch = createApiRegex.exec(content)
+  if (!createApiMatch) return
 
-    if (apiPath && fnName && Build.apiMethods.has(apiMethod)) {
-      build.writes[getWriteKey(apiMethod)] += build.getConstEntry({
-        fnName,
-        fsPath,
-        pathIsKey: true,
-        urlPath: apiPath,
-        moduleName: apiMethod
-      })
+  const key = createApiMatch[2] || createApiMatch[3]
+  const infoName = createApiMatch[4]
+  const resolverName = createApiMatch[5]
+  if (!key || !infoName || !resolverName) return
 
-      build.writes.constApiName += build.getConstEntry({
-        fnName,
-        fsPath,
-        pathIsKey: false,
-        urlPath: apiPath,
-        moduleName: apiMethod
-      })
+  const infoRegex = new RegExp(
+    String.raw`export\s+const\s+` +
+    infoName +
+    String.raw`\s*=\s*new\s+ApiInfo\s*\(\s*\{\s*([^]*?)\}\s*\)`,
+    "m"
+  )
 
-      build.writes.apiFunctions += `export const ${fnName} = createApiFn('${fnName}')\n`
-    
-      build.writes.apiLoaders += `export async function ${fnName}Loader() {
-  'use server'
-  return (await import(${build.fsPath2Relative(fsPath)})).${apiMethod}
-}\n\n`
-    }
-  }
-}
+  const infoContent = infoRegex.exec(content)?.[1]
+  if (!infoContent) return
 
+  const methodRegex = /method\s*:\s*(['"`])([^'"`]+)\1/
+  const method = methodRegex.exec(infoContent)?.[2]
+  if (!Build.apiMethods.has(method)) return
 
-function getWriteKey(method: ApiMethods): keyof Writes {
-  return `const${method}` as keyof Writes
+  const pathnameRegex = /path\s*:\s*(['"`])([^'"`]+)\1/;
+  const pathname = pathnameRegex.exec(infoContent)?.[2]
+  if (!pathname) return
+
+  const segments = pathname2Segments(pathname)
+
+  const importPath = build.fsPath2Relative(fsPath)
+
+  build.writes.mapApis += `  '${key}': {
+    api: () => import(${importPath}).then((m) => m.default),
+    info: () => import(${importPath}).then((m) => m.${infoName}),
+    resolver: () => import(${importPath}).then((m) => m.${resolverName}),
+    buildUrl: (props?: MapBuildUrlProps) => buildUrl({ ...props, segments: ${JSON.stringify(segments)} }),
+  },
+`
+
+  build.apis[method].push({
+    key,
+    fsPath,
+    infoName,
+    pathname,
+    segments,
+    resolverName,
+  })
 }
 
 
@@ -141,13 +147,20 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
   
       if (!routePath) continue // this tsx file has no propertly formatted export default new Route or new Route404
   
-      build.writes.constRoutes += build.getConstEntry({
-        pathIsKey: true,
-        urlPath: routePath,
+      const segments = pathname2Segments(routePath)
+
+      build.routes.push({
         fsPath,
-        moduleName: 'default'
+        segments,
+        key: routePath,
+        pathname: routePath,
       })
 
+      build.writes.mapRoutes += `  '${routePath}': {
+    route: () => import(${build.fsPath2Relative(fsPath)}).then((m) => m.default),
+    buildUrl: (props?: MapBuildUrlProps) => buildUrl({ ...props, segments: ${JSON.stringify(segments)} }),
+  },
+`
       const route: BuildRoute = { fsPath, routePath }
 
       let node = build.tree

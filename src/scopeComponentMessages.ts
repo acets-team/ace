@@ -1,12 +1,12 @@
 import { config } from 'ace.config'
 import { createSignal, type Signal } from 'solid-js'
-import { defaultMessageName } from './fundamentals/vars'
-import type { AceErrorProps } from './fundamentals/aceError'
+import type { AceResErrorEither, FlatMessages } from './fundamentals/types'
+import { defaultMessageName, issuesErrorCauseKey } from './fundamentals/vars'
 
 
 /**
  * - Messages are grouped by name: `Map<string, Signal<string[]>>`
- * - Messages are read from `response.error.messages` & typically have `valibot` / `zod` errors
+ * - Messages are read from `response.error.cause[issuesErrorCauseKey]` & typically have `valibot` / `zod` errors
  * - If `response.error.message` is defined, we'll put that value @ `mesages[defaultMessageName] = [response.error.message]`
  */
 export class ScopeComponentMessages {
@@ -30,7 +30,7 @@ export class ScopeComponentMessages {
 
     return signal$
   }
-  
+
 
 
   /**
@@ -51,7 +51,7 @@ export class ScopeComponentMessages {
     const [current, setCurent] = this.get(name)
 
     if (Array.isArray(value)) setCurent(current().concat(value))
-    else setCurent([ ...current(), value ])
+    else setCurent([...current(), value])
   }
 
 
@@ -78,29 +78,36 @@ export class ScopeComponentMessages {
    */
   align(res: any) {
     if (res && typeof res === 'object') {
-      if (res?.isAceError === true || res?.message) this.#align(res)
-      else if (res?.error?.isAceError === true) this.#align(res.error)
+      // fe error
+      if ((res.message && typeof res.message === 'string') || (res.cause && typeof res.cause === 'object')) this.#align(res)
+
+      // be error
+      if (res.error && typeof res.error === 'object') {
+        if ((res.error.message && typeof res.error.message === 'string') || (res.error.cause && typeof res.error.cause === 'object')) this.#align(res.error)
+      }
     }
   }
 
 
-  #align(error: AceErrorProps) {
-    if (error.messages) {
-      for (const name in error.messages) { // messages are grouped by name
-        const signal$ = this.#messages.get(name)
-
-        if (Array.isArray(error.messages[name])) {
-          if (signal$) signal$[1](error.messages[name]) // call setter
-          else this.set({ name, value: error.messages[name] }) // create setter
-        }
-      }
-    }
-
-    if (error.message) {
+  #align(error: AceResErrorEither['error']) {
+    if (error.message && typeof error.message === 'string') {
       const signal$ = this.#messages.get(defaultMessageName)
 
       if (signal$) signal$[1]([error.message])
       else this.set({ name: defaultMessageName, value: error.message })
+    }
+
+    if (error.cause?.[issuesErrorCauseKey]) {
+      for (const name in error.cause[issuesErrorCauseKey]) { // messages are grouped by name
+        const signal$ = this.#messages.get(name)
+        const issues = error.cause[issuesErrorCauseKey] as FlatMessages
+        const issue = issues && typeof issues === 'object' && name in issues ? issues[name] : null
+
+        if (Array.isArray(issue)) {
+          if (signal$) signal$[1](issue) // call setter
+          else this.set({ name, value: issue }) // create setter
+        }
+      }
     }
   }
 }

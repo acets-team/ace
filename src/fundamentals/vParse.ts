@@ -1,12 +1,11 @@
 /**
  * 🧚‍♀️ How to use:
  *   import { vParse } from '@ace/vParse'
- *   import type { ValibotParse2Input } from '@ace/vParse'
  */
 
 
-import { AceError } from './aceError'
 import type { FlatMessages } from './types'
+import { issuesErrorCauseKey } from './vars'
 import { flatten, safeParse, type GenericSchema, type InferOutput, type Config, type SafeParseResult } from 'valibot'
 
 
@@ -30,12 +29,18 @@ export function vParse<T_Schema extends GenericSchema<any>>(schema: T_Schema, co
 
 /** @returns valid parsed input or `AceError` */
 function vParseInner<T_Schema extends GenericSchema<any>>(input: unknown, schema: T_Schema, config?: Config<any>): InferOutput<T_Schema> {
-  const result = safeParse(schema, input, config)
+  // Use the schema as GenericSchema<any> to bypass the complex type recursion check
+  const genericSchema = schema as GenericSchema<any>;
 
-  if (!result.issues) return result.output
+  // Call safeParse with the generic type
+  const result = safeParse(genericSchema, input, config);
 
-  const messages = flattenErrors(result)
-  throw new AceError({ messages })
+  if (!result.issues) {
+    // Cast the output back to the specific T_Schema output type
+    return result.output as InferOutput<T_Schema>;
+  }
+
+  throw new Error('Please provide valid data', { cause: { [issuesErrorCauseKey]: flattenErrors(result) }})
 }
 
 
@@ -56,12 +61,3 @@ function flattenErrors<T_Schema extends GenericSchema<any>>(result: SafeParseRes
 
   return messages
 }
-
-
-/** 
- * - Receives: Valibot Parser
- * - Gives: The type for the input
-*/
-export type ValibotParse2Input<T_Parser> = T_Parser extends (input: unknown) => infer T_Input
-  ? T_Input
-  : never

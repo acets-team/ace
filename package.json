@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "author": "https://github.com/acets-team",
   "homepage": "https://github.com/acets-team/ace#readme",
-  "description": "Our Mission: 🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, typesafe and beautifully documented library! 🙏",
+  "description": "Our Mission: 🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, type-safe and beautifully documented library! 🙏",
   "bin": {
     "ace": "dist/src/cli/cli.js"
   },
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@libsql/client": "^0.15.15",
+    "@lottiefiles/dotlottie-web": "^0.57.0",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.3",
     "@solidjs/start": "^1.2.0",

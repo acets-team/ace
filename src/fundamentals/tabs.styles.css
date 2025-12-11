@@ -5,8 +5,8 @@
 
 
 .ace-tabs {
-  &.pill,
-  &.classic {
+  &.variant-pill,
+  &.variant-classic {
     .marker {
       top: 0;
       left: 0;
@@ -21,7 +21,7 @@
       color: #007bff;
     }
   }
-  &.underline {
+  &.variant-underline {
     .marker {
       bottom: 0;
       border-radius: 3rem;
@@ -35,13 +35,14 @@
       color: #007bff;
     }
   }
-  &.pill .marker {
+  &.variant-pill .marker {
     border-radius: 999px;
   }
 
   .tabs {
     position: relative;
     display: flex;
+    gap: 0.9rem;
     overflow-x: auto;
     scrollbar-width: none;
     scrollbar-color: transparent transparent;
@@ -54,7 +55,7 @@
     }
 
     .tab {
-      padding: 12px 20px;
+      padding: 0.6rem 1.8rem;
       white-space: nowrap;
       cursor: pointer;
       transition: color 0.3s;
@@ -68,7 +69,7 @@
   }
 
   .tab-contents {
-    margin-top: 6px;
+    margin-top: 0.6rem;
 
     .tab-content {
       display: none;

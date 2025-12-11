@@ -8,6 +8,7 @@
 
 import { render } from 'solid-js/web'
 import { createSignal, onMount, onCleanup, createUniqueId, createMemo, createEffect, type JSX, type Accessor } from 'solid-js'
+import { mergeStrings } from './merge'
 
 
 /**
@@ -134,7 +135,11 @@ function TooltipComponent(componentProps: {
     tooltipElement.style.left = `${left + window.scrollX}px`
   }
 
-  const mergedClass = createMemo(() => `ace-tooltip position-${position()} ${componentProps.refProps().$div?.class || ''}`)
+  const mergedClass = createMemo(() => mergeStrings(
+    'ace-tooltip',
+    'position-' + position(),
+    componentProps.refProps().$div?.class
+  ))
 
   return <>
     <div

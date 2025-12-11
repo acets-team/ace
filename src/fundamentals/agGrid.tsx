@@ -1,12 +1,13 @@
 /**
  * 🧚‍♀️ How to use:
+ *   Plugin: agGrid
  *   import { AgGrid, defaultStyle } from '@ace/agGrid'
  *   import type { AgGridProps } from '@ace/agGrid'
  */
 
 
+import { mergeStrings } from './merge'
 import { feComponent } from './feComponent'
-import type { AgGridRegisterFn } from './types'
 import { createEffect, type JSX, type Setter, type Accessor } from 'solid-js'
 import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
 
@@ -16,6 +17,9 @@ import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
  * 
  * - Requires the following npm dev imports:
  *     - `ag-grid-community`
+ * - Provides 2 elements:
+ *     1. A full-stack `div` that accepts props via `$div` & has a defualt class of `ace-ag-grid-wrapper`. Full stack let's us set styling which avoid jitter when we have `FE` components and can only style the `FE` elements
+ *     1. A `FE` component that is just a div that has a default class of `ace-ag-grid`. Defining as a `FE` component ensures `ag-grid-community` does not enter your `BE` build
  * @link https://www.ag-grid.com/
  * @example
   ```tsx
@@ -43,7 +47,6 @@ import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
     })}
   />
 
-
   const TableCellAmount = agGridComponent<Transaction>(params => {
     const amount = params.data?.amount ?? 0
 
@@ -54,35 +57,51 @@ import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
     </>
   })
   ```
+ * @example
+  ```css
+  .ace-ag-grid-wrapper {
+    width: 100%;
+    height: 45rem;
+
+    .ace-ag-grid {
+      height: 100%;
+      width: 100%;
+    }
+  }
+  ```
  * @param props.gridOptions - Passed to `agGrid.createGrid(grid, gridOptions)`
- * @param props.$div - Optional, default is `{style: defaultStyle}`, additional styles will be merged, & props.$div = additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
+ * @param props.$div - Optional, dom props to place onto wrapper `<div>`, class of 'ace-ag-grid-wrapper' is added automatically, to style the div that get agGrid applied to it just do `.ace-ag-grid-wrapper .ace-ag-grid {}`
+ * @param props.setGridApi - Provide setter if you'd like to work w/ gridApi
+ * @param props.register - By passing the register function to the component we can ensure the grid is registered before being created
  */
-export const AgGrid = feComponent(Component)
-
-
-function Component<T_Data>(props: {
+export function AgGrid<T_Data>(props: {
   /** Passed to `agGrid.createGrid(grid, gridOptions)` */
   gridOptions: Accessor<GridOptions<T_Data>>
-  /** Optional, default is `{style: defaultStyle}`, Props to set onto wrapper div */
+  /** Optional, dom props to place onto wrapper `<div>`, class of 'ace-ag-grid-wrapper' is added automatically, to style the div that get agGrid applied to it just do `.ace-ag-grid-wrapper .ace-ag-grid {}` */
   $div?: JSX.HTMLAttributes<HTMLDivElement>
   /** Provide setter if you'd like to work w/ gridApi */
   setGridApi?: Setter<GridApi<any> | undefined>
   /** By passing the register function to the component we can ensure the grid is registered before being created */
-  register?: AgGridRegisterFn
+  register?: () => void
 }) {
+  return <>
+    <div {...props.$div} class={mergeStrings('ace-ag-grid-wrapper', props.$div?.class)}>
+      <AgGridFE {...props} />
+    </div>
+  </>
+}
+
+
+const AgGridFE = feComponent(function Source<T_Data>(props: Omit<AgGridProps<T_Data>, '$div'>) {
   if (props.register) props.register()
 
   let gridDiv: undefined | HTMLDivElement
   let gridApi: GridApi<T_Data> | undefined
 
-  const baseStyle = defaultStyle
-  const mergedStyle = typeof props.$div?.style === 'object' ? { ...baseStyle, ...props.$div.style } : baseStyle
-
   createEffect(() => {
     const opts = props.gridOptions()
-
     if (!opts || !gridDiv) return
-    
+
     if (gridApi) gridApi.updateGridOptions(opts) // grid already exists — update it
     else { // frirst time — create the grid
       gridApi = createGrid(gridDiv, opts)
@@ -90,11 +109,8 @@ function Component<T_Data>(props: {
     }
   })
 
-  return <div ref={gridDiv} {...props.$div} style={mergedStyle}></div>
-}
+  return <div class="ace-ag-grid" ref={gridDiv}></div>
+})
 
 
-export const defaultStyle: JSX.CSSProperties = { height: '45rem', width: '100%', 'margin-bottom': '2.1rem' }
-
-
-export type AgGridProps<T_Data extends any> = Parameters<typeof Component<T_Data>>[0]
+export type AgGridProps<T_Data extends any> = Parameters<typeof AgGrid<T_Data>>[0]

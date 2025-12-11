@@ -1,202 +1,303 @@
-/**
- * 🧚‍♀️ How to access:
- *     - import { API } from '@ace/api'
- *     - import type { APIResolveFunction, APIValues, APIStorage } from '@ace/api'
- */
+import { mapApis } from './mapApis'
+import { ScopeBE } from './scopeBE'
+import { isServer } from 'solid-js/web'
+import { parseError } from './parseError'
+import { createAceResponse, AceResponse } from './aceResponse'
+import type { AceResponse2Data, AceResData, Api, B4, BaseApiReq, BaseEventLocals, ApiInfo2Req, MergeLocals, Parser, ApiResolver2ResData, ApiResolverFn, MapApis, AceResEither } from './types'
 
 
 
-import type { ScopeBE } from './scopeBE'
-import { pathnameToPattern } from './pathnameToPattern'
-import type { B4, Parser, ApiBody, AceResponse, MergeLocals, UrlSearchParams, UrlPathParams, BaseEventLocals, AceResponse2ApiResponse } from './types'
+export { ApiInfo2Req }
 
 
 
-/** 
- * - Create an API endpoint
- * - When defining the API you may give it a path that can be called w/in or w/out the application & a function name
- * - When calling via function name from `FE` a fetch is done and when calling from `BE` the resolve function is called directly
- */
-export class API<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any, T_Body extends UrlPathParams = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> {
-  /** Typed loosely so we may freely mutate it at runtime */
-  #storage: APIStorage
+export function createApi<
+  T_Info extends ApiInfo,
+  T_Req extends ApiInfo2Req<T_Info>,
+  T_Resolver extends ApiResolverFn<T_Req, any> = ApiResolverFn<T_Req, any>,
+  T_Res_Data extends ApiResolver2ResData<T_Resolver> = ApiResolver2ResData<T_Resolver>
+>(apiName: string, info: T_Info, resolver: T_Resolver): Api<T_Resolver, T_Info> {
+  return (async (req: T_Req): Promise<AceResponse<T_Res_Data> | AceResEither<T_Res_Data>> => {
+    if (!req) req = {} as T_Req
+    (req as any).__apiName = apiName
 
-  constructor(path: string, fnName: string) {
-    this.#storage = { path, pattern: pathnameToPattern(path) }
-    this.values.fn = fnName
-  }
-
-
-  /** Public .values getter that casts #storage into APIValues<…>, giving us perfect intelliSense */
-  public get values(): APIValues<T_Params, T_Search, T_Body, T_Response, T_Locals> {
-    return this.#storage as any
-  }
+    return _callApi<T_Req, T_Res_Data>({
+      req,
+      info: info,
+      resolver: resolver,
+    })
+  }) as Api<T_Resolver, T_Info>
+}
 
 
-  /** 
-   * ### Set async functions to run before route/api boots
-   * - IF `b4()` return is truthy => returned value is sent to the client & route handler is not processed
-   * - 🚨 If returning the response must be a `Response` object b/c this is what is given to the client
-   * @example
-    ```ts
-    export const GET = new API('/api/character/:element', 'apiCharacter')
-      .b4([authB4, eventB4])
-    ```
-   * @param b4 - Array of functions to happen before `.resolve()`
-   */
-  b4<const T_B4_Functions extends B4<any>[]>(b4: T_B4_Functions): API<T_Params, T_Search, T_Body, T_Response, MergeLocals<T_B4_Functions>> {
-    this.#storage.b4 = b4
-    return this as any
-  }
 
 
-  /** 
-   * ### Set async function to run when api is called
-   * @example
-    ```ts
-    export const GET = new API('/api/character/:element', 'apiCharacter')
-      .pathParams(vParse(object({ element: picklist(elements) })))
-      .resolve(async (scope) => {
-        return scope.success(scope.pathParams.element)
+async function _callApi<T_Req extends BaseApiReq, T_Res_Data extends AceResData>(props: {
+  req: T_Req,
+  info: ApiInfo,
+  resolver: ApiResolverFn<T_Req, T_Res_Data>,
+}) {
+  try {
+    if (isServer) return props.resolver(props.req)
+    else {
+      if (!props.req) props.req = {} as T_Req
+
+      const { scope } = await import('./scopeComponent')
+      const __apiName = props.req['__apiName' as keyof BaseApiReq] as unknown as keyof MapApis // from createApi()
+
+      const entry = mapApis[__apiName]
+      if (!entry) throw new Error(`Please run "ace build local" to build your api's`)
+
+      return scope.fetch<T_Res_Data>({
+        url: entry.buildUrl(props.req),
+        requestInit: {
+          method: props.info.method,
+          headers: { 'content-type': 'application/json' },
+          body: props.req.body ? JSON.stringify(props.req.body) : null,
+        }
       })
-    ```
-   * @param resolveFunction - Async function that holds primary api route handling logic
-   */
-  resolve<T_Resolve_Fn extends APIResolveFunction<T_Params, T_Search, T_Body, any, T_Locals>>(resolveFunction: T_Resolve_Fn): API<T_Params, T_Search, T_Body, AceResponse2ApiResponse<Awaited<ReturnType<T_Resolve_Fn>>>, T_Locals> {
-    this.#storage.resolve = resolveFunction
-    return this as any
-  }
-
-
-
-  /** 
-   * ### Set validating / parsing function for this api's body that runs before the api's resolve function
-   * @example
-    ```ts
-    .body(vParse(object({ id: vNum(), choice: vBool(), eamil: vEmail(), createdAt: optional(vDate()), email: pipe(string(), email()) })))
-    ```
-   * @example
-    ```ts
-    .body(input => {
-      if (typeof input !== 'object' || input === null) throw new Error('input is not an object')
-
-      const raw = (input as any).id
-      if (raw === undefined) throw new Error('input.id is undefined')
-
-      const id = Number(raw)
-      if (Number.isNaN(id)) throw new Error('input.id is not a number')
-
-      return { id }
-    })
-    ```
-   * @example
-    ```ts
-    .body(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
-    ```
-  * @param parser - Parsing function, accepts an input and validate / optionally parses the input
-  */
-  body<T_New_Body extends ApiBody>(parser: Parser<T_New_Body>): API<T_Params, T_Search, T_New_Body, T_Response, T_Locals> {
-    this.#storage.bodyParser = parser
-    return this as any
-  }
-
-
-  /** 
-   * ### Set validating / parsing function for this api's path params that runs before the api's resolve function
-   * @example
-    ```ts
-    .pathParams(vParse(object({ id: vNum(), choice: vBool(), eamil: vEmail(), createdAt: optional(vDate()), email: pipe(string(), email()) })))
-    ```
-   * @example
-    ```ts
-    .pathParams(input => {
-      if (typeof input !== 'object' || input === null) throw new Error('input is not an object')
-
-      const raw = (input as any).id
-      if (raw === undefined) throw new Error('input.id is undefined')
-
-      const id = Number(raw)
-      if (Number.isNaN(id)) throw new Error('input.id is not a number')
-
-      return { id }
-    })
-    ```
-   * @example
-    ```ts
-    .pathParams(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
-    ```
-  * @param parser - Parsing function, accepts an input and validate / optionally parses the input
-  */
-  pathParams<T_New_PathParams extends UrlPathParams>(parser: Parser<T_New_PathParams>): API<T_New_PathParams, T_Search, T_Body, T_Response, T_Locals>  {
-    this.#storage.pathParamsParser = parser
-    return this as any
-  }
-
-
-  /** 
-   * ### Set validating / parsing function for this api's serch params that runs before the api's resolve function
-   * @example
-    ```ts
-    .searchParams(vParse(object({ id: vNum(), choice: vBool(), eamil: vEmail(), createdAt: optional(vDate()), email: pipe(string(), email()) })))
-    ```
-   * @example
-    ```ts
-    .searchParams(input => {
-      if (typeof input !== 'object' || input === null) throw new Error('input is not an object')
-
-      const raw = (input as any).id
-      if (raw === undefined) throw new Error('input.id is undefined')
-
-      const id = Number(raw)
-      if (Number.isNaN(id)) throw new Error('input.id is not a number')
-
-      return { id }
-    })
-    ```
-   * @example
-    ```ts
-    .searchParams(zParse(z.object({ email: z.string().email({ message: 'Email is invalid' }) })))
-    ```
-  * @param parser - Parsing function, accepts an input and validate / optionally parses the input
-  */
-  searchParams<T_New_SearchParams extends UrlSearchParams>(parser: Parser<T_New_SearchParams>): API<T_Params, T_New_SearchParams, T_Body, T_Response, T_Locals> {
-    this.#storage.searchParamsParser = parser
-    return this as any
+    }
+  } catch (e) {
+    return createAceResponse<T_Res_Data>(parseError(e))
   }
 }
 
 
 
-export type APIResolveFunction<
-  T_Params extends UrlPathParams,
-  T_Search extends UrlSearchParams,
-  T_Body extends ApiBody,
-  T_Response_Data,
-  T_Locals extends BaseEventLocals = {}
-> = (scope: ScopeBE<T_Params, T_Search, T_Body, T_Locals>) => AceResponse<T_Response_Data> | Promise<AceResponse<T_Response_Data>>
+export class ApiResolver<
+  T_Req extends BaseApiReq = BaseApiReq,
+  T_Locals extends BaseEventLocals = {},
+  T_Res_Data extends AceResData = AceResData
+> {
+  // runtime storage
+  #req: T_Req
+  #b4: B4<any, any>[] = []
+
+
+  /** initializes the resolver chain, inferring T_Req from the request object */
+  constructor(req: T_Req) {
+    this.#req = req
+  }
+
+
+  b4<const T_B4_Array extends readonly B4<any, any>[]>(
+    b4Fns: T_B4_Array
+  ): ApiResolver<T_Req, MergeLocals<T_B4_Array>, T_Res_Data> {
+    this.#b4 = b4Fns as unknown as B4<any, any>[] // set runtime storage
+    return this as unknown as ApiResolver<T_Req, MergeLocals<T_B4_Array>, T_Res_Data> // set locals types
+  }
+
+
+  res<T_Res_Fn extends (scope: ScopeBE<T_Req, T_Locals>) => Promise<AceResponse<any>>>(
+    resFn: T_Res_Fn
+  ): Promise<AceResponse<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>> {
+    return this.callResFn(resFn) // call res fn
+  }
+
+
+  private async callResFn<
+    T_Res_Fn extends (scope: ScopeBE<T_Req, T_Locals>) => Promise<AceResponse<any>>
+  >(resFn: T_Res_Fn): Promise<AceResponse<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>> {
+    try {
+      const __mapEntry = this.#req['__mapEntry' as keyof BaseApiReq] // from [...api]
+      const __apiName = this.#req['__apiName' as keyof BaseApiReq] as unknown as keyof MapApis // from createApi()
+
+      const entry = __mapEntry || mapApis[__apiName]
+      if (!entry) throw new Error(`Please run "ace build local" to build your api's`)
+
+      const info = await entry.info()
+      if (!info) throw new Error(`Please run "ace build local" to build your api's`)
+
+      info.parser?.(this.#req)
+
+      const { ScopeBE } = await import('./scopeBE')
+
+      const scope = new ScopeBE(this.#req) as ScopeBE<T_Req, T_Locals>
+
+      for (const b4Fn of this.#b4) { // call middleware sequentially
+        const result = await b4Fn(scope)
+
+        if (result instanceof Response) {
+          return result
+        }
+      }
+
+      const response = await resFn(scope) // call res fn
+
+      if (response instanceof Response) return response
+      else throw new Error(`Error w/ API "${info.path}" -- API\'s must return a Response`, { cause: { response, path: info.path }})
+    } catch (e) {
+      return createAceResponse<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>(parseError(e));
+    }
+  }
+}
 
 
 
-export type APIValues<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any, T_Body extends ApiBody = {}, T_Response = unknown, T_Locals extends BaseEventLocals = {}> = {
+/**
+ * - API route info
+ * - Aligns w/ a `use server` function
+ */
+export class ApiInfo<T_Parser extends Parser<any> = any> implements ApiInfoInterface<T_Parser> {
+  public readonly path: string
+  public readonly method: string
+  public readonly parser?: T_Parser
+
+  constructor(info: ApiInfoInterface<T_Parser>) {
+    this.path = info.path
+    this.method = info.method
+    this.parser = info.parser
+  }
+}
+
+export interface ApiInfoInterface<T_Parser extends Parser<any> = any> {
   path: string
-  pattern: RegExp
-  fn?: string
-  b4?: B4<T_Locals>[]
-  bodyParser?: Parser<T_Body>
-  pathParamsParser?: Parser<T_Params>
-  searchParamsParser?: Parser<T_Search>
-  resolve?: APIResolveFunction<T_Params, T_Search, T_Body, T_Response, T_Locals>
+  method: string
+  parser?: T_Parser
 }
 
 
+// import { mapApis } from './mapApis'
+// import { ScopeBE } from './scopeBE'
+// import { onApi404 } from '../onApi404'
+// import { isServer } from 'solid-js/web'
+// import { parseError } from './parseError'
+// import { createAceResponse, AceResponse } from './aceResponse'
+// import type { AceResponse2Data, AceResData, Api, B4, BaseApiReq, BaseEventLocals, ApiInfo2Req, MergeLocals, Parser, ApiResolver2ResData, ApiResolverFn } from './types'
 
-export type APIStorage = {
-  path: string
-  pattern: RegExp
-  fn?: string
-  b4?: B4<any>[]
-  bodyParser?: Parser<any>
-  pathParamsParser?: Parser<any>
-  searchParamsParser?: Parser<any>
-  resolve?: APIResolveFunction<any,any,any,any,any>
-}
+
+
+// export { ApiInfo2Req }
+
+
+
+// export function createApi<
+//   T_Info extends ApiInfo,
+//   T_Req extends ApiInfo2Req<T_Info>,
+//   T_Resolver extends ApiResolverFn<T_Req, any> = ApiResolverFn<T_Req, any>,
+//   T_Res_Data extends ApiResolver2ResData<T_Resolver> = ApiResolver2ResData<T_Resolver>
+// >(props: {
+//   info: T_Info,
+//   resolver: T_Resolver
+// }): Api<T_Resolver, T_Info> {
+//   return (async (req: T_Req): Promise<AceResponse<T_Res_Data>> => resolveApi({
+//     req,
+//     info: props.info,
+//     resolver: props.resolver
+//   })) as Api<T_Resolver, T_Info>
+// }
+
+
+
+// /**
+//  * - API route info
+//  * - Aligns w/ a `use server` function
+//  */
+// export class ApiInfo<T_Parser extends Parser<any> = any> implements ApiInfoInterface<T_Parser> {
+//   public readonly path: string
+//   public readonly method: string
+//   public readonly parser?: T_Parser
+
+//   constructor(info: ApiInfoInterface<T_Parser>) {
+//     this.path = info.path
+//     this.method = info.method
+//     this.parser = info.parser
+//   }
+// }
+
+// export interface ApiInfoInterface<T_Parser extends Parser<any> = any> {
+//   path: string
+//   method: string
+//   parser?: T_Parser
+// }
+
+
+
+// export async function resolveApi<T_Req extends BaseApiReq, T_Res_Data extends AceResData>(props: {
+//   req: T_Req,
+//   info: ApiInfo,
+//   resolver: ApiResolverFn<T_Req, T_Res_Data>,
+// }) {
+//   try {
+//     if (isServer) return props.resolver(props.req)
+//     else {
+//       const { scope } = await import('./scopeComponent')
+
+//       return scope.fetch<AceResponse<T_Res_Data>>({
+//         url: pathname2Url({ path: props.info.path, pathParams: props.req.pathParams, searchParams: props.req.searchParams }),
+//         requestInit: {
+//           method: props.info.method,
+//           headers: { 'content-type': 'application/json' },
+//           body: props.req.body ? JSON.stringify(props.req.body) : null,
+//         }
+//       })
+//     }
+//   } catch (e) {
+//     return createAceResponse<T_Res_Data>(parseError(e))
+//   }
+// }
+
+
+
+// export class ApiResolver<
+//   T_Req extends BaseApiReq = BaseApiReq,
+//   T_Locals extends BaseEventLocals = {},
+//   T_Res_Data extends AceResData = AceResData
+// > {
+//   // runtime storage
+//   #req: T_Req
+//   #info: ApiInfo
+//   #b4: B4<any, any>[] = []
+
+
+//   /** initializes the resolver chain, inferring T_Req from the request object */
+//   constructor(req: T_Req, info: ApiInfo) {
+//     this.#req = req
+//     this.#info = info
+//   }
+
+
+//   b4<const T_B4_Array extends readonly B4<any, any>[]>(
+//     b4Fns: T_B4_Array
+//   ): ApiResolver<T_Req, MergeLocals<T_B4_Array>, T_Res_Data> {
+//     this.#b4 = b4Fns as unknown as B4<any, any>[] // set runtime storage
+//     return this as unknown as ApiResolver<T_Req, MergeLocals<T_B4_Array>, T_Res_Data> // set locals types
+//   }
+
+
+//   res<T_Res_Fn extends (scope: ScopeBE<T_Req, T_Locals>) => Promise<AceResponse<any>>>(
+//     resFn: T_Res_Fn
+//   ): Promise<AceResponse<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>> {
+//     return this.callResFn(resFn) // call res fn
+//   }
+
+
+//   private async callResFn<
+//     T_Res_Fn extends (scope: ScopeBE<T_Req, T_Locals>) => Promise<AceResponse<any>>
+//   >(resFn: T_Res_Fn): Promise<AceResponse<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>> {
+//     try {
+//       if (!this.#info) return onApi404<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>()
+
+//       this.#info.parser?.(this.#req)
+
+//       const { ScopeBE } = await import('./scopeBE')
+
+//       const scope = new ScopeBE(this.#req) as ScopeBE<T_Req, T_Locals>
+
+//       for (const b4Fn of this.#b4) { // call middleware sequentially
+//         const result = await b4Fn(scope)
+
+//         if (result instanceof Response) {
+//           return result
+//         }
+//       }
+
+//       const response = resFn(scope) // call res fn
+
+//       if (response instanceof Response) return response
+//       else throw new Error(`Error w/ API "${this.#info.path}" -- API\'s must return a Response`, { cause: { response, path: this.#info.path }})
+//     } catch (e) {
+//       return createAceResponse<AceResponse2Data<Awaited<ReturnType<T_Res_Fn>>>>(parseError(e));
+//     }
+//   }
+// }

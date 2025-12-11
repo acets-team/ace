@@ -6,6 +6,7 @@
  */
 
 
+import { mergeStrings } from './merge'
 import { createSignal, createEffect, onCleanup, createMemo, Show, Index, type JSX } from 'solid-js'
 
 
@@ -61,11 +62,8 @@ export function Slideshow({ items, dots = true, autoPlay = true, showPlayControl
     onCleanup(() => clearInterval(timer))
   })
 
-  const baseClass = 'ace-slideshow'
-  const mergedClass = $section?.class ? `${baseClass} ${$section.class}` : baseClass
-
   return <>
-    <section aria-roledescription="carousel" aria-label="Slideshow" {...$section} class={mergedClass}>
+    <section aria-roledescription="carousel" aria-label="Slideshow" {...$section} class={mergeStrings('ace-slideshow', $section?.class)}>
       <div class="track">
         <Index each={itemsMemo()} fallback={null}>{
           (item, i) => <>

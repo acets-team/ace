@@ -2,25 +2,24 @@
  * 🧚‍♀️ How to use:
  *   Plugin: chartjs
  *   import { useChartJs } from '@ace/useChartJs'
- *   import type { UseChartJsProps } from '@ace/useChartJs'
+ *   import type { UseChartJsProps, ChartJsMap } from '@ace/useChartJs'
  */
 
 
-import type { ChartJsMap, ChartJsRegisterFn } from './types'
 import { createEffect, createSignal, untrack, type Accessor } from 'solid-js'
 import { Chart, type ChartConfiguration, type ChartTypeRegistry } from 'chart.js'
 
 
 export function useChartJs<T extends keyof ChartTypeRegistry>(props: {
-  map: Accessor<ChartJsMap[]>,
+  map: Accessor<undefined | ChartJsMap[]>,
   ref: Accessor<undefined | HTMLCanvasElement>,
   config: ChartConfiguration<T>,
-  register?: ChartJsRegisterFn
+  register?: () => void
 }) {
   const [chart, setChart] = createSignal<undefined | Chart<T>>()
 
   createEffect(() => {
-    if (props.map().length && props.ref()) {
+    if (props.map()?.length && props.ref()) {
       untrack(() => {
         if (props.register) props.register()
 
@@ -34,7 +33,7 @@ export function useChartJs<T extends keyof ChartTypeRegistry>(props: {
         const labels = []
         const _chart = chart()
 
-        for (const c of props.map()) {
+        for (const c of props.map() ?? []) {
           labels.push(c.id)
           data.push(c.amount)
         }
@@ -43,7 +42,7 @@ export function useChartJs<T extends keyof ChartTypeRegistry>(props: {
           const firstDataSet = _chart.data.datasets[0]
 
           if (firstDataSet) firstDataSet.data = data
-          
+
           _chart.data.labels = labels
           _chart.update()
         } else {
@@ -66,3 +65,11 @@ export function useChartJs<T extends keyof ChartTypeRegistry>(props: {
 
 
 export type UseChartJsProps = Parameters<typeof useChartJs>[0]
+
+
+export type ChartJsMap = {
+  /** Aligned w/ label[], Good for sync() */
+  id: string
+  /** Aligned w/ data[] */
+  amount: number
+}

@@ -27,11 +27,10 @@ export const apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE'])
 export const goStatusCode = 200
 
 /**
- * 
  * - By using Location as the header name, query() actually handles server side redirects which is helpful when doing a queryType of 'stream'
  * - By putting the url in the header & not the body => no json parsing is necessary
  */
-export const goHeaderName = 'ace_go'
+export const goHeaderName = 'location'
 
 
 /** 
@@ -60,4 +59,8 @@ export const idbDefaultStoreName = 'kv'
 
 
 /** @link https://github.com/acets-team/ace?tab=readme-ov-file#call-apis > full explanation of `queryType` */
-export const queryType = new Enums(['stream', 'direct', 'maySetCookies'])
+export const queryType = new Enums(['stream', 'direct', 'maySetCookies', 'seo'])
+
+
+/** When we throw issues from `valibot/zod` they can be found @ `Error.cause[issuesErrorCauseKey]` */
+export const issuesErrorCauseKey = '_issues'

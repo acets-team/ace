@@ -1,377 +1,433 @@
 /**
  * 🧚‍♀️ How to access:
- *     - import type { APINames, ... } from '@ace/types'
+ *     - import type { MapApis, ... } from '@ace/types'
  */
 
 
-import type { API } from './api'
 import type { Atom } from './atom'
+import type { Load } from './load'
 import type { Route } from './route'
+import type { Async } from './async'
+import type { ApiInfo } from './api'
+import type { Stream } from './stream'
+import type { mapApis } from './mapApis'
 import type { IndexDB } from './indexDB'
 import type { ScopeBE } from './scopeBE'
 import type { InferEnums } from './enums'
 import type { Route404 } from './route404'
-import type { JSX, Signal } from 'solid-js'
-import type { regexRoutes } from './regexRoutes'
-import type { createAsync } from '@solidjs/router'
-import type { regexApiPuts } from './regexApiPuts'
-import type { regexApiGets } from './regexApiGets'
-import type { regexApiNames } from './regexApiNames'
-import type { regexApiPosts } from './regexApiPosts'
+import type { mapRoutes } from './mapRoutes'
+import type { JSX, Accessor } from 'solid-js'
+import type { BuildUrlProps } from './buildUrl'
+import type { AceResponse } from './aceResponse'
 import type { ScopeComponent } from './scopeComponent'
-import type { regexApiDeletes } from './regexApiDeletes'
-import type { AceError, AceErrorProps } from './aceError'
-import type { apiMethods, atomIs, atomPersit, queryType } from './vars'
-import type { reconcile as solidReconcile, Store as SolidStore, SetStoreFunction } from 'solid-js/store'
+import type { apiMethods, atomIs, atomPersit } from './vars'
+import type { reconcile as solidReconcile, SetStoreFunction, SolidStore } from 'solid-js/store'
 import type { APIEvent as SolidAPIEvent, FetchEvent as SolidFetchEvent } from '@solidjs/start/server'
 
 
-/** { 'apiPostA' | 'apiGetA' | 'apiPostB' } */
-export type ApiNames = keyof typeof regexApiNames
+
+/** `{ apiName: { pattern, api, info, resolver } }` */
+export type MapApis = typeof mapApis
 
 
-/** '/api/a' | '/api/b/:id' */
-export type GETPaths = keyof typeof regexApiGets
+/** `{ 'apiPostA' | 'apiGetA' | 'apiPostB' }` */
+export type ApiNames = keyof MapApis
 
 
-/** '/api/a' | '/api/b/:id' */
-export type POSTPaths = keyof typeof regexApiPosts
+export type MapRoutes = typeof mapRoutes
 
 
-/** '/api/a' | '/api/b/:id' */
-export type DELETEPaths = keyof typeof regexApiDeletes
+export type RoutePaths = keyof MapRoutes
 
 
-/** '/api/a' | '/api/b/:id' */
-export type PUTPaths = keyof typeof regexApiPuts
+/** The api methods we support */
+export type ApiMethods = InferEnums<typeof apiMethods>
 
 
-/** '/a' | '/b/:id' */
-export type Routes = keyof typeof regexRoutes
+/** `'/a' | '/b/:id'` */
+export type Routes = keyof typeof mapRoutes
 
 
 /** In the RegexMap it can point to a new Route() or a new Route404() */
-export type AnyRoute = Route<any, any> | Route404
-
-
-/**
- * - `RegexMap` helps organize and type all route or `API` entries in one place
- * - Ensures each `key` in the map corresponds to a properly typed `RegexMapEntry`, providing consistent access to route or `API` meta data
- */
-export type RegexMap<Kind extends 'route' | 'api'> = Kind extends 'route'
-  ? Record<string, RegexMapEntry<'route', AnyRoute>>
-  : Record<string, RegexMapEntry<'api', API<any, any, any, any, any>>>;
-
-
-/**
- * - `RegexMapEntry` defines the shape of a single entry in the `RegexMap` based on its kind (`route` or `API`)
- * - Ensures that each entry contains the correct fields (like `method` for APIs) and type-safe dynamic loader functions
- */
-export type RegexMapEntry<Kind extends 'route' | 'api', T_Module> = Kind extends 'route'
-  ? { pattern: RegExp, loader: () => Promise<T_Module> }
-  : { path: string, method: ApiMethods, pattern: RegExp, loader: () => Promise<T_Module> }
+export type AnyRoute = Route<any> | Route404
 
 
 /** 
- * - Receives: Regex Map & Path
- * - Gives: Type of new API()
-*/
-export type RegexApiMapAndPath2API<T_Map extends RegexMap<'api'>, T_Path extends keyof T_Map> = T_Map[T_Path] extends { loader: () => Promise<infer T_API> } // infer whatever the loader() promised
-  ? T_API extends API<any, any, any, any, any> // only keep it if it’s actually a new API()
-  ? T_API
-  : never
-  : never;
-
-
-/** 
- * - Receives: Regex Map & Path
- * - Gives: Type of new Route()
-*/
-export type RegexRouteMapAndPath2Route<T_Map extends RegexMap<'route'>, T_Path extends keyof T_Map> = T_Map[T_Path] extends { loader: () => Promise<infer T_Route> } //  infer the Raw loader return
-  ? T_Route extends AnyRoute // only keep it if it’s actually a new Route()
-  ? T_Route
-  : never
-  : never
-
-
-/**
- * - When we create a Response object the type for the stringified json is lost b/c the Response object does not accept generics
- * - When we create an AceResponse we can store / infer the type for the stringified json in @ `__resType`!
- * - This is the return type for `respond()` aka this is the return type for a `new API()` > `.resolve()`
+ * - `data` or `error` might be set
+ * - the parsed value w/in an `AceResponse` which is just a typed `Response`
  */
-export interface AceResponse<T_Data> extends Response {
-  __dataType?: T_Data
+export type AceResEither<T_ResData extends AceResData = AceResData> = {
+  data?: T_ResData
+  error?: AceResError
 }
 
 
-/**
- * - Required API response from `new API()` > `.resolve()`
- * - The go prop never get's to the fe, by then the redirect will happen
- */
-export type ApiResponse<T_Data = any> = {
-  go?: string
-  data?: T_Data
-  error?: AceErrorProps
+/** Either shape but it'll definitly have an error */
+export type AceResErrorEither<T_ResData extends AceResData = AceResData> = {
+  data?: T_ResData
+  error: NonNullable<AceResError>
 }
 
 
-/** 
- * - Receives: AceResponse
- * - Gives: API Response
-*/
-export type AceResponse2ApiResponse<T_AceResponse> = T_AceResponse extends AceResponse<infer T_Data>
-  ? ApiResponse<T_Data>
-  : never
-
-
-/** 
- * - Receives: API
- * - Gives: ApiResponse
-*/
-export type Api2Response<T_API> = T_API extends API<any, any, any, any, any>
-  ? ApiResponse<Api2Data<T_API>>
-  : never
-
-
-/** 
- * - Receives: API
- * - Gives: Response data type
-*/
-export type Api2Data<T_API> = T_API extends API<any, any, any, infer T_Response, any>
-  ? T_Response extends ApiResponse<infer T_Data>
-  ? Exclude<T_Data, null>
-  : never
-  : never
-
-
-/** 
- * - Receives: API
- * - Gives: Request body type
-*/
-export type Api2Body<T_API extends API<any, any, any, any, any>> = T_API extends API<any, any, infer T_Body, any, any>
-  ? GetPopulated<T_Body>
-  : undefined
-
-
-/** 
- * - Receives: API
- * - Gives: Request params type
-*/
-export type Api2PathParams<T_API extends API<any, any, any, any, any>> = T_API extends API<infer T_Params, any, any, any, any>
-  ? GetPopulated<T_Params>
-  : undefined
-
-
-/** 
- * - Receives: API
- * - Gives: Request search params type
-*/
-export type Api2SearchParams<T_API extends API<any, any, any, any, any>> = T_API extends API<any, infer T_Search, any, any, any>
-  ? GetPopulated<T_Search>
-  : undefined
-
-
-/** If object has keys return object, else return undefined */
-export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
-
-
-/** If testing item is an object and has keys returns true, else return false */
-export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? false : true : false
-
-
-/** 
- * - Receives: API Function Name
- * - Gives: API Response
-*/
-export type ApiName2Response<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
-  ? Api2Response<T_API>
-  : never
-
-
-/** 
- * - Receives: API Function Name
- * - Gives: API Response Data
-*/
-export type ApiName2Data<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
-  ? Api2Data<T_API>
-  : never
-
-
-/** 
- * - Receives: API Function Name
- * - Gives: API Type
-*/
-export type ApiName2Api<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API>
-  ? T_API extends API<any, any, any, any, any>
-  ? T_API
-  : never
-  : never
-
-
-/** 
- * - Receives: API Function Name
- * - Gives: API Request Props
- * @example
-    ```ts
-    const props: ApiName2Props<'apiClothing'> = { bitKey: 'clothing' }
-    if (category) props.searchParams = { category }
-    const res = await apiClothing(props)
-    ```
-*/
-export type ApiName2Props<T_Name extends ApiNames> = typeof regexApiNames[T_Name] extends RegexMapEntry<'api', infer T_API> // Get module type T_API from the RegexMapEntry
-  ? T_API extends API<infer T_PathParams, infer T_SearchParams, infer T_Body, infer T_Response, infer T_Locals> // ensure T_API is indeed an API<…>
-  ? BaseAPIFnProps<API<T_PathParams, T_SearchParams, T_Body, T_Response, T_Locals>> & { bitKey?: string } // build props type
-  : never
-  : never
-
-
-/** Building an options object whose properties are only present if they have keys */
-export type BaseAPIFnProps<T_API extends API<any, any, any, any, any>> =
-  OptionalIfNoRequired<'body', Api2Body<T_API>> &
-  OptionalIfNoRequired<'pathParams', Api2PathParams<T_API>> &
-  OptionalIfNoRequired<'searchParams', Api2SearchParams<T_API>>
-
-
-/** 
- * - Receives: API
- * - Gives: Type for the Function that calls this API
- * - How: No required API params => allow missing options altogether, otherwise options object must be passed
-*/
-export type Api2Function<T_API extends API<any, any, any, any, any>> = RequiredKeys<ApiFnProps<T_API>> extends never
-  ? (options?: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
-  : (options: ApiFnProps<T_API>) => Promise<Api2Response<T_API>>
-
-
-/** 
- * - The props (arguments / options) that are sent to an api function
-*/
-export type ApiFnProps<T_API extends API<any, any, any, any, any>> = BaseAPIFnProps<T_API> & {
-  /** 
-   * - Optional, bits are boolean signals, we identify them by bitKey, lovely for loading indicators
-   * - IF `bitKey` = `undefined` AND `onLoadChange` = `undefined` THEN `bitKey` <- `apiName`
-   */
-  bitKey?: AceKey
-  /** Optional, if queryType set AND queryKey undefined THEN queryKey <- apiName */
-  queryKey?: AceKey
-  /** @link https://github.com/acets-team/ace?tab=readme-ov-file#call-apis > full explanation of `queryType` */
-  queryType?: QueryType,
-  /** Optional, to send w/ `fetch()` */
-  requestInit?: Partial<RequestInit>,
-  /** On `FE`, IF `response.error` is truthy THEN `onError()` OR `defaultOnError()` will be called w/ `response.error`  */
-  onError?: (error: AceErrorProps | AceError) => void
-  /** On `FE`, IF no errors AND `onSuccess` provided THEN `onSuccess` will be called w/ `response.data` */
-  onSuccess?: (data: Api2Data<T_API>) => void
-  /** On `FE`, IF no errors AND `onResponse` provided THEN `onResponse` will be called w/ `Response` */
-  onResponse?: (response: any) => void
-  /** On `FE`, Optional, set if you'd love a callback on load change by this api */
-  onLoadChange?: (value: boolean) => void
-  /** Optional, default is `{deferStream: true}`, requested `createAsyncOptions` are merged w/ default & passed to `createAsync()` */
-  createAsyncOptions?: Partial<Parameters<typeof createAsync>[1]>
+/** Either shape that'll definitly have data */
+export type AceResDataEither<T_ResData extends AceResData = AceResData> = {
+  data: T_ResData
+  error?: AceResError
 }
 
 
+/** `data` prop @ `AceResEither` */
+export type AceResData = Record<string, unknown> | any[] | string | number | boolean | null | undefined
+
+
+/** `error` prop @ `AceResEither` */
+export type AceResError = { message: string, cause?: Record<string, unknown> } | null | undefined
+
+
+export type AceResponse2Data<T_Res> = T_Res extends AceResponse<infer T_Res_Data>
+  ? T_Res_Data
+  : never
+
+
+export type BaseApiReq = {
+  body?: BaseBody,
+  pathParams?: BasePathParams,
+  searchParams?: BaseSearchParams,
+}
+
+
+export type BaseRouteReq = {
+  pathParams?: BasePathParams,
+  searchParams?: BaseSearchParams,
+}
+
+
+export type BaseBody = {
+  [key: string]: any
+}
+
+
+export type BasePathParams = {
+  [key: string]: any
+}
+
+
+export type BaseSearchParams = {
+  [key: string]: any
+}
+
+
+export type Api<
+  T_Resolver extends ApiResolverFn<any, any>, // Allow any locals/data to be passed
+  T_Info extends ApiInfo
+> = (req: ApiInfo2Req<T_Info>) => Promise<AceResponse<ApiResolver2ResData<T_Resolver>>>
+
+
+export type ApiResolverFn<
+  T_Req extends BaseApiReq,
+  T_Res_Data extends AceResData,
+> = (req: T_Req) => Promise<AceResponse<T_Res_Data>>
+
+
+export type ApiResFn<
+  T_Req extends BaseApiReq,
+  T_Res_Data extends AceResData,
+  T_Locals extends BaseEventLocals = {}
+> = (scope: ScopeBE<T_Req, T_Locals>) => AceResponse<T_Res_Data> | Promise<AceResponse<T_Res_Data>>
+
+
+export type ApiDeconstructor<T_Api> = T_Api extends Api<infer T_Resolver, infer T_Info>
+  ? { req: ApiInfo2Req<T_Info>, res: ApiResolver2ResData<T_Resolver> }
+  : never
+
+export type Api2Req<T_Api> = ApiDeconstructor<T_Api>['req']
+
+export type Api2Res<T_Api> = ApiDeconstructor<T_Api>['res']
+
+
+export type MapApisEntry<
+  T_Api extends Api<any, any>,
+  T_Info extends ApiInfo,
+  T_Resolver extends ApiResolverFn<any, any>
+> = {
+  buildUrl: (props: MapBuildUrlProps) => string,
+  api: () => Promise<T_Api>,
+  info: () => Promise<T_Info>,
+  resolver: () => Promise<T_Resolver>,
+}
+
+/** Build url props @ MapApis & MapRoutes */
+export type MapBuildUrlProps = Omit<BuildUrlProps, 'segments'>
+
+
+export type TreeApiSearchResult = {
+  key: string,
+  params: BasePathParams
+}
+
+
+export type ApiName2Entry<T_Name extends ApiNames> = (typeof mapApis)[T_Name] extends infer T_Entry
+  ? T_Entry extends MapApisEntry<infer A, infer I, infer R>
+  ? { api: A, info: I, resolver: R }
+  : never
+  : never
+
+
+export type ApiName2Req<T_Name extends ApiNames> = ApiName2Entry<T_Name> extends { info: infer T_Info }
+  ? T_Info extends ApiInfo
+  ? ApiInfo2Req<T_Info>
+  : never
+  : never
+
+
+export type ApiName2ResData<T_Name extends ApiNames> = ApiName2Entry<T_Name> extends { resolver: infer T_Resolver }
+  ? T_Resolver extends (...args: any) => any
+  ? ApiResolver2ResData<T_Resolver>
+  : never
+  : never
+
+
+export type ApiName2Either<T_Name extends ApiNames> = AceResEither<ApiName2ResData<T_Name>>
+
+
+export type ApiName2PathParams<T_Name extends ApiNames> = ApiReq2PathParams<ApiName2Req<T_Name>>
+
+
+export type ApiName2SearchParams<T_Name extends ApiNames> = ApiReq2SearchParams<ApiName2Req<T_Name>>
+
+
+export type ApiName2Body<T_Name extends ApiNames> = ApiReq2Body<ApiName2Req<T_Name>>
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: Stream Response
+*/
+export type ApiName2Stream<T_Name extends ApiNames> = Stream<ApiName2Req<T_Name>, ApiName2ResData<T_Name>>
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: Load Response
+*/
+export type ApiName2Load<T_Name extends ApiNames> = Load<ApiName2Req<T_Name>, ApiName2ResData<T_Name>>
+
+
+/** 
+ * - Receives: API Function Name
+ * - Gives: Async `run()` Response (this response is parsed so it'll be an object w/ `data/error`) to get a raw `Response` don't call `run()`, call `raw()`
+*/
+export type ApiName2Async<T_Name extends ApiNames> = Async<ApiName2Req<T_Name>, ApiName2ResData<T_Name>>
+
+
+export type ApiResolver2ResData<T_Resolver extends ApiResolverFn<any, any>> = Awaited<ReturnType<T_Resolver>> extends infer T_Result
+  ? T_Result extends AceResponse<infer T_Res_Data>
+  ? T_Res_Data
+  : never
+  : never
+
+
+/** 
+ * - Receives: ApiInfo
+ * - Request type
+*/
+export type ApiInfo2Req<T_ApiInfo extends ApiInfo> = Parser2Req<T_ApiInfo['parser']>
+
+
+
 /**
- * - Used for `bitKey` (boolean signals) & `queryKey` (Solid's `query()` key)
- * - Allows you to send a string or something like `['example', 2]`
+ * Receives: Api request type
+ * Gives: Api body type
  */
-export type AceKey = string | (string | number)[]
-
-
-/** Utility to extract the *required* keys of some object */
-export type RequiredKeys<T_Object> = {
-  [K in keyof T_Object]-?: {} extends Pick<T_Object, K> ? never : K
-}[keyof T_Object]
+export type ApiReq2Body<T_Req extends BaseApiReq> = NonNullable<T_Req['body']> extends BaseBody
+  ? NonNullable<T_Req['body']>
+  : BaseBody
 
 
 /**
- * – If there are no required keys, you get an optional prop
- * – Otherwise it’s a required prop
+ * Receives: Api request type
+ * Gives: Api path params type
  */
-export type OptionalIfNoRequired<Name extends string, T> = RequiredKeys<T> extends never
-  ? { [P in Name]?: T }
-  : { [P in Name]: T }
+export type ApiReq2PathParams<T_Req extends BaseApiReq> = NonNullable<T_Req['pathParams']> extends BasePathParams
+  ? NonNullable<T_Req['pathParams']>
+  : BasePathParams
+
+
+/**
+ * Receives: Api request type
+ * Gives: Api search params type
+ */
+export type ApiReq2SearchParams<T_Req extends BaseApiReq> = NonNullable<T_Req['searchParams']> extends BaseSearchParams
+  ? NonNullable<T_Req['searchParams']>
+  : BaseSearchParams
 
 
 /** 
- * - Receives: GET Path
- * - Gives: API
-*/
-export type GETPath2Api<T_Path extends GETPaths> = RegexApiMapAndPath2API<typeof regexApiGets, T_Path>
+ * - No/Any library may be used w/in a parser function (valibot, zod etc)
+ * - It's purpose it to validate `input`, throw errors if invalid, and optionally parse the input
+ */
+export type Parser<T> = (input: unknown) => T
 
 
 /** 
- * - Receives: POST Path
- * - Gives: API
+ * - Receives: Parser
+ * - Gives: The type for the output (return value type from the parser function)
 */
-export type POSTPath2Api<T_Path extends POSTPaths> = RegexApiMapAndPath2API<typeof regexApiPosts, T_Path>
+export type Parser2Output<T_Parser> = T_Parser extends (input: any) => infer T_Output
+  ? T_Output
+  : never
 
 
 /** 
- * - Receives: PUT Path
- * - Gives: API
+ * - Receives: Parser
+ * - Gives: The specific type (ex: `{ body: { id: number } }`) or the fallback type if it's invalid/undefined `BaseApiReq`
 */
-export type PUTPath2Api<T_Path extends PUTPaths> = RegexApiMapAndPath2API<typeof regexApiPuts, T_Path>
+export type Parser2Req<T_Parser> = Parser2Output<T_Parser> extends infer T_Output
+  ? T_Output extends BaseApiReq
+  ? T_Output & BaseApiReq // If it extends, use the specific type AND the base
+  : BaseApiReq // If it doesn't extend, fall back to the base
+  : BaseApiReq
 
 
-/** 
- * - Receives: DELETE Path
- * - Gives: API
-*/
-export type DELETEPath2Api<T_Path extends DELETEPaths> = RegexApiMapAndPath2API<typeof regexApiDeletes, T_Path>
-
-
-/** 
- * - Receives: Route
- * - Gives: Route path params type
-*/
-export type Route2PathParams<T_Route extends Route<any, any>> = T_Route extends Route<infer T_Params, any>
-  ? GetPopulated<T_Params>
-  : undefined
-
-
-/** 
- * - Receives: Route
- * - Gives: Route search params type
-*/
-export type Route2SearchParams<T_Route extends Route<any, any>> = T_Route extends Route<any, infer T_Search>
-  ? GetPopulated<T_Search>
-  : undefined
-
-/** 
- * - Receives: Route path
- * - Gives: The type for that route's path params
-*/
-export type RoutePath2PathParams<T_Path extends Routes> = Route2PathParams<RegexRouteMapAndPath2Route<typeof regexRoutes, T_Path>>
-
-
-/** 
- * - Receives: Route path
- * - Gives: The type for that route's search params
-*/
-export type RoutePath2SearchParams<T_Path extends Routes> = Route2SearchParams<RegexRouteMapAndPath2Route<typeof regexRoutes, T_Path>>
-
-
-/** The component to render for a route */
-export type RouteComponent<T_Params extends UrlPathParams, T_Search extends UrlSearchParams> = (scope: ScopeComponent<T_Params, T_Search>) => JSX.Element
-
-
-/** The component to render for a layout */
-export type LayoutComponent = (scope: ScopeComponent) => JSX.Element
-
-
-/** This is how `Valibot` flattens their errors */
+/** This is how `Valibot` / `Zod` flattens their errors/issues */
 export type FlatMessages = Record<string, string[]>
 
 
-export type ApiBody = Record<string, any>
-export type UrlSearchParams = Record<string, any>
-export type UrlPathParams = Record<string, any>
+/**
+ * - What:
+ *     - Loop through each key in T
+ *     - Assign the type `unknown` to each key
+ * - Why:
+ *     - Remember the goal above, correct keys, any (unknown) value
+ * - So:
+ *     - IF T is { aloha: boolean } THEN AllowAnyValue<T> is { aloha: unknown }
+ */
+type AllowAnyValue<T> = { [K in keyof T]: unknown }
 
 
-export type JsonPrimitive = string | number | boolean | null;
-export type JsonObject = { [key: string]: JsonPrimitive | JsonObject | JsonPrimitive[] | JsonObject[] | (JsonPrimitive | JsonObject)[] }
-export type Json = JsonPrimitive | Json[] | JsonObject
+/**
+ * - `T` => Expected shape
+ * - `U` => User defined shape
+ * - `Exclude<keyof U, keyof T>`
+ *     - Ensures U has no extra keys in it
+ *     - Puts U keys into array and then removes keys also in T
+ *     - So if U has any extra keys we don't match exact keys amongst objects
+ * - `Exclude<keyof U, keyof T> extends never`
+ *     - IF the set difference between keys is never (empty) THEN pass
+ * - Why `Exclude<keyof U, keyof T>` AND `Exclude<keyof T, keyof U>`
+ *     - Checking both directions
+ *     - Way 1: `U` has no extra keys
+ *     - Way 2: `T` has no extra keys
+ * - IF truthy we don't have exact keys 
+ * - If falsy (`never`) we have exact keys so return `U` aka the keys
+ */
+export type ExactKeys<T, U> = Exclude<keyof U, keyof T> extends never
+  ? (Exclude<keyof T, keyof U> extends never
+    ? U
+    : never
+  )
+  : never
 
+
+/**
+ * - From the shape T
+ * - Replace its values w/ unknown
+ * - Enforce that the keys are exactly that of T
+ */
+export type AnyValue<T> = ExactKeys<T, AllowAnyValue<T>>
+
+
+/** The fn provided to Stream, Load & Async */
+export type FetchFn<
+  T_Req extends BaseApiReq,
+  T_Res_Data extends AceResData
+> = (req: T_Req) => Promise<AceResponse<T_Res_Data>>
+
+
+/**
+ * - `undefined extends AllowUndefinedIfNoRequired<T>`
+ *     - Is the type `undefined` assignable to the type `AllowUndefinedIfNoRequired<T>`
+ *     - Does T have no required keys
+ */
+export type MaybeOptionalArg<T> = undefined extends AllowUndefinedIfNoRequired<T>
+  ? [req?: AllowUndefinedIfNoRequired<T>] // no required keys → req optional
+  : [req: AllowUndefinedIfNoRequired<T>] // required keys → req required
+
+
+export type LoadStatus = 'loading' | 'error' | 'storeRendered' | 'success'
+
+export type AsyncStatus = 'idle' | 'loading' | 'error' | 'success'
+
+export type StreamStatus = 'loading' | 'error' | 'storeRendered' | 'success'
+
+
+export type UIProps<
+  T_Data extends AceResData,
+  T_For_Item extends AceResData = Array2ArrayItem<T_Data>
+> = (
+  UISuspenseProps<T_Data> |
+  UIForProps<T_Data, T_For_Item> |
+  UIIndexProps<T_Data, T_For_Item> |
+  UIDefaultProps
+) & {
+  error?: UIErrorFn,
+  onLoad?: Accessor<JSX.Element>
+}
+
+
+export type UIErrorFn = (error: AceResErrorEither['error']) => JSX.Element
+
+
+export type UISuspenseFn<T_Data> = (data?: T_Data | null) => JSX.Element
+
+
+export type UILoopDataFn<T_Res_Data extends AceResData, T_For_Item extends AceResData> = (res: AceResEither<T_Res_Data>['data']) => T_For_Item[] | undefined | null
+
+
+export type UIForFn<T_For_Item> = (item: T_For_Item | null, index: Accessor<number>) => JSX.Element
+
+
+export type UIIndexFn<T_For_Item> = (item: () => T_For_Item | null, index: number) => JSX.Element;
+
+
+export type UIDefaultProps = {
+  'suspense'?: never;
+  loopData?: never;
+  for?: never;
+  index?: never;
+}
+
+
+export type UISuspenseProps<T_Res extends AceResData> = {
+  'suspense': UISuspenseFn<T_Res>
+  for?: never
+  index?: never
+  loopData?: never
+}
+
+
+export type UIForProps<T_Res_Data extends AceResData, T_For_Item extends AceResData> = {
+  for: UIForFn<T_For_Item>
+  loopData?: UILoopDataFn<T_Res_Data, T_For_Item>
+  index?: never
+  'suspense'?: never
+}
+
+
+export type UIIndexProps<T_Res extends AceResData, T_For_Item extends AceResData> = {
+  index: UIIndexFn<T_For_Item>
+  loopData?: UILoopDataFn<T_Res, T_For_Item>
+  for?: never
+  'suspense'?: never
+}
+
+
+/** Response that comes from FE Store */
+export type FetchStoreResponse<T_Res extends AceResData> = AceResEither<T_Res> | null | undefined
+
+
+/** Fetch `.response()` */
+export type FetchResponseAccessor<T_Res extends AceResData> = Accessor<AceResEither<T_Res> | null | undefined>
 
 /** 
  * - Source: `import type { APIEvent } from '@solidjs/start/server'`
@@ -388,20 +444,28 @@ export type FetchEvent = SolidFetchEvent
 
 
 /** 
- * - Anonymous async function (aaf) that runs b4 api and/or route fn
- * - If the aaf's response is truthy, that response is given to client & the api and/or route fn is not called, else the api and/or route fn is called
- * - To share data between b4 function and other b4 function and the api fn add data to event.locals
+ * - Async function that runs before api `res` function
+ * - IF the b4's response is truthy THEN that response is given to client & the api `res` function is not called ELSE the api `res` function is called
+ * - To share data between b4 function and/or the api `res` function add data to `event.locals` & update the generic
+ * @example
+    ```ts
+    export const exampleB4: B4<{ example: boolean }> = async (scope) => {
+      scope.event.locals.example = true
+    }
+    ```
  */
-export type B4<T_Locals extends BaseEventLocals = {}> = (scope: ScopeBE<any, any, any, T_Locals>) => Promise<Response | void>
+export type B4<T_Locals extends BaseEventLocals = {}, T_Req extends BaseApiReq = BaseApiReq> = (scope: ScopeBE<T_Req, T_Locals>) => Promise<Response | void>
 
 
 /** The object that is passed between b4 async functions and given to the api */
-export type BaseEventLocals = Record<string, any>
+export type BaseEventLocals = {
+  [key: string]: any
+}
 
 
 /** 
  * - Receives: B4
- * - Gives: The type for the event.locals this B4 adds
+ * - Gives: The type for the `event.locals` this B4 adds
 */
 export type B42Locals<T_B4> = T_B4 extends B4<infer T_Locals>
   ? T_Locals
@@ -409,107 +473,96 @@ export type B42Locals<T_B4> = T_B4 extends B4<infer T_Locals>
 
 
 /**
- * - Merge the event.locals types from an array of B4 functions
- * - T_B4Head: the first element in T_B4_Array
- * - T_B4Tail: the remaining elements in T_B4_Array
- * - Extract locals from the first B4
- * - Merge with the locals from the rest recursively
- * - Base case: the array is empty
+ * Merge the event.locals types from an array of B4 functions
  */
-export type MergeLocals<T_B4_Array extends B4<any>[]> = T_B4_Array extends [infer T_B4Head, ...infer T_B4Tail]
-  ? B42Locals<T_B4Head> & MergeLocals<T_B4Tail extends B4<any>[] ? T_B4Tail : []>
+export type MergeLocals<T extends readonly B4<any>[]> = T extends readonly [infer H, ...infer R]
+  ? B42Locals<H> & MergeLocals<R extends readonly B4<any>[] ? R : []>
   : {}
 
 
-export type CMSItem = {
-  /** DB id */
-  id: number
-  /** Describes what this CMS item is for */
-  label: string
-  /** Markdown content */
-  content: string
-  /** The page this content is on, its sql id */
-  pageId: number
-  /** The page this content is on, its name */
-  pageName: string
-  /** Boolean, does the content include markdown? */
-  isMarkdown: number
-}
-
-export type CMSMap = Map<number, Signal<CMSItem | undefined>>
+export type RouteReq2PathParams<T extends BaseRouteReq> = T['pathParams']
 
 
-/**
- * Goal w/ 3 types below: Enforce the exact shape of keys from InferOutput<T> @ `parse()`
- * Allow more flexible values (e.g., string | null instead of just string) b/c `fd()` has no guarantee's on response but valibot will guarantee that but atleast the object shape going into parse can be enforced, let valibot do the actual value enforcing
- * Disallow extra keys not in the inferred shape.
- * If the input is type any, like when await res.json() that will be allowed, but if any keys are known they must match the schema and the parser will do a thorough check of values
- */
+export type RouteReq2SearchParams<T extends BaseRouteReq> = T['searchParams']
 
 
-/**
- * - What:
- *     - Loop through each key in T
- *     - Assign the type `unknown` to each key
- * - Why:
- *     - Remember the goal above, correct keys, any (unknown) value
- * - So:
- *     - IF T is { aloha: boolean } THEN AllowAnyValue<T> is { aloha: unknown }
- */
-type AllowAnyValue<T> = { [K in keyof T]: unknown }
+/** 
+ * - Receives: Route
+ * - Gives: Route path params type
+*/
+export type Route2PathParams<T_Route extends Route<any>> = T_Route extends Route<infer T_Req>
+  ? GetPopulated<RouteReq2PathParams<T_Req>>
+  : undefined
 
 
-/**
- * - Exclude<keyof U, keyof T>
- *     - Ensures U has no extra keys in it
- *     - Puts U keys into array and then removes keys also in T
- *     - So if U has any extra keys we don't match exact keys amongst objects
- * - If `Exclude<keyof T, keyof U>` is truthy we don't have exact keys which will throw a ts errow with the extends `never` and if we do we'll return U aka the object keys
- */
-type ExactKeys<T, U> = Exclude<keyof U, keyof T> extends never
-  ? Exclude<keyof T, keyof U> extends never
-  ? U
+/** 
+ * - Receives: Route
+ * - Gives: Route search params type
+*/
+export type Route2SearchParams<T_Route extends Route<any>> = T_Route extends Route<infer T_Req>
+  ? GetPopulated<RouteReq2SearchParams<T_Req>>
+  : undefined
+
+
+/** 
+ * - Receives: Route Path
+ * - Gives: Type @ new Route()
+*/
+export type RoutePath2Route<T_Path extends keyof MapRoutes> = MapRoutes[T_Path] extends { route: () => Promise<infer T_Route> } //  infer the Raw loader return
+  ? T_Route extends AnyRoute // only keep it if it’s actually a new Route()
+  ? T_Route
   : never
-  : never;
+  : never
+
+
+/** 
+ * - Receives: Route path
+ * - Gives: The type for that route's path params
+*/
+export type RoutePath2PathParams<T_Path extends Routes> = Route2PathParams<RoutePath2Route<T_Path>>
+
+
+/** 
+ * - Receives: Route path
+ * - Gives: The type for that route's search params
+*/
+export type RoutePath2SearchParams<T_Path extends Routes> = Route2SearchParams<RoutePath2Route<T_Path>>
+
+
+/** The component to render for a route */
+export type RouteComponent<T_Req extends BaseRouteReq> = (scope: ScopeComponent<T_Req>) => JSX.Element
+
+
+/** The component to render for a layout */
+export type LayoutComponent = (scope: ScopeComponent) => JSX.Element
 
 
 /**
- * - From the shape T
- * - Replace its values w/ unknown
- * - Enforce that the keys are exactly that of T
+ * Ensures the user-defined shape U contains only keys that exist in the expected shape T.
+ * This is used when T contains optional keys (T?) and the input U is allowed to omit them.
+ * This checks ONLY for excess keys in U, allowing U to be a subset of T's keys.
+ *
+ * @template T - The expected shape (e.g., ApiInputSchema, where keys are optional).
+ * @template U - The user-defined shape (e.g., { pathParams: {...} }).
+ * @returns U if U contains no extra keys, otherwise never (error).
  */
-export type AnyValue<T> = ExactKeys<T, AllowAnyValue<T>>
+export type StrictSubsetKeys<T, U> = Exclude<keyof U, keyof T> extends never ? U : never;
 
 
-/** We support parsing / validations of path params, search params and api bodies by valibot, zod or custom (and anyone else) and we do that by using this base parser */
-export type Parser<T> = (input: unknown) => T
+/** If object has keys return object, else return undefined */
+export type GetPopulated<T> = IsPopulated<T> extends true ? T : undefined
 
 
-/** The api methods we support */
-export type ApiMethods = InferEnums<typeof apiMethods>
+/** If testing item is an object and has keys returns true, else return false */
+export type IsPopulated<T> = T extends object ? [keyof T] extends [never] ? false : true : false
 
 
-/** 
- * - Atom's in Ace = frontend data that can be persisted to all the locations mentioned here:
- * - **idb** is Index Db: `~ hundreds of MBs` - Persists post page refresh, across all tabs & through browser refreh (best @ home, they trust this device a lot & got tons of space)
- * - **ls** is Local Storage: `~5 MB` - Persists post page refresh, across all tabs & through browser refreh (good @ home, they trust this device a lot & got some space)
- * - **ss** is Session Storage: `~5 MB` - Persists post page refresh, across all tabs but not through browser refreh, (best @ library, when I close the browser my data is gone)
- * - **m** is Memory: `available RAM` - Not shared between tabs, and not persisted after any refresh, (best for ephemeral or private data that can exist on the sceen and that's it)
- */
-export type AtomSaveLocations = InferEnums<typeof atomPersit>
-
-
-/** 
- * - Atom's in Ace = frontend data that can be persisted to all the locations mentioned @ `AtomSaveLocations`
- * - `AtomIs` helps us ensure that we serialize and deserialize to and from persistance correctly
- */
-export type AtomIs = InferEnums<typeof atomIs>
-
-
-export type RefFn = (el: HTMLElement | null) => void
-
-
+/** FE store data that can persist to memory, session storage, local storage or index db */
 export type Atoms = Record<string, Atom<any>>
+
+
+/** Enum of allowed Atom save locations */
+export type AtomSaveLocations = InferEnums<typeof atomPersit>
 
 
 /** 
@@ -517,6 +570,10 @@ export type Atoms = Record<string, Atom<any>>
  * - Gives: The type of the Atom, string
  */
 export type InferAtom<T> = T extends Atom<infer U> ? U : never
+
+
+/** `AtomIs` helps us ensure that we serialize and deserialize to and from persistance correctly */
+export type AtomIs = InferEnums<typeof atomIs>
 
 
 /** 
@@ -534,6 +591,7 @@ export type Atoms2Store<T_Atoms extends Atoms> = {
   [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>
 }
 
+
 /**
  * - Receives: Atoms
  * - Gives: A union of all the keys (string literals) present in the store's schema.
@@ -542,210 +600,62 @@ export type Atoms2Keys<T_Atoms extends Atoms> = keyof T_Atoms
 
 
 /**
- * - Strict, key-aware overloads up to 8 levels deep
- * - Each call returns a RefFn suitable for `ref` attribute
+ * - Converts arrays into a strig key
+ * - Example: `const id = 360` -> `['customer', id]` -> `customer:360`
  */
-export type StoreRefBind<T extends Atoms> = {
-  <K1 extends keyof T>(k1: K1): RefFn
-
-  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>>(
-    k1: K1, k2: K2): RefFn
-
-  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>, K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>>(
-    k1: K1, k2: K2, k3: K3): RefFn
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4): RefFn
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): RefFn
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6): RefFn
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7): RefFn
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
-    K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8): RefFn
-}
+export type AceKey = string | (string | number)[]
 
 
-export type StoreSync<T extends Atoms> = {
-  <
-    K1 extends keyof T
-  >(k1: K1, value: InferAtom<T[K1]>, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>
-  >(k1: K1, k2: K2, value: InferAtom<InferAtom<T[K1]>[K2]>, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>
-  >(k1: K1, k2: K2, k3: K3, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
-
-  <
-    K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
-    K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8, value: any, opts?: Parameters<typeof solidReconcile>[1]): void
-}
+/**
+ * - Receives: Array
+ * - Gives: Array Item
+*/
+export type Array2ArrayItem<T_Array> = T_Array extends (infer T_Array_Item)[]
+  ? T_Array_Item
+  : T_Array
 
 
-export type StoreCopy<T> = {
-  <K1 extends keyof T>(
-    k1: K1,
-    fn: (draft: InferAtom<T[K1]>) => void
-  ): void
-
-  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>>(
-    k1: K1,
-    k2: K2,
-    fn: (draft: InferAtom<InferAtom<T[K1]>[K2]>) => void
-  ): void
-
-  <K1 extends keyof T, K2 extends keyof InferAtom<T[K1]>, K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>>(
-    k1: K1,
-    k2: K2,
-    k3: K3,
-    fn: (draft: any) => void
-  ): void
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, fn: (draft: any) => void): void
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, fn: (draft: any) => void): void
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, fn: (draft: any) => void): void
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, fn: (draft: any) => void): void
-
-  <K1 extends keyof T,
-    K2 extends keyof InferAtom<T[K1]>,
-    K3 extends keyof InferAtom<InferAtom<T[K1]>[K2]>,
-    K4 extends keyof InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>,
-    K5 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>,
-    K6 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>,
-    K7 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>,
-    K8 extends keyof InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<InferAtom<T[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7]>
-  >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6, k7: K7, k8: K8, fn: (draft: any) => void): void
-}
+export type OptionalIfNoRequired<Name extends string, T> = RequiredKeys<T> extends never
+  ? { [P in Name]?: T }
+  : { [P in Name]: T }
 
 
-export type BaseStoreContext<T_Atoms extends Atoms> = {
+export type RequiredKeys<T_Obj> = {
+  [T_Key in keyof T_Obj]-?: {} extends Pick<T_Obj, T_Key> ? never : T_Key
+}[keyof T_Obj]
+
+
+export type AllowUndefinedIfNoRequired<T> = RequiredKeys<T> extends never ? T | undefined : T
+
+/** ❤️ Complex Store Types */
+
+
+export type BaseStoreCtx<T_Atoms extends Atoms> = {
   /**
    * - Showing the proper value for each Atom is important and this "_" variable helps us accomplish that
    * - IF an Atom has an init value we will start by showing that
    * - IF an Atom has some data saved on the fe locally (ex: index db) that will show over the init value once available
    * - IF an Atom has some data loaded from an API that will show over the fe local data once available
    */
-  _: BaseStoreContextInternal,
+  _: BaseStoreInternal,
 
   /**
    * Provided by Solid 
    * @link https://docs.solidjs.com/concepts/stores
    */
-  store: SolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+  store: Atoms2Store<T_Atoms>,
 
   /**
    * Provided by Solid 
    * @link https://docs.solidjs.com/concepts/stores
    */
-  setStore: SetStoreFunction<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+  setStore: SetStoreFunction<Atoms2Store<T_Atoms>>,
 
   /** 
    * Does: Solid's `setStore()` + Ace's `save()`
    * @link https://docs.solidjs.com/concepts/stores
    */
-  set: SetStoreFunction<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+  set: SetStoreFunction<Atoms2Store<T_Atoms>>,
 
   /** Your own index db instance that you can read and write too like a document db :) */
   idb: IndexDB,
@@ -755,13 +665,6 @@ export type BaseStoreContext<T_Atoms extends Atoms> = {
 
   /** Inspired by AngularJS ngModel, 2 way data binding between a variable in a store and an input, textarea or select */
   refBind: StoreRefBind<T_Atoms>,
-
-  /** 
-   * - Does: Solid's `setStore()` + Solid's `produce()` + Ace's `save()`
-   * - Convenient but not fine grained reactivity like `sync()` b/c the entire array/object is overwritten
-   * @link https://docs.solidjs.com/concepts/stores
-   */
-  copy: StoreCopy<T_Atoms>,
 
   /** 
    * - Does: Solid's `setStore()` + Solid's `reconcile()` + Ace's `save()`
@@ -775,25 +678,296 @@ export type BaseStoreContext<T_Atoms extends Atoms> = {
 }
 
 
-export type BaseStoreContextInternal = {
+export type BaseStoreInternal = {
   dontLoad: Set<string>,
   trackDontLoad: boolean
 }
 
 
-export type QueryType = InferEnums<typeof queryType>
+/** Function that is applied to a ref tsx attribute */
+export type RefFn = (el: HTMLElement | null) => void
 
 
-export type ChartJsMap = {
-  /** Aligned w/ label[], Good for sync() */
-  id: string
-  /** Aligned w/ data[] */
-  amount: number
+/**
+ * - Helps us support two way data binding between a store and form item
+ * - Ex: `<input ref={refBind('profile', 'email')} name="email" type="email" />`
+ * - TS gets very slow when these higher levels are uncommented b/c it has to start from the highest level first. 4 levels gives us 2 passed the response.data prop which is fair & fast
+ * - At runtime we support 7 levels deeps, if you'd like more levels deep @ compile-time uncomment the levels deep you'd love, ts may slow down tho
+ */
+export type StoreRefBind<T extends Atoms> = {
+  // // --- 7 Levels Deep ---
+  // <
+  //   K1 extends KeyOf<W<Atoms2Store<T>>>,
+  //   K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+  //   K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+  //   K4 extends KeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>,
+  //   K5 extends KeyOf<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>>,
+  //   K6 extends KeyOf<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>>,
+  //   K7 extends MutableKeyOf<W<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>>
+  // >(
+  //   k1: K1, // Note: Using the raw key type K1 here, not Part<...>, is cleaner for simple pathing
+  //   k2: K2,
+  //   k3: K3,
+  //   k4: K4,
+  //   k5: K5,
+  //   k6: K6,
+  //   k7: K7
+  // ): RefFn;
+
+  // // --- 6 Levels Deep ---
+  // <
+  //   K1 extends KeyOf<W<Atoms2Store<T>>>,
+  //   K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+  //   K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+  //   K4 extends KeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>,
+  //   K5 extends KeyOf<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>>,
+  //   K6 extends MutableKeyOf<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>>
+  // >(
+  //   k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6
+  // ): RefFn;
+
+  // // --- 5 Levels Deep ---
+  // <
+  //   K1 extends KeyOf<W<Atoms2Store<T>>>,
+  //   K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+  //   K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+  //   K4 extends KeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>,
+  //   K5 extends MutableKeyOf<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>>
+  // >(
+  //   k1: K1, k2: K2, k3: K3, k4: K4, k5: K5
+  // ): RefFn;
+
+  // --- 4 Levels Deep ---
+  <
+    K1 extends KeyOf<W<Atoms2Store<T>>>,
+    K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+    K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+    K4 extends MutableKeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>
+  >(
+    k1: K1, k2: K2, k3: K3, k4: K4
+  ): RefFn;
+
+  // --- 3 Levels Deep ---
+  <
+    K1 extends KeyOf<W<Atoms2Store<T>>>,
+    K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+    K3 extends MutableKeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>
+  >(
+    k1: K1, k2: K2, k3: K3
+  ): RefFn;
+
+  // --- 2 Levels Deep ---
+  <
+    K1 extends KeyOf<W<Atoms2Store<T>>>,
+    K2 extends MutableKeyOf<W<W<Atoms2Store<T>>[K1]>>
+  >(
+    k1: K1, k2: K2
+  ): RefFn;
+
+  // --- 1 Level Deep ---
+  <
+    K1 extends MutableKeyOf<W<Atoms2Store<T>>>
+  >(
+    k1: K1
+  ): RefFn;
 }
 
 
-export type ChartJsRegisterFn = () => void
+type ReconcileOptions = Parameters<typeof solidReconcile>[1]
 
 
-export type AgGridRegisterFn = () => void
+/**
+ * - Helps us call Solid's set() + Solid's reconcile() + Ace's save() all at once
+ * - Ex: `sync('finances', 'data', 'categories', [...currentCategories, newCategory])`
+ * - TS gets very slow when these higher levels are uncommented b/c it has to start from the highest level first. 4 levels gives us 2 passed the response.data prop which is fair & fast
+ * - At runtime we support 7 levels deeps, if you'd like more levels deep @ compile-time uncomment the levels deep you'd love, ts may slow down tho
+ */
+export type StoreSync<T extends Atoms> = { // 
+  // // --- 7 Levels Deep ---
+  // <
+  //   K1 extends KeyOf<W<Atoms2Store<T>>>,
+  //   K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+  //   K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+  //   K4 extends KeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>,
+  //   K5 extends KeyOf<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>>,
+  //   K6 extends KeyOf<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>>,
+  //   K7 extends MutableKeyOf<W<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>>
+  // >(
+  //   k1: Part<W<Atoms2Store<T>>, K1>,
+  //   k2: Part<W<W<Atoms2Store<T>>[K1]>, K2>,
+  //   k3: Part<W<W<W<Atoms2Store<T>>[K1]>[K2]>, K3>,
+  //   k4: Part<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>, K4>,
+  //   k5: Part<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>, K5>,
+  //   k6: Part<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>, K6>,
+  //   k7: Part<W<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>, K7>,
+  //   value: StoreSetter<W<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>[K6]>[K7], [K7, K6, K5, K4, K3, K2, K1]>,
+  //   opts?: ReconcileOptions
+  // ): void;
 
+  // // --- 6 Levels Deep ---
+  // <
+  //   K1 extends KeyOf<W<Atoms2Store<T>>>,
+  //   K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+  //   K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+  //   K4 extends KeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>,
+  //   K5 extends KeyOf<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>>,
+  //   K6 extends MutableKeyOf<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>>
+  // >(
+  //   k1: Part<W<Atoms2Store<T>>, K1>,
+  //   k2: Part<W<W<Atoms2Store<T>>[K1]>, K2>,
+  //   k3: Part<W<W<W<Atoms2Store<T>>[K1]>[K2]>, K3>,
+  //   k4: Part<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>, K4>,
+  //   k5: Part<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>, K5>,
+  //   k6: Part<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>, K6>,
+  //   value: StoreSetter<W<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5]>[K6], [K6, K5, K4, K3, K2, K1]>,
+  //   opts?: ReconcileOptions
+  // ): void;
+
+  // // --- 5 Levels Deep ---
+  // <
+  //   K1 extends KeyOf<W<Atoms2Store<T>>>,
+  //   K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+  //   K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+  //   K4 extends KeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>,
+  //   K5 extends MutableKeyOf<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>>
+  // >(
+  //   k1: Part<W<Atoms2Store<T>>, K1>,
+  //   k2: Part<W<W<Atoms2Store<T>>[K1]>, K2>,
+  //   k3: Part<W<W<W<Atoms2Store<T>>[K1]>[K2]>, K3>,
+  //   k4: Part<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>, K4>,
+  //   k5: Part<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>, K5>,
+  //   value: StoreSetter<W<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4]>[K5], [K5, K4, K3, K2, K1]>,
+  //   opts?: ReconcileOptions
+  // ): void;
+
+  // --- 4 Levels Deep ---
+  <
+    K1 extends KeyOf<W<Atoms2Store<T>>>,
+    K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+    K3 extends KeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>,
+    K4 extends MutableKeyOf<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>>
+  >(
+    k1: Part<W<Atoms2Store<T>>, K1>,
+    k2: Part<W<W<Atoms2Store<T>>[K1]>, K2>,
+    k3: Part<W<W<W<Atoms2Store<T>>[K1]>[K2]>, K3>,
+    k4: Part<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>, K4>,
+    value: StoreSetter<W<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3]>[K4], [K4, K3, K2, K1]>,
+    opts?: ReconcileOptions
+  ): void;
+
+  // --- 3 Levels Deep ---
+  <
+    K1 extends KeyOf<W<Atoms2Store<T>>>,
+    K2 extends KeyOf<W<W<Atoms2Store<T>>[K1]>>,
+    K3 extends MutableKeyOf<W<W<W<Atoms2Store<T>>[K1]>[K2]>>
+  >(
+    k1: Part<W<Atoms2Store<T>>, K1>,
+    k2: Part<W<W<Atoms2Store<T>>[K1]>, K2>,
+    k3: Part<W<W<W<Atoms2Store<T>>[K1]>[K2]>, K3>,
+    value: StoreSetter<W<W<W<Atoms2Store<T>>[K1]>[K2]>[K3], [K3, K2, K1]>,
+    opts?: ReconcileOptions
+  ): void;
+
+  // --- 2 Levels Deep ---
+  <
+    K1 extends KeyOf<W<Atoms2Store<T>>>,
+    K2 extends MutableKeyOf<W<W<Atoms2Store<T>>[K1]>>
+  >(
+    k1: Part<W<Atoms2Store<T>>, K1>,
+    k2: Part<W<W<Atoms2Store<T>>[K1]>, K2>,
+    value: StoreSetter<W<W<Atoms2Store<T>>[K1]>[K2], [K2, K1]>,
+    opts?: ReconcileOptions
+  ): void;
+
+  // --- 1 Level Deep (Base Atom Update) ---
+  <
+    K1 extends MutableKeyOf<W<Atoms2Store<T>>>
+  >(
+    k1: Part<W<Atoms2Store<T>>, K1>,
+    value: StoreSetter<W<Atoms2Store<T>>[K1], [K1]>,
+    opts?: ReconcileOptions
+  ): void;
+}
+
+
+/** ❤️ Essential / Core Solid Utilities */
+
+/** Lists all values that should not be proxied (primitives, functions, null, undefined, etc.) */
+type NotWrappable = string | number | bigint | symbol | boolean | Function | null | undefined | SolidStore.Unwrappable[keyof SolidStore.Unwrappable]
+
+/** Stands for Wrappable, lets us know if T can be a reactive proxy */
+type W<T> = Exclude<T, NotWrappable>
+
+/**
+ * - Smart replacement for the standard TypeScript keyof T
+ * - Correctly handle arrays and tuples
+ */
+type KeyOf<T> = number extends keyof T
+  ? 0 extends 1 & T
+  ? keyof T
+  : [T] extends [never]
+  ? never
+  : [T] extends [readonly unknown[]]
+  ? number
+  : keyof T
+  : keyof T
+
+/** Filters out all readonly properties from T, leaving a type composed only of the mutable properties */
+type PickMutable<T> = {
+  [K in keyof T as (<U>() => U extends {
+    [V in K]: T[V];
+  } ? 1 : 2) extends <U>() => U extends {
+    -readonly [V in K]: T[V];
+  } ? 1 : 2 ? K : never]: T[K];
+}
+
+/** Determine the union of all keys in a type T that are safe to be written to */
+type MutableKeyOf<T> = KeyOf<T> & keyof PickMutable<T>
+
+/**
+ * - Designed to provide a "partial" version of an object or array
+ * - Lets us update a structure by supplying only a subset of its properties without causing a TS error
+ * - Main function is to mimic Partial<T> for standard objects AND to provide special, robust handling for arrays and tuples
+ */
+type CustomPartial<T> = T extends readonly unknown[] ? "0" extends keyof T ? {
+  [K in Extract<keyof T, `${number}`>]?: T[K];
+} : {
+  [x: number]: T[number];
+} : Partial<T>
+
+/**
+ * - `item: T`: The current element being processed in the array
+ * - `index`: number: The index of the current element in the array
+ * - Allows a filter function in the path, rather than a fixed key or index
+ */
+type ArrayFilterFn<T> = (item: T, index: number) => boolean
+
+/**
+ * - Lets us update a subset of array elements without using a filter function or explicitly listing every index
+ * - `from`: The starting index (inclusive) of the range. If omitted, the range starts at index 0
+ * - `to`: The ending index (exclusive) of the range. If omitted, the range ends at the last element
+ * - `by`: The step size for iteration (e.g., updating every 2nd or 3rd element). If omitted, the step size is 1
+ */
+type StorePathRange = {
+  from?: number,
+  to?: number,
+  by?: number,
+}
+
+/**
+ * - Defines all the valid ways a single segment of a deep path (k1, k2, k3, etc.) can be expressed
+ * - What allows a single argument to accept a string, an array of strings, a function, or an object
+ */
+type Part<T, K extends KeyOf<T> = KeyOf<T>> =
+  | K
+  | ([K] extends [never] ? never : readonly K[])
+  | ([T] extends [readonly unknown[]] ? ArrayFilterFn<T[number]> | StorePathRange : never)
+
+/**
+ * - Defines all the valid input forms that the final value argument can take when updating a property in a SolidJS store (
+ * - Ex: The last argument @ `sync()`
+ */
+type StoreSetter<T, U extends PropertyKey[] = []> =
+  | T
+  | CustomPartial<T>
+  | ((prevState: T, traversed: U) => T | CustomPartial<T>)

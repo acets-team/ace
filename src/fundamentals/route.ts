@@ -6,22 +6,21 @@
 
 
 import type { Layout } from './layout'
-import { pathnameToPattern } from './pathnameToPattern'
-import type { RouteComponent, UrlPathParams, UrlSearchParams, Parser } from './types'
+import type { RouteComponent, BaseRouteReq, Parser, Parser2Req } from './types'
 
 
 
-export class Route<T_Params extends UrlPathParams = any, T_Search extends UrlSearchParams = any> {
+export class Route<T_Req extends BaseRouteReq = BaseRouteReq> {
   /** Typed loosely so we may freely mutate it at runtime */
   #storage: RouteStorage
   
 
   constructor(path: string) {
-    this.#storage = { path, pattern: pathnameToPattern(path) }
+    this.#storage = { path }
   }
 
   /** Public .values getter that casts #storage into RouteValues<…>, giving us perfect intelliSense */
-  public get values(): RouteValues<T_Params, T_Search> {
+  public get values(): RouteValues<T_Req> {
     return this.#storage
   }
 
@@ -46,8 +45,7 @@ export class Route<T_Params extends UrlPathParams = any, T_Search extends UrlSea
       })
     ```
    */
-  component(component: RouteComponent<T_Params, T_Search>): this {
-    this.#storage.component = component
+  component(component: RouteComponent<T_Req>): this {    this.#storage.component = component
     return this
   }
 
@@ -62,54 +60,24 @@ export class Route<T_Params extends UrlPathParams = any, T_Search extends UrlSea
   }
 
 
-  /**
-   * ### Set search params for this route
-   * - @ `.component()` use `scope.PathParams()` if you'd like reactive path params that can work in `createEffect()`
-   * - @ `.component()` use `scope.pathParams` if you don't need a reactive path params
-   * @example
-    ```ts
-    export default new Route('/fortune/:id')
-      .pathParams(vParse(object({ id: vNum() })))
-    ```
-   */
-  pathParams<NewParams extends UrlPathParams>(schema: Parser<NewParams>): Route<NewParams, T_Search> {
-    this.#storage.pathParamsParser = schema
-    return this as any
-  }
-
-
-  /**
-   * ### Set search params for this route
-   * - @ `.component()` use `scope.SearchParams()` if you'd like reactive search params that can work in `createEffect()`
-   * - @ `.component()` use `scope.searchParams` if you don't need a reactive search params
-   * @example
-    ```ts
-    export default new Route('/spark')
-      .searchParams(vParse(object({ modal: optional(vBool()) })))
-    ```
-   */
-  searchParams<NewSearch extends UrlSearchParams>(schema: Parser<NewSearch>): Route<T_Params, NewSearch> {
-    this.#storage.searchParamsParser = schema
+  parser<T_Parser extends Parser<any>>(parser: T_Parser): Route<Parser2Req<T_Parser>> {
+    this.#storage.requestParser = parser
     return this as any
   }
 }
 
 
-export type RouteValues<T_Params extends UrlPathParams, T_Search extends UrlSearchParams> = {
+export type RouteValues<T_Req extends BaseRouteReq> = {
   path: string
-  pattern: RegExp
   layouts?: Layout[]
-  component?: RouteComponent<T_Params, T_Search>
-  pathParamsParser?: Parser<T_Params>
-  searchParamsParser?: Parser<T_Search>
+  component?: RouteComponent<T_Req>
+  requestParser?: Parser<T_Req>
 }
 
 
 export type RouteStorage = {
   path: string
-  pattern: RegExp
   layouts?: Layout[]
-  component?: RouteComponent<any, any>
-  pathParamsParser?: Parser<any>
-  searchParamsParser?: Parser<any>
+  component?: RouteComponent<any>
+  requestParser?: Parser<any>
 }

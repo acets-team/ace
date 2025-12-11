@@ -4,9 +4,10 @@ import { buildWrite } from './buildWrite.js'
 import { fundamentals } from '../../fundamentals.js'
 import { cuteLog } from '../../fundamentals/cuteLog.js'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { type TreeCreateRoute } from '../../treeCreate.js'
 import { sep, join, relative, resolve, dirname } from 'node:path'
+import type { PathnameSegments } from '../../pathname2Segments.js'
 import { Enums, type InferEnums } from '../../fundamentals/enums.js'
-import { pathnameToPattern } from '../../fundamentals/pathnameToPattern.js'
 
 
 /**
@@ -14,7 +15,7 @@ import { pathnameToPattern } from '../../fundamentals/pathnameToPattern.js'
  * - Configured w/ `ace.config.js`
  * - Command Options:
  *     - `--verbose`: Log what's happening
- * @param cwd Common working directory
+ * @param cwd Current working directory
  */
 export async function cliBuild(cwd: string) {
   const build = await Build.Create(cwd)
@@ -36,13 +37,20 @@ export class Build {
   /** `./dist/src/cli/build/build.js` */
   dirDistBuildJs: string
   fsVanillaTypes?: string
+  routes: RouteArray = []
+  apis: {
+    GET: ApiArray,
+    POST: ApiArray,
+    PUT: ApiArray,
+    DELETE: ApiArray,
+  } = { GET: [], POST: [], PUT: [], DELETE: []}
   dirWriteFundamentals: string
   fsParseMarkdownFolders?: string
   whiteList = new FundamentalWhiteList()
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
-  writes: Writes = { types: '', constGET: '', constPOST: '', constPUT: '', constDELETE: '', constRoutes: '', apiFunctions: '', constApiName: '', apiLoaders: '' }
+  writes: Writes = { types: '', mapApis: '', mapRoutes: '' }
 
   /**
    * - We start off with a single root node
@@ -50,7 +58,7 @@ export class Build {
    * - Each time we discover a Route @ `bindAppData()` we insert it into this tree
    * - If the route has no layouts => it goes into root.routes
    */
-  tree: TreeNode = { root: true, routes: [], layouts: new Map() }
+  tree: CreateAppTreeNode = { root: true, routes: [], layouts: new Map() }
 
 
   /**
@@ -140,23 +148,23 @@ export class Build {
   }
 
 
-  getConstEntry = (props: { pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', method?: string, fnName?: string }) => {
-    if (props.pathIsKey && props.fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
-      return `  '${props.urlPath}': regexApiNames.${props.fnName},\n`
-    } else if (props.fnName) { // regexApiNames
-      return `  '${props.fnName}': {
-      path: '${props.urlPath}',
-      method: '${props.moduleName}',
-      pattern: ${pathnameToPattern(props.urlPath)},
-      loader: apiLoaders.${props.fnName}Loader,
-    },\n`
-    } else { // regexRoutes
-      return `  '${props.urlPath}': {
-      pattern: ${pathnameToPattern(props.urlPath)},
-      loader: () => import(${this.fsPath2Relative(props.fsPath)}).then((m) => m.${props.moduleName}),
-    },\n`
-    }
-  }
+  // getConstEntry = (props: { pathIsKey: boolean, urlPath: string, fsPath: string, moduleName: ApiMethods | 'default', method?: string, fnName?: string }) => {
+  //   if (props.pathIsKey && props.fnName) { // regexApiGets, regexApiPosts, regexApiDeletes, regexApiPuts
+  //     return `  '${props.urlPath}': regexApiNames.${props.fnName},\n`
+  //   } else if (props.fnName) { // regexApiNames
+  //     return `  '${props.fnName}': {
+  //     path: '${props.urlPath}',
+  //     method: '${props.moduleName}',
+  //     pattern: ${pathnameToPattern(props.urlPath)},
+  //     loader: apiLoaders.${props.fnName}Loader,
+  //   },\n`
+  //   } else { // regexRoutes
+  //     return `  '${props.urlPath}': {
+  //     pattern: ${pathnameToPattern(props.urlPath)},
+  //     loader: () => import(${this.fsPath2Relative(props.fsPath)}).then((m) => m.${props.moduleName}),
+  //   },\n`
+  //   }
+  // }
 }
 
 
@@ -205,25 +213,37 @@ export type BuildRoute = {
  * - Routes that do not have layouts go into the root routes
  * - This way we can print the routes like a tree
  */
-export type TreeNode = {
+export type CreateAppTreeNode = {
   root: boolean,
   fsPath?: string,
   routes: BuildRoute[],
-  layouts: Map<string,TreeNode>
+  layouts: Map<string,CreateAppTreeNode>
 }
 
 
 export type Writes = {
   types: string,
-  constGET: string,
-  constPUT: string,
-  constPOST: string,
-  apiLoaders: string,
-  constDELETE: string,
-  constRoutes: string,
-  constApiName: string,
-  apiFunctions: string,
+  mapApis: string,
+  mapRoutes: string,
 }
+
+
+type ApiArray = (
+  TreeCreateRoute & {
+    fsPath: string,
+    infoName: string,
+    resolverName: string,
+    segments: PathnameSegments,
+  }
+)[]
+
+
+type RouteArray = (
+  TreeCreateRoute & {
+    fsPath: string,
+    segments: PathnameSegments,
+  }
+)[]
 
 
 const errors = {

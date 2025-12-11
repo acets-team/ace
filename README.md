@@ -10,7 +10,7 @@
 1. [Create API Route](#create-api-route)
 1. [Create Middleware](#create-api-route)
 1. [Path and Search Params](#path-and-search-params)
-1. [Valibot Helpers](#valibot-helpers)
+1. [Parser](#parser)
 1. [Create a Layout](#create-a-layout)
 1. [Create a Route](#create-a-route)
 1. [Call APIs](#call-apis)
@@ -67,7 +67,7 @@
 - Ace is a set of functions, classes, and types (**fundamentals**) to aid web developers. We’ve grouped these fundamentals into **plugins**. To use a plugins fundamentals, set that plugin to **true** in your [`ace.config.js`](#ace-config)! 🙏
 - [**Ace plugins:**](#ace-plugins)
   1. **[Solid](https://docs.solidjs.com/)** (optimal DOM updates)
-  1. **[Drizzle](https://orm.drizzle.team/)** (typesafe db updates)
+  1. **[Drizzle](https://orm.drizzle.team/)** (type-safe db updates)
   1. **[Turso](https://turso.tech/)** (Fast SQL DB)
   1. **[Cloudflare](https://www.cloudflare.com/)** (Region: Earth)
   1. **[AgGrid](https://www.ag-grid.com/)** (Scrollable, filterable & sortable tables)
@@ -80,7 +80,7 @@
 
 
 ## Ace Mission Statement
-**🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, typesafe and beautifully documented library! 🙏**
+**🌎 Unite industry leaders, to provide optimal web fundamentals, in a performant, type-safe and beautifully documented library! 🙏**
 
 
 
@@ -242,8 +242,8 @@
       .resolve(async (scope) => {
         await db
           .update(users)
-          .set({ email: scope.body.email }) // typesafe b/c updateEmailParser
-          .where(eq(users.id, scope.event.locals.session.userId)) // typesafe b/c sessionB4
+          .set({ email: scope.body.email }) // type-safe b/c updateEmailParser
+          .where(eq(users.id, scope.event.locals.session.userId)) // type-safe b/c sessionB4
 
         return scope.success('Updated!')
       })
@@ -252,7 +252,7 @@
     ```ts
     // Ace middleware is different then express middleware and for that reason we use a different name we call them b4 (before) functions b/c they run before your API resolve function
     // If a b4 returns anything that response is given as the Response
-    // To persist data from one b4 to the next or from a b4 to the resolve, place data into `event.locals` and update the functions generic type 🚨 By setting the generic type this lets downstream b4's or resolves know the type of your persisted data, so then in the resolve for example we'd have typesafety for `scope.event.locals.session` as seen in the api example above
+    // To persist data from one b4 to the next or from a b4 to the resolve, place data into `event.locals` and update the functions generic type 🚨 By setting the generic type this lets downstream b4's or resolves know the type of your persisted data, so then in the resolve for example we'd have type-safety for `scope.event.locals.session` as seen in the api example above
 
 
     import type { B4 } from '@ace/types'
@@ -288,7 +288,7 @@
 
 #### 🚨 Important
 - `.pathParams()` & `.searchParams()` @ `new Route()` & `new API()` work the same way!
-- IF params are valid THEN `scope.pathParams` and/or `scope.searchParams` will be set w/ their typesafe parsed values!
+- IF params are valid THEN `scope.pathParams` and/or `scope.searchParams` will be set w/ their type-safe parsed values!
 - And when working w/ `new API()` you may also pass a parser to `.body()` which if valid will be available @ `scope.body`
 
 #### ✅ Examples:
@@ -893,7 +893,7 @@
 - Why doesen't `Ace` use `Single Flight Mutations`?
     - The `Response` that comes from a `Single Flight Mutation` is framework specific & not a `JSON` shape we define
     - & b/c of how `RPC` functions are created, the `Request URL` may also be difficult to predict 
-    - We love **defined** & **typesafe**, `URLs` & `Responses`
+    - We love **defined** & **type-safe**, `URLs` & `Responses`
 
 
 
@@ -1084,7 +1084,7 @@
         - Get the children for a layout
         - IF not a layout OR no children THEN `undefined`
     - `scope.GET()`
-        - Call api `GET` method w/ **typesafe autocomplete**
+        - Call api `GET` method w/ **type-safe autocomplete**
         - Props:
             ```ts
             /**
@@ -1096,7 +1096,7 @@
             */
             ```
     - `scope.POST()`
-        - Call api `POST` method w/ **typesafe autocomplete**
+        - Call api `POST` method w/ **type-safe autocomplete**
         - Props:
             ```ts
             /**
@@ -1109,7 +1109,7 @@
             */
             ```
     - `scope.PUT()`
-        - Call api `PUT` method w/ **typesafe autocomplete**
+        - Call api `PUT` method w/ **type-safe autocomplete**
         - Props:
             ```ts
             /**
@@ -1122,7 +1122,7 @@
             */
             ```
     - `scope.DELETE()`
-        - Call api `DELETE` method w/ **typesafe autocomplete**
+        - Call api `DELETE` method w/ **type-safe autocomplete**
         - Props:
             ```ts
             /**
@@ -1165,12 +1165,26 @@ export default new Route404()
 
 
 ## Create a Typesafe Anchor
-- Path, pathParams & searchParams = **typesafe**
-- So IF path or search params are defined for this path as **required** THEN they'll be required here via TS IDE autocomplete intellisense
-- By default & configurable this component toggles an active class based on the current route 🥳
-```html
-<A path="/about">Learn More</A>
-```
+- `Path`, `pathParams` & `searchParams` = **type-safe**
+- IF `pathParams` or `searchParams` are defined for this route as **required** THEN they'll be required here @ compile-time (IDE autocomplee 🙌)
+- When anchor path matches the current route an `active` class is added to the generated anchor
+- When anchor path does not match the current route an `inactive` class is added to the generated anchor
+- Use the [SolidJS `end` prop](https://docs.solidjs.com/solid-router/reference/components/a) (ex: `<A path="/" $a={{ end: true }}>Home</A>`) if the match is too greedy. If true, only considers the link to be active when the current location matches the href exactly; if false, checks if the current location starts with href
+    ```tsx
+    import { A } from '@ace/a'
+
+    <A path="/about">Learn More</A>
+    ```
+- Props:
+  ```js
+  /**
+   * @param props.path - Path to navigate to, as defined @ `new Route()`
+   * @param props.pathParams - Route path params
+   * @param props.searchParams - Route search params
+   * @param props.children - Required
+   * @param props.$a - Add props to `<SolidA />` & the html dom `<a />`
+   */
+  ```
 
 
 
@@ -1330,7 +1344,7 @@ export default new Route404()
 - Example:
     ```tsx
     // How `.md?raw` works:
-      // at build-time, the markdown file is minified & bundled as a string literal 
+      // at build-time, the markdown file is bundled as a string literal 
       // so at run-time, there's no file I/O b/c the markdown is an in memory string constant 
 
     // 🚨 IF not highlighting code THEN `registerHljs` AND `hljsMarkdownItOptions` are not necessary
@@ -1348,7 +1362,7 @@ export default new Route404()
 - `Directives`:
     - `$info`:
         - Example: `<!--{ "$info": true, "$interpolate": true, "title": "What is Ace?", "slug": "what-is-ace" }-->`
-        - IF `$info.$interpolate` is `true` THEN `vars` from `$info` can be placed @ `markdown`, `component props`, `tab label` & `tab content`
+        - IF `$info.$interpolate` is `true` THEN `vars` from `$info` can be placed @ `markdown`, `component props`, `tab label` & `tab content`, example: `# {title} ❤️`
     - `$component`:
         - Adds a Solid component into markdown 🙌
         - Example: `<!--{ "$component": "Example", "title": "{title}" }-->`
@@ -1382,7 +1396,7 @@ export default new Route404()
 
 
 #### `parseMarkdownFolders()` ✅
-- Helpful when we have a folder of `.md` files and we'd love to get `typesafe` info about all of the markdowns w/in the folder
+- Helpful when we have a folder of `.md` files and we'd love to get `type-safe` info about all of the markdowns w/in the folder
 - Example: We've got a folder for posts and we wanna show each post title & link to it w/in a component
     - `Ace Markdown Directive`:
         ```html
@@ -1544,7 +1558,7 @@ export default new Route404()
 
     console.log(voiceParts.has('Tenor')) // false
 
-    console.log(voiceParts.keys.Bass) // 'Bass' & typesafe!
+    console.log(voiceParts.keys.Bass) // 'Bass' & type-safe!
     ```
 1. Complex:
     ```ts
@@ -2168,7 +2182,7 @@ export function SignIn() {
 
 
 ## Add Custom Fonts
-1. Place the `.tff` file in the `/public` folder, ex: `public/fonts/Quicksand.ttf`
+1. Place the `VariableFont_wght` > `.tff` file in the `/public` folder, ex: `public/fonts/Quicksand.ttf`
 1. Add font css: `src/app.css`
     ```css
     :root {
@@ -2471,6 +2485,11 @@ export function SignIn() {
       liveHosts?: Record<string, string>
       /** Would you like to log errors */
       logCaughtErrors?: boolean,
+      /** 
+      * - Optional, Specify an `id` and the `path` to a folder of markdowns from the current working directory
+      * - When defined the `mdFolders` will get a `parseMarkdownFolders()` helper created at build time
+      */
+      mdFolders?: { id: string, path: string }[]
     }
     ```
 
@@ -2732,6 +2751,7 @@ export function SignIn() {
 1. Install: `npm i @libsql/client -D`
 1. Install: `npm i drizzle-orm -D`
 1. Install: `npm i drizzle-kit -D`
+1. Add `turso: true` to `ace.config.ts` > `plugins` & then run `ace build local` OR `npm run dev` to import turso fundamentals
 1. Create [`./drizzle.config.ts`](https://orm.drizzle.team/docs/drizzle-config-file), example:
     ```ts
     // Helps Drizzle CLI connect to DB
@@ -2766,38 +2786,46 @@ export function SignIn() {
     import { env } from '@ace/env'
     import { relations } from 'drizzle-orm'
     import { tursoConnect } from '@ace/tursoConnect'
-    import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+    import { text, integer, sqliteTable } from 'drizzle-orm/sqlite-core'
 
-    export const users = sqliteTable('users', {
+
+    export const posts = sqliteTable('posts', {
       id: integer('id').primaryKey({ autoIncrement: true }),
-      email: text('email').notNull().unique(),
-      name: text('name').notNull(),
-      isAdmin: integer('isAdmin', { mode: 'boolean' }).notNull().default(false),
+      title: text('title').notNull(),
+      slug: text('slug').notNull().unique(),
+      displayOrder: integer('displayOrder').notNull(),
+      content: text('content').notNull(),
+      groupId: integer('groupId').references(() => postGroups.id).notNull(),
+      createdAt: integer('createdAt', { mode: 'timestamp_ms' }).notNull().default(new Date()),
     })
 
-    export const sessions = sqliteTable('sessions', {
+
+    export const postGroups = sqliteTable('postGroups', {
       id: integer('id').primaryKey({ autoIncrement: true }),
-      userId: integer('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
-      expiration: integer('expiration', { mode: 'timestamp_ms' }).notNull(),
+      title: text('title').notNull(),
+      displayOrder: integer('displayOrder').notNull(),
     })
 
-    export const usersRelations = relations(users, ({ many }) => ({
-      sessions: many(sessions),
+
+    export const postsRelations = relations(posts, ({ one }) => ({
+      group: one(postGroups, {
+        fields: [posts.groupId],
+        references: [postGroups.id],
+      })
     }))
 
-    export const sessionsRelations = relations(sessions, ({ one }) => ({
-      user: one(users, {
-        fields: [sessions.userId],
-        references: [users.id],
-      }),
+
+    export const postGroupsRelations = relations(postGroups, ({ many }) => ({
+      posts: many(posts)
     }))
+
 
     export const { db, client } = tursoConnect({
       local: env === 'local' ? 'http://127.0.0.1:8080' : null,
       drizzleConfig: {
         schema: {
-          users,
-          sessions,
+          posts,
+          postGroups,
         }
       }
     })
@@ -2812,18 +2840,19 @@ export function SignIn() {
       "db:push": "ace build prod && npm run db:migrate && ace build local",
     }
     ```
+1. Create migrations locally: `npm run db:generate`
+1. Review newly created `migrations` folder `sql`
 1. Start local database
     1. Terminal 1: `npm run db:local`
     1. Terminal 2: `npm run db:studio`
-1. Create migrations locally: `npm run db:generate`
-1. In your `.env` file add your Turso production credentials, example:
-    ```toml
-    TURSO_DATABASE_URL="libsql://your-db.turso.io"
-    TURSO_AUTH_TOKEN="your-secret-auth-token"
-    ```
 1. Apply migrations:
-   - Local: `ace build local` & THEN `npm run db:migrate`
-   - Production: `npm run db:push` & THEN `npm run db:studio` to view prod data locally
+   - Local:
+       1. `ace build local`
+       1. `npm run db:migrate`
+   - Production:
+       1. `ace build prod`
+       1. `npm run db:push`
+       1. `npm run db:studio` to view prod data locally
 1. 🚨 How it works:
     - The `env` @ `ace build <env>` determines the current db during `npm run db:studio` AND `npm run db:migrate`
     - So to:
@@ -2832,6 +2861,11 @@ export function SignIn() {
         - View local data: `ace build local && npm run db:studio`
         - View prod data: `ace build prod && npm run db:studio`
     - Note: `npm run dev` does an `ace build local` btw ❤️
+1. In your `.env` file add your Turso production credentials, example:
+    ```toml
+    TURSO_DATABASE_URL="libsql://your-db.turso.io"
+    TURSO_AUTH_TOKEN="your-secret-auth-token"
+    ```
 
 
 

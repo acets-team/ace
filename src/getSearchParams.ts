@@ -1,4 +1,4 @@
-import type { APIEvent, FetchEvent, UrlSearchParams } from './fundamentals/types'
+import type { APIEvent, FetchEvent, BaseSearchParams } from './fundamentals/types'
 
 /**
  * @example
@@ -12,9 +12,9 @@ import type { APIEvent, FetchEvent, UrlSearchParams } from './fundamentals/types
   }
   ```
  */
-export function getSearchParams(event: FetchEvent | APIEvent): UrlSearchParams {
+export function getSearchParams(event: FetchEvent | APIEvent): BaseSearchParams {
   const url = new URL(event.request.url)
-  const params: UrlSearchParams = {}
+  const params: BaseSearchParams = {}
 
   for (const key of new Set(url.searchParams.keys())) {
     const values = url.searchParams.getAll(key)

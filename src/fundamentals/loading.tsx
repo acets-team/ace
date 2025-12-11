@@ -5,6 +5,7 @@
 
 
 import type { JSX, Component } from 'solid-js'
+import { mergeObjects, mergeStrings } from './merge'
 
 
 /**
@@ -61,18 +62,13 @@ export const Loading: Component<LoadingProps> = ({ type, size, thickness, color,
   if (speed) propsStyle['--ace-loading-speed'] = speed
   if (twoColor) propsStyle['--ace-loading-two-color'] = twoColor
 
-  const baseClass = `ace-loading ${type === 'two' ? 'ace-loading--two' : ''}`
-  const mergedClass = $span?.class ? `${baseClass} ${$span.class}` : baseClass
-
-  const mergedStyle = { ...propsStyle, ...requestedStyle }
-
   return <>
     <span
       role="status"
       aria-live="polite"
       {...$span}
-      style={mergedStyle}
-      class={mergedClass}
+      style={mergeObjects({ base: propsStyle, request: requestedStyle })}
+      class={mergeStrings('ace-loading', type === 'two' ? 'ace-loading--two' : '', $span?.class)}
     >
       <span class="label">{label || 'Loading...'}</span>
     </span>

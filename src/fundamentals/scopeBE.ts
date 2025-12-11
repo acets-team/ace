@@ -1,38 +1,37 @@
 import { config } from 'ace.config'
-import { AceError } from './aceError'
-import { buildUrl } from '../buildUrl'
+import { mapRoutes } from './mapRoutes'
 import { env, configOrigins } from './env'
-import { type RequestEvent } from 'solid-js/web'
+import { createAceKey } from './createAceKey'
 import { getRequestEvent } from './getRequestEvent'
 import { goHeaderName, goStatusCode } from './vars'
 import { destructureReady } from './destructureReady'
 import type { CookieSerializeOptions } from 'cookie-es'
 import { setCookie, getCookie, deleteCookie } from 'h3'
-import type { ApiBody, ApiResponse, UrlSearchParams, UrlPathParams, AceResponse, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals } from './types'
+import { createAceResponse, type AceResponse } from './aceResponse'
+import type { BaseApiReq, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals, ApiReq2Body, ApiReq2PathParams, ApiReq2SearchParams, AceResData, AceResError, AceKey } from './types'
 
 
 
-/** Base scope for both API and middleware scopes */
-export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSearchParams = {}, T_Body extends ApiBody = {}, T_Locals extends BaseEventLocals = {}> {
-  readonly body: T_Body
-  readonly pathParams: T_Params
-  readonly searchParams: T_Search
+/** Base scope for both API and B4 (middleware) scopes */
+export class ScopeBE<T_Req extends BaseApiReq = {}, T_Locals extends BaseEventLocals = {}> {
+  readonly body: ApiReq2Body<T_Req>
+  readonly pathParams: ApiReq2PathParams<T_Req>
+  readonly searchParams: ApiReq2SearchParams<T_Req>
   defaultHeaders: Record<string, string>
-  readonly event: RequestEvent & { locals: T_Locals }
+  readonly event: Omit<ReturnType<typeof getRequestEvent>, 'locals'> & { locals: T_Locals }
 
 
-  constructor(params: T_Params, search: T_Search, body: T_Body) {
-    this.body = body
-    this.pathParams = params
-    this.searchParams = search
-    this.event = getRequestEvent() as RequestEvent & { locals: T_Locals }
+  constructor(request: T_Req) {
+    this.body = (request.body ?? {}) as ApiReq2Body<T_Req>
+    this.pathParams = (request.pathParams ?? {}) as ApiReq2PathParams<T_Req>
+    this.searchParams = (request.searchParams ?? {}) as ApiReq2SearchParams<T_Req>
+    this.event = getRequestEvent() as Omit<ReturnType<typeof getRequestEvent>, 'locals'> & { locals: T_Locals }
     this.defaultHeaders = {
       'Access-Control-Expose-Headers': goHeaderName,
       ...this.#getCorsHeaders(),
     }
     destructureReady(this)
   }
-
 
 
   /**
@@ -82,40 +81,44 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @param props.headers - Optional, HTTP headers, see `scope.defaultHeaders` to see/update the default headers, and this prop overrides `this.defaultHeaders`
    * @returns - `Response` based on options
    */
-  respond<T_Data, T_Path extends Routes>({data, error, path, pathParams, searchParams, status = 200, headers}: { data?: T_Data, error?: AceError, path?: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }): AceResponse<T_Data> {
-    if (path) return this.#giveRedirect(path, {pathParams, searchParams, headers})
-    else return this.#giveJSON(status, data ?? null, error ?? null, headers)
+  respond<T_Res_Data extends AceResData, T_Path extends Routes>( // Overload: Success case (data provided)
+    props: { data: T_Res_Data, error?: null, path?: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }
+  ): AceResponse<T_Res_Data>
+
+  respond<T_Path extends Routes>( // Overload: Error case (data is null)
+    props: { data?: null | undefined, error: AceResError, path?: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }
+  ): AceResponse<null>
+
+  respond<T_Path extends Routes>( // Overload: Redirect case (data is undefined)
+    props: { path: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }
+  ): AceResponse<undefined>
+
+  respond<T_Res_Data extends AceResData, T_Path extends Routes>({ data, error, path, pathParams, searchParams, status = 200, headers }: { data?: T_Res_Data, error?: AceResError | null, path?: T_Path, pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, status?: number, headers?: HeadersInit }): AceResponse<T_Res_Data | null | undefined> { // Implementation: (broadest possible type)
+    if (path) return this.#giveRedirect(path, { pathParams, searchParams, headers })
+
+    return createAceResponse(error ? { error, data: null } : { data, error: null }, {
+      status,
+      headers: { ...this.defaultHeaders, ...headers }
+    })
   }
 
+  #giveRedirect<T_Path extends Routes>(path: T_Path, options?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, headers?: HeadersInit }): AceResponse<undefined> {
+    let url = this.requestUrlOrigin
 
-  #giveRedirect<T_Path extends Routes>(path: T_Path, options?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path>, headers?: HeadersInit }) {
-    const url = this.requestUrlOrigin + buildUrl(path, {pathParams: options?.pathParams, searchParams: options?.searchParams})
+    const entry = mapRoutes[path]
+
+    if (entry) {
+      this.requestUrlOrigin + entry.buildUrl({ pathParams: options?.pathParams, searchParams: options?.searchParams })
+    }
 
     return new Response(JSON.stringify({[goHeaderName]: url}), {
       status: goStatusCode,
       headers: {
         ...this.defaultHeaders,
+        ...options?.headers,
         [goHeaderName]: url,
-        ...options?.headers
       }
     })
-  }
-
-
-  #giveJSON<T_Data>(status: number, data: T_Data | null, error: AceError | null, headers?: HeadersInit) {
-    const responseJSON: ApiResponse<T_Data> = {}
-
-    if (data !== null && data !== undefined) responseJSON.data = data
-    if (error) responseJSON.error = error.get().error
-
-    const res: AceResponse<T_Data> = new Response(JSON.stringify(responseJSON), {
-      status,
-      headers: { ...this.defaultHeaders, ...headers, 'Content-Type': 'application/json' }
-    })
-
-    res.__dataType = null as T_Data
-
-    return res
   }
 
 
@@ -125,8 +128,15 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @param status - Optional, HTTP Response Status, Defaults to `200`
    * @returns - An API Response of type `AceResponse<T_Data>`
    */
-  success<T_Data>(data?: T_Data, status = 200): AceResponse<T_Data> {
-    return this.respond({ data, status })
+  
+  success<T_Res_Data extends AceResData>(data: T_Res_Data, status?: number): AceResponse<T_Res_Data> // Overload: Data is provided
+
+  
+  success(data?: undefined, status?: number): AceResponse<undefined> // Overload: Data is omitted
+
+  // Implementation: (broadest possible type)
+  success<T_Res_Data extends AceResData>(data?: T_Res_Data, status = 200): AceResponse<T_Res_Data | undefined> {
+    return this.respond({ data: data as T_Res_Data, status }) as AceResponse<T_Res_Data | undefined> // the overloads above ensure the correct type is inferred for the caller
   }
 
 
@@ -137,7 +147,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @returns - Error `Response`
    */
   error(message: string, status = 400): AceResponse<null> {
-    return this.respond({ error: new AceError({ message }), status })
+    return this.respond({ error: {message}, status })
   }
 
 
@@ -149,7 +159,7 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @returns Redirect `Response`
    */
   go<T_Path extends Routes>(path: T_Path, params?: { pathParams?: RoutePath2PathParams<T_Path>, searchParams?: RoutePath2SearchParams<T_Path> }): AceResponse<null> {
-    return this.respond({ path, pathParams: params?.pathParams, searchParams: params?.searchParams })
+    return this.respond({ data: null, path, pathParams: params?.pathParams, searchParams: params?.searchParams })
   }
 
 
@@ -203,8 +213,10 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
    * @example
       ```ts
       const res = await scope.liveEvent({
-        stream: 'example',
-        data: { example: true },
+        // events are grouped into streams
+        // streams can be a string or a tuple
+        stream: ['chatRoom', id],
+        data: { aloha: true },
         requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }, // Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
       })
 
@@ -215,11 +227,11 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
         }
       }
       ```
-  * @param props.stream - The `stream` to subscribe to
+  * @param props.stream - The `stream` to subscribe to. Events are grouped by stream. Can be a string or a tuple, ex: ['chatRoom': id]
   * @param props.data - Event data, the entire object will be provided to `/subscribe`
   * @param props.requestInit - Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
   */
-  async liveEvent(props: { stream: string, data: object, requestInit?: Partial<RequestInit> }): Promise<Response> {
+  async liveEvent(props: { stream: AceKey, data: object, requestInit?: Partial<RequestInit> }): Promise<Response> {
     const url = config.liveHosts?.[env]
     if (!url) throw new Error(`ace.config.js > liveHosts > "${env}" is undefined`)
 
@@ -238,20 +250,6 @@ export class ScopeBE<T_Params extends UrlPathParams = {}, T_Search extends UrlSe
       },
     }
 
-    return fetch(`http${url.includes('localhost') ? '' : 's'}://${url}/event?stream=${encodeURIComponent(props.stream)}`, mergedInit)
+    return fetch(`http${url.includes('localhost') ? '' : 's'}://${url}/event?stream=${encodeURIComponent(createAceKey(props.stream))}`, mergedInit)
   }
-}
-
-
-export type RespondProps<T_Data> = {
-  /** Optional, data to respond w/, can be in the response w/ `props.error` too */
-  data?: T_Data,
-  /** Optional, AceError to respond w/, can be in the response w/ `props.error` too */
-  error?: AceError,
-  /** Optional, redirect to respond w/, when this is set, data & error are not in the response */
-  go?: string,
-  /** HTTP status */
-  status: number,
-  /** Optional, HTTP headers, automatically adds a content type of application json when go is not set */
-  headers?: HeadersInit
 }

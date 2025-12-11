@@ -1,7 +1,8 @@
 import { join, resolve } from 'node:path'
-import { Build, type TreeNode } from './build.js'
 import { fundamentals } from '../../fundamentals.js'
+import { Build, type CreateAppTreeNode } from './build.js'
 import { mkdir, copyFile, writeFile } from 'node:fs/promises'
+import { treeCreate } from '../../treeCreate.js'
 
 
 
@@ -39,15 +40,14 @@ function getPromises(build: Build) {
   if (build.config.plugins.solid) {
     promises.push(
       fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsSolidTypes || '', fileName: 'types.d.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApis(build), fileName: 'apis.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderCreateApp(build), fileName: 'createApp.tsx' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexRoute(build), fileName: 'regexRoutes.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiGets(build), fileName: 'regexApiGets.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiPosts(build), fileName: 'regexApiPosts.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiPuts(build), fileName: 'regexApiPuts.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiDeletes(build), fileName: 'regexApiDeletes.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderRegexApiNames(build), fileName: 'regexApiNames.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderApiLoaders(build), fileName: 'apiLoaders.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreeRoutes(build), fileName: 'treeRoutes.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreeGets(build), fileName: 'treeGET.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreePosts(build), fileName: 'treePOST.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreePuts(build), fileName: 'treePUT.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreeDeletes(build), fileName: 'treeDELETE.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderMapApis(build), fileName: 'mapApis.ts' }),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderMapRoutes(build), fileName: 'mapRoutes.ts' }),
     )
   }
 
@@ -83,80 +83,56 @@ function renderEnv(build: Build) {
 
 
 
-function renderApis(build: Build) {
-  return `import { createApiFn } from '../createApiFn' 
+function renderMapRoutes(build: Build) {
+  return `import { buildUrl } from './buildUrl'
+import type { MapBuildUrlProps } from './types'
 
-${build.writes.apiFunctions}`
+
+export const mapRoutes = {
+${build.writes.mapRoutes ? build.writes.mapRoutes.slice(0, -1) : ''}
+} as const\n`
 }
 
 
 
-function renderRegexRoute(build: Build) {
-  return `import type { RegexMap } from './types'
-
-export const regexRoutes = {
-${build.writes.constRoutes ? build.writes.constRoutes.slice(0, -1) : ''}
-} satisfies RegexMap<'route'>\n`
+function renderTreeRoutes(build: Build) {
+  return `export const treeRoutes = ${JSON.stringify(treeCreate(build.routes), null, 2)}\n`
 }
 
 
 
-function renderRegexApiGets(build: Build) {
-  return `import { RegexMap } from './types'
-import { regexApiNames } from './regexApiNames'
-
-export const regexApiGets = {
-${build.writes.constGET ? build.writes.constGET.slice(0, -1) : ''}
-} satisfies RegexMap<'api'>\n`
+function renderTreeGets(build: Build) {
+  return `export const treeGET = ${JSON.stringify(treeCreate(build.apis.GET), null, 2)}\n`
 }
 
 
 
-function renderRegexApiPosts(build: Build) {
-  return `import { RegexMap } from './types'
-import { regexApiNames } from './regexApiNames'
-
-export const regexApiPosts = {
-${build.writes.constPOST ? build.writes.constPOST.slice(0, -1) : ''}
-} satisfies RegexMap<'api'>\n`
+function renderTreePosts(build: Build) {
+  return `export const treePOST = ${JSON.stringify(treeCreate(build.apis.POST), null, 2)}\n`
 }
 
 
 
-function renderRegexApiPuts(build: Build) {
-  return `import { RegexMap } from './types'
-import { regexApiNames } from './regexApiNames'
-
-export const regexApiPuts = {
-${build.writes.constPUT ? build.writes.constPUT.slice(0, -1) : ''}
-} satisfies RegexMap<'api'>\n`
+function renderTreePuts(build: Build) {
+  return `export const treePUT = ${JSON.stringify(treeCreate(build.apis.PUT), null, 2)}\n`
 }
 
 
 
-function renderRegexApiDeletes(build: Build) {
-  return `import { RegexMap } from './types'
-import { regexApiNames } from './regexApiNames'
-
-export const regexApiDeletes = {
-${build.writes.constDELETE ? build.writes.constDELETE.slice(0, -1) : ''}
-} satisfies RegexMap<'api'>\n`
+function renderTreeDeletes(build: Build) {
+  return `export const treeDELETE = ${JSON.stringify(treeCreate(build.apis.DELETE), null, 2)}\n`
 }
 
 
 
-function renderRegexApiNames(build: Build) {
-  return `import { RegexMap } from './types'
-import * as apiLoaders from '@ace/apiLoaders'
-
-export const regexApiNames = {
-${build.writes.constApiName ? build.writes.constApiName.slice(0, -1) : ''}
-} satisfies RegexMap<'api'>\n`
-}
+function renderMapApis(build: Build) {
+  return `import { buildUrl } from './buildUrl'
+import type { MapBuildUrlProps } from './types'
 
 
-function renderApiLoaders(build: Build) {
-  return build.writes.apiLoaders ? build.writes.apiLoaders.slice(0, -1) : ''
+export const mapApis = {
+${build.writes.mapApis ? build.writes.mapApis.slice(0, -1) : ''}
+} as const\n`
 }
 
 
@@ -197,13 +173,13 @@ function renderParseMarkdownFolders(build: Build) {
  * @param indent - Where the indent starts
  * @param accumulator - Routes string
  */
-function walkTree(build: Build, node: TreeNode, indent = 8, accumulator = {routes: ''}) {
+function walkTree(build: Build, node: CreateAppTreeNode, indent = 8, accumulator = {routes: ''}) {
   if (!node.root && node.fsPath) { // open <Route>, for layout, unless virtual root
     accumulator.routes += (' '.repeat(indent) + `<Route component={props => lazyLayout(props, () => import(${build.fsPath2Relative(node.fsPath)}))}>\n`)
     indent += 2
   }
 
-  for (const r of node.routes) { //TreeNode for each route in this layout
+  for (const r of node.routes) { // TreeNode for each route in this layout
     accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={lazyRoute(() => import(${build.fsPath2Relative(r.fsPath)}))} />\n`) // set routes entry
   }
 

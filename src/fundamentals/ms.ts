@@ -6,7 +6,7 @@
  *     - `const jwtPayload = { exp: seconds }`
  * 
  * - 🚨 Recommendation:
- *    - Store dates in db as `ms`, example: `integer('expiration', { mode: 'timestamp_ms' }).notNull()`
+ *    - Store dates in db as `ms`, Turso Example: `integer('createdAt', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`)`
  */
 
 

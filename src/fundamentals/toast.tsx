@@ -6,6 +6,7 @@
  */
 
 
+import { mergeStrings } from './merge'
 import { isServer, render } from 'solid-js/web'
 import { createSignal, onMount, createEffect, For, Show, createRoot, type JSX, type Component } from 'solid-js'
 
@@ -159,9 +160,6 @@ const ToastItemComponent: Component<{ toast: ToastItem, onRemove: (id: string) =
   onMount(() => refToast?.focus())
   createEffect(() => isHiding() && refToast && smoothHide(refToast))
 
-  const baseClass = `toast ${props.toast.type ? props.toast.type : ''}`
-  const mergedClass = props.toast.$div?.class ? `${baseClass} ${props.toast.$div.class}` : baseClass
-
   return <>
     <div
       id={props.toast.id}
@@ -169,7 +167,7 @@ const ToastItemComponent: Component<{ toast: ToastItem, onRemove: (id: string) =
       tabIndex={0}
       ref={el => refToast = el}
       {...props.toast.$div}
-      class={mergedClass}>
+      class={mergeStrings('toast', props.toast.type, props.toast.$div?.class)}>
 
       <div class="icon-wrapper">
         <div class="icon">{props.toast.icon}</div>

@@ -8,7 +8,7 @@
 import type { AtomIs, AtomSaveLocations } from './types'
 
 
-export class Atom<T> {
+export class Atom<T = undefined> {
   save: AtomSaveLocations
   is?: AtomIs
   init?: T

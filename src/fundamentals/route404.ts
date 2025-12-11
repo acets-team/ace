@@ -7,7 +7,6 @@
 
 import type { Layout } from './layout'
 import type { RouteComponent } from './types'
-import { pathnameToPattern } from './pathnameToPattern'
 
 
 
@@ -44,7 +43,7 @@ export class Route404 {
 
 
   constructor() {
-    this.#storage = { path: '*', pattern: pathnameToPattern('*') }
+    this.#storage = { path: '*' }
   }
   
   /** Public .values getter that casts #storage into RouteValues<…>, giving us perfect intelliSense */
@@ -73,7 +72,7 @@ export class Route404 {
       })
     ```
    */
-  component(component: RouteComponent<any, any>): this {
+  component(component: RouteComponent<any>): this {
     this.#storage.component = component
     return this
   }
@@ -92,16 +91,14 @@ export class Route404 {
 
 export type Route404Storage = {
   path: '*'
-  pattern: RegExp
   layouts?: Layout[]
-  component?: RouteComponent<any, any>
+  component?: RouteComponent<any>
 }
 
 
 
 export type Rou404teValues = {
   path: string
-  pattern: RegExp
   layouts?: Layout[]
-  component?: RouteComponent<any, any>
+  component?: RouteComponent<any>
 }

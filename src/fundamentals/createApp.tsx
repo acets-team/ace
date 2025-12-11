@@ -7,14 +7,16 @@
 
 
 import { Layout } from './layout'
+import { config } from 'ace.config'
 import { Route404 } from './route404'
+import { isServer } from 'solid-js/web'
 import { Route as AceRoute } from './route'
 import { MetaProvider } from '@solidjs/meta'
 import { FileRoutes } from '@solidjs/start/router'
 import { MessagesCleanup } from '../messagesCleanup'
 import { setScopeComponentChildren } from '../scopeComponentChildren'
 import { scope, ScopeComponentContextProvider } from './scopeComponent'
-import { createMemo, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
+import { createMemo, createRenderEffect, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
 import { Route, Router, useLocation, useParams, type RouteSectionProps } from '@solidjs/router'
 
 
@@ -61,6 +63,12 @@ export function createApp(requestedParentComponents: ParentComponentEntry<any>[]
   }
 
   return function App(): JSX.Element {
+    if (config.sw && !isServer) {
+      createRenderEffect(() => {
+        document.body.classList.add('sw-ready')
+      })
+    }
+
     return <>
       <Router root={Root}>
         <FileRoutes />
@@ -93,19 +101,36 @@ function lazyRoute(loader:() => Promise<any>) {
         if (!component) throw new Error('!component')
 
         if (route instanceof AceRoute) {
-          scope.pathParams = { ...(route.values.pathParamsParser ? route.values.pathParamsParser({...(useParams())}) : useParams()) }
+          const rawPathParams = {...(useParams())}
+          const rawSearchParams = Object.fromEntries(new URLSearchParams({...(useLocation())}.search).entries())
+
+          const parsedRequest = route.values.requestParser
+            ? route.values.requestParser({ pathParams: rawPathParams, searchParams: rawSearchParams })
+            : { pathParams: rawPathParams, searchParams: rawSearchParams }
+
+          scope.pathParams = parsedRequest.pathParams
+          scope.searchParams = parsedRequest.searchParams
 
           scope.PathParams = createMemo(() => {
-            return { ...(route.values.pathParamsParser ? route.values.pathParamsParser({...(useParams())}) : useParams()) }
+            const currentRawPathParams = { ...(useParams()) }
+            const currentRawSearchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
+
+            const currentParsedRequest = route.values.requestParser
+              ? route.values.requestParser({ pathParams: currentRawPathParams, searchParams: currentRawSearchParams })
+              : { pathParams: currentRawPathParams, searchParams: currentRawSearchParams }
+
+            return currentParsedRequest.pathParams
           })
 
-          scope.searchParams = route.values.searchParamsParser
-            ? route.values.searchParamsParser(Object.fromEntries(new URLSearchParams(useLocation().search).entries()))
-            : Object.fromEntries(new URLSearchParams(useLocation().search).entries())
-
           scope.SearchParams = createMemo(() => {
-            const params =  Object.fromEntries(new URLSearchParams(useLocation().search).entries())
-            return { ...(route.values.searchParamsParser ? route.values.searchParamsParser(params) : params) }
+            const currentRawPathParams = { ...(useParams()) }
+            const currentRawSearchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
+
+            const currentParsedRequest = route.values.requestParser
+              ? route.values.requestParser({ pathParams: currentRawPathParams, searchParams: currentRawSearchParams })
+              : { pathParams: currentRawPathParams, searchParams: currentRawSearchParams }
+
+            return currentParsedRequest.searchParams
           })
         } else {
           scope.pathParams = { ...(useParams()) }
@@ -114,10 +139,10 @@ function lazyRoute(loader:() => Promise<any>) {
             return { ...(useParams()) }
           })
 
-          scope.searchParams = Object.fromEntries(new URLSearchParams(useLocation().search).entries())
+          scope.searchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
 
           scope.SearchParams = createMemo(() => {
-            return Object.fromEntries(new URLSearchParams(useLocation().search).entries())
+            return Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
           })
         }
 

@@ -9,19 +9,18 @@ import type { Atom } from './atom'
 import { isServer } from 'solid-js/web'
 import { IndexDB, type IDBOptions } from './indexDB'
 import { createStoreRefBind } from './createStoreRefBind'
-import { createStoreProduce } from './createStoreProduce'
 import { createStoreReconcile } from './createStoreReconcile'
 import { idbDefaultDbName, idbDefaultStoreName } from './vars'
 import { createContext, onMount, useContext, type JSX } from 'solid-js'
-import type { Atoms, BaseStoreContext, BaseStoreContextInternal, InferAtom } from './types'
+import type { Atoms, BaseStoreCtx, BaseStoreInternal, InferAtom } from './types'
 import { unwrap, createStore as createSolidStore, SetStoreFunction as SetSolidStore } from 'solid-js/store'
 
 
 
 export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string }) {
   const idb = new IndexDB()
-  const StoreContext = createContext<BaseStoreContext<T_Atoms>>()
-  let _: BaseStoreContextInternal = { dontLoad: new Set(), trackDontLoad: true }
+  const StoreContext = createContext<BaseStoreCtx<T_Atoms>>()
+  let _: BaseStoreInternal = { dontLoad: new Set(), trackDontLoad: true }
   const idbOpts: IDBOptions = { dbName: createStoreProps.idbDbName ?? idbDefaultDbName, storeName: createStoreProps.idbStoreName ?? idbDefaultStoreName }
 
   const StoreProvider = (providerProps: { children: JSX.Element }) => {
@@ -56,7 +55,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
     }
 
 
-    const context: BaseStoreContext<T_Atoms> = {
+    const context: BaseStoreCtx<T_Atoms> = {
       _,
       idb,
       set,
@@ -64,8 +63,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
       store,
       setStore,
       atoms: createStoreProps.atoms,
-      copy: createStoreProduce(setStore, save),
-      refBind: createStoreRefBind(store, setStore),
+      refBind: createStoreRefBind(store, set),
       sync: createStoreReconcile(setStore, save),
     }
 
@@ -102,7 +100,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
 
 
 async function loadStore<T_Atoms extends Atoms>(props: {
-  _: BaseStoreContextInternal,
+  _: BaseStoreInternal,
   idb: IndexDB,
   atoms: T_Atoms,
   store: { [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>; },
