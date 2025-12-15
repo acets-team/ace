@@ -79,7 +79,7 @@ export function refLottie(src: string, config?: LottieConfig) {
 
   onClean(clear)
 
-  return (canvas: HTMLCanvasElement | null) => {
+  return (canvas: HTMLCanvasElement) => {
     if (canvas instanceof HTMLCanvasElement) {
       if (lottieInstance) clear()
 

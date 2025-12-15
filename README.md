@@ -910,8 +910,7 @@
 
 
 
-## Scope
-#### ✅ ScopeBE
+## ScopeBE
 - Available @:
     - [`B4` Functions](#create-api-route), example:
         ```ts
@@ -982,7 +981,7 @@
         - Helpful when you'd love to create an [Ace Live Server](#live-data-without-browser-refresh) `event`
     - `scope.requestUrlOrigin`
         - The origin of the current HTTP request URL
-#### ✅ ScopeComponent
+## ScopeComponent
 - Available @:
     - Any component via `import { scope } from '@ace/scopeComponent'`
     - [`Layout > .component()`](#create-a-layout), example:
@@ -1083,57 +1082,6 @@
     - `scope.children`
         - Get the children for a layout
         - IF not a layout OR no children THEN `undefined`
-    - `scope.GET()`
-        - Call api `GET` method w/ **type-safe autocomplete**
-        - Props:
-            ```ts
-            /**
-            * @param path - As defined @ `new API()`
-            * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
-            * @param options.pathParams - Path params
-            * @param options.searchParams - Search params
-            * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
-            */
-            ```
-    - `scope.POST()`
-        - Call api `POST` method w/ **type-safe autocomplete**
-        - Props:
-            ```ts
-            /**
-            * @param path - As defined @ `new API()`
-            * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
-            * @param options.pathParams - Path params
-            * @param options.searchParams - Search params
-            * @param options.body - Request body
-            * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
-            */
-            ```
-    - `scope.PUT()`
-        - Call api `PUT` method w/ **type-safe autocomplete**
-        - Props:
-            ```ts
-            /**
-            * @param path - As defined @ `new API()`
-            * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
-            * @param options.pathParams - Path params
-            * @param options.searchParams - Search params
-            * @param options.body - Request body
-            * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
-            */
-            ```
-    - `scope.DELETE()`
-        - Call api `DELETE` method w/ **type-safe autocomplete**
-        - Props:
-            ```ts
-            /**
-            * @param path - As defined @ `new API()`
-            * @param options.bitKey - `Bits` are `boolean signals`, they live in a `map`, so they each have a `bitKey` to help us identify them, the provided bitKey will have a value of true while this api is loading
-            * @param options.pathParams - Path params
-            * @param options.searchParams - Search params
-            * @param options.body - Request body
-            * @param options.manualBitOff - Optional, defaults to false, set to true when you don't want the bit to turn off in this function but to turn off in yours, helpful if you want additional stuff to happen afte api call then say we done
-            */
-            ```
 
 
 
@@ -2020,9 +1968,90 @@ export function SignIn() {
 
 
 
-## Live Data without Browser Refresh
-![Ace Live Server](https://i.imgur.com/BtKtzWk.png)
-1. Create an **Ace Live Server** (`Cloudflare Worker` + `Cloudflare Durable Object` that uses [hibernating web sockets](https://developers.cloudflare.com/durable-objects/best-practices/websockets)), bash:
+## Ace Live Server
+
+- Helpful when you'd love to show `real-time data` w/ no browser refresh required
+- Does not use `polling` (request every x seconds) b/c that is not real-time data
+- Does not use `long polling` or `standard web sockets` b/c they **charge while waiting for an event**
+- Uses Cloudflare's [hibernating websockets](https://developers.cloudflare.com/durable-objects/best-practices/websockets) which are free when waiting for an event, but keep the connection open & allow 100,000 requests a month for free, cost example:
+
+| Amount | Description |
+|--------|-------------|
+| `3,000` | Concurrent Connections |
+| `10` | Events per Second |
+| `30` | Days in Month |
+| `86,400` | Seconds in Day |
+| `864,000` | Events per Day = Seconds in Day * Events per Second |
+| `$5` | [Paid Plan Cost](https://developers.cloudflare.com/durable-objects/platform/pricing): B/c over 100,000 requests per day |
+| `25,920,000` | Events per Month = Events per Day * Days in Month |
+| `20` | Daily WS Reconnects |
+| `1,800,000` | WS Connects per Month = Concurrent Connections * Daily WS Reconnects * Days in Month |
+| `27,720,000` | Requests per Month = Events per Month + WS Connects per Month |
+| `10` | [Processing time per request (ms)](/docs/ace-live-server) |
+| `277,200,000` | Monthly processing time (ms) = Requests per Month * Processing time per request (ms) |
+| `277,200` | Monthly processing time (seconds) = Monthly processing time (ms) / 1,000 |
+| `0.128` | Memory allocated in GB |
+| `35,482` | Total GB/Second per Month |
+| `$0` | GB/Second Cost (free tier allows 400,000) |
+| `27.72` | Total Requests per Month (millions) |
+| `26.72` | Paid Requests per Month (millions) ([first million is free](https://developers.cloudflare.com/durable-objects/platform/pricing)) = Total Requests per Month (millions) - 1 |
+| `$0.15` | [Cost per million requests](https://developers.cloudflare.com/durable-objects/platform/pricing) |
+| `$4.01` | Requests Cost per month = Paid Requests per Month (millions) * Cost per million requests |
+| `$9.01` | Total Cost per Month |
+
+
+
+## How it works
+- App is running @ `localhost:3000` or `example.com`
+    - `Solid Start` app powered by `Vite`
+- Ace Live Server is running @ `localhost:3001` or `live.example.com`
+    - Cloudflare `Worker` + Cloudflare `Durable Object` powered by `wrangler`
+- App & Ace Live Server can share cookies between each other b/c they are on the same domain, just ensure the cookie is set like this
+  ```ts
+  import {env} from '@ace/env'
+
+  scope.setCookie(sessionCookieName, jwt, {
+    maxAge: secWeek,
+    domain: env == 'prod'
+      ? '.example.com' // allows us to set cookies @ example.com & read cookie @ live.example.com
+      : undefined
+  })
+  ```
+- To create events App sends a request to the Ace Live Server
+    ```ts
+    // BE: Broadcast to thousands of concurrent connections
+    const res = await scope.liveEvent({
+      // events are grouped into streams
+      // streams can be a string or a tuple
+      stream: ['chatRoom', id],
+      data: { aloha: true },
+    })
+    ```
+- To subscribe, subscribers establish hibernating websocket connections to Ace Live Server
+    ```ts
+    // FE: Real-time data w/ no browser refresh required
+    onMount(() => {
+      const { ws, error } = scope.liveSubscribe({ stream: ['chatRoom', id] })
+
+      if (error?.message) showErrorToast(error.message)
+      else if (ws) {
+        ws.addEventListener('message', event => {
+          console.log(event.data) // ✅ real-time data received!
+        })
+
+        onCleanup(() => scope.liveUnsubscribe(ws))
+      }
+    })
+    ```
+
+
+
+## Example
+1. Prerequisites: Have an app running: 
+    ```bash
+    npx create-ace-app@latest
+    ```
+1. Create an **Ace Live Server** (`Cloudflare Worker` + `Cloudflare Durable Object` that uses `hibernating web sockets`), bash:
     ```bash
     npx create-ace-live-server@latest
     ```
@@ -2037,26 +2066,8 @@ export function SignIn() {
           }
         }
         ```
-    1. **Subscribe** to events w/ [ScopeComponent](#scope):
-        ```ts
-        onMount(() => {
-          const ws = scope.liveSubscribe({ stream: 'example' })
-
-          ws.addEventListener('message', event => {
-            console.log(event.data)
-          })
-
-          onCleanup(() => scope.liveUnsubscribe(ws))
-        })
-        ```
-    1. **Create Events** w/ [ScopeBE](#scope):
-        ```ts
-        const res = await scope.liveEvent({ // ScopeBE
-          stream: 'example',
-          data: { aloha: true }, // Event data, the entire object will be provided to `/subscribe`
-          requestInit: { headers: { LIVE_SECRET: process.env.LIVE_SECRET } }, // Optional, is merged w/ the `defaultInit` of `{ method: 'POST', body: JSON.stringify(props.data), headers: { 'Content-Type': 'application/json' } }`
-        })
-        ```
+    1. **Subscribe** to events w/ [ScopeComponent](/posts/scope)
+    1. **Create Events** w/ [ScopeBE](#scope)
 1. 🚨 IF you would love to send messages from the browser `ws` THEN add an `onMessage` callback @ `createLiveDurableObject()`, example:
     ```ts
     import { createLiveWorker, createLiveDurableObject } from '@ace/liveServer'
@@ -2093,24 +2104,7 @@ export function SignIn() {
       }
     })
     ```
-  - 🚨  Cookies can be shared between `Website` & `Ace Live Server`, IF:
-      - on `localhost` OR
-      - `Ace Live Server` is deployed to a website sub-domain AND the cookie is set like this: 
-          ```ts
-          import { env } from '@ace/env'
-          import { msWeek } from '@ace/ms'
-          import { sessionCookieName } from '@src/lib/vars'
-
-          const maxAge = msWeek / 1000 // session maxAge is in seconds
-
-          scope.setCookie(sessionCookieName, jwt, {
-            maxAge,
-            domain: env == 'prod'
-              ? '.example.com' // allows us to set cookies @ example.com & read cookie @ live.example.com
-              : undefined
-          })
-          ```
-1. To deploy your `Ace Live Server` w/ **git push**, follow our [deploy directions here](#deploy)!
+1. To deploy your `Ace Live Server` w/ **git push**, follow our [deploy directions here](/posts/deploy)!
 1. 🚨 To place `Ace Live Server` @ a subdomain so you may share cookies w/ your `App`, in your `wrangler.jsonc` set `routes` to: 
     ```json
     {
@@ -2866,7 +2860,17 @@ export function SignIn() {
     TURSO_DATABASE_URL="libsql://your-db.turso.io"
     TURSO_AUTH_TOKEN="your-secret-auth-token"
     ```
-
+1. Move local data into prod
+    - Create `data.sql`, Update `sql` to include tables you want:
+      ```
+      sqlite3 ./src/db/local.db <<'EOF' > data.sql
+      .dump postGroups
+      .dump posts
+      EOF
+      ```
+    - Review/Edit `data.sql`
+    - `turso db list`: to get prod db names
+    - `turso db shell <prod-db-name> < data.sql`: Import
 
 
 ## AgGrid Demo
@@ -3355,7 +3359,8 @@ export function SignIn() {
 
 
 ## Error Dictionary
-#### Anytime you see "Standard Fix" below, [do these app clear steps first please](#if-developing-multiple-ace-projects-simultaneously)... & then these steps please
+
+## Standard Fix
 1. Stop all local servers running Ace
 1. Delete generated `.ace` folder
 1. `npm run dev`
@@ -3364,7 +3369,7 @@ export function SignIn() {
 
 
 
-### 🔔 Errors
+## 🔔 Errors
 1. `bash: ace: command not found`
     - The way `npm` works, is if we wanna go into a `bash` terminal & use a command like `ace` then the package that provides this command **must be globally installed**
     - This is b/c bash can navigate to any directory, so all that is required is to globally install is `npm i @acets-team/ace -g`

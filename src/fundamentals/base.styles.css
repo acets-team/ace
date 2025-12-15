@@ -1,0 +1,81 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - Plugin: vanilla
+ *     - import '@ace/base.styles.css'
+ */
+
+
+:root {
+  --ace-fast-transition: all var(--ace-duration-fast) var(--ace-easing);
+  --ace-transition: all var(--ace-duration-normal) var(--ace-easing);
+  --ace-prop-transition: var(--ace-duration-normal) var(--ace-easing);
+  --ace-fast-prop-transition: var(--ace-duration-fast) var(--ace-easing);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 var(--ace-ring-width) var(--ace-ring);
+}
+
+body,
+html,
+#app {
+  margin: 0;
+  width: 100%;
+}
+
+html {
+  font-size: 62.5%;
+  scroll-behavior: smooth;
+  background: var(--ace-background);
+}
+
+body {
+  position: relative;
+  z-index: var(--ace-z-base);
+  color: var(--ace-foreground);
+  font-family: var(--ace-font-family);
+  font-size: var(--ace-font-size);
+  line-height: var(--ace-line-height);
+  background: var(--ace-background-gradient, var(--ace-background));
+}
+
+p {
+  margin-bottom: var(--ace-spacing-md);
+}
+
+input,
+select,
+textarea {
+  background: var(--ace-input);
+  border-radius: var(--ace-radius);
+  padding: var(--ace-spacing-sm) var(--ace-spacing-md);
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: var(--ace-font-family);
+  font-size: var(--ace-font-size);
+  color: var(--ace-foreground);
+}
+
+button {
+  cursor: pointer;
+  border-radius: var(--ace-radius);
+  padding: var(--ace-spacing-sm) var(--ace-spacing-md);
+}
+
+.ace-text-gradient {
+  background-image: var(--ace-text-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}

@@ -6,7 +6,9 @@ import { object, optional, type ObjectEntries, type GenericSchema, type InferOut
 
 
 export { optional, object }
+export { vImg } from './vImg'
 export { vNum } from './vNum'
+export { vFile } from './vFile'
 export { vDate } from './vDate'
 export { vBool } from './vBool'
 export { vEmail } from './vEmail'

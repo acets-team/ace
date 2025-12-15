@@ -627,6 +627,10 @@ export type RequiredKeys<T_Obj> = {
 
 export type AllowUndefinedIfNoRequired<T> = RequiredKeys<T> extends never ? T | undefined : T
 
+
+export type PopoverPosition = 'topCenter' | 'bottomCenter' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'
+
+
 /** ❤️ Complex Store Types */
 
 

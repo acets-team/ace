@@ -1,5 +1,6 @@
 /**
  * 🧚‍♀️ How to access:
+ *     - Plugin: solid
  *     - import '@ace/tooltip.styles.css'
  *     - import { refTooltip } from '@ace/refTooltip'
  *     - import type { RefTooltipProps, TooltipPosition } from '@ace/refTooltip'
@@ -7,8 +8,10 @@
 
 
 import { render } from 'solid-js/web'
-import { createSignal, onMount, onCleanup, createUniqueId, createMemo, createEffect, type JSX, type Accessor } from 'solid-js'
 import { mergeStrings } from './merge'
+import type { PopoverPosition } from './types'
+import { createPositionPopover } from '../createPositionPopover'
+import { createSignal, onMount, onCleanup, createUniqueId, createMemo, createEffect, type JSX, type Accessor } from 'solid-js'
 
 
 /**
@@ -26,7 +29,7 @@ export function refTooltip<T extends HTMLElement>(props: Accessor<{
   /** String OR JSX content inside the tooltip */
   content: JSX.Element
   /** Optional, default is `topCenter`, position relative to the element the ref is on */
-  position?: TooltipPosition
+  position?: PopoverPosition,
   /** Extra HTML props (`class`, `style`, etc.) - 🚨 `style` must be set as an `object` and not a `string` for prop merging to work */
   $div?: JSX.HTMLAttributes<HTMLDivElement>
 }>) {
@@ -96,44 +99,11 @@ function TooltipComponent(componentProps: {
     }, 100)
   }
 
-  const positionTooltip = () => {
-    if (!tooltipElement) return
-
-    let top = 0, left = 0
-    const aimElementRect = componentProps.aimElement.getBoundingClientRect()
-    const tooltipRect = tooltipElement.getBoundingClientRect()
-
-    switch (position()) {
-      case 'topCenter':
-        top = aimElementRect.top - tooltipRect.height
-        left = aimElementRect.left + aimElementRect.width / 2 - tooltipRect.width / 2 // 🔮
-        break
-      case 'topLeft':
-        top = aimElementRect.top - tooltipRect.height
-        left = aimElementRect.left
-        break
-      case 'topRight':
-        top = aimElementRect.top - tooltipRect.height
-        left = aimElementRect.right - tooltipRect.width
-        break
-      case 'bottomLeft':
-        top = aimElementRect.bottom
-        left = aimElementRect.left
-        break
-      case 'bottomRight':
-        top = aimElementRect.bottom
-        left = aimElementRect.right - tooltipRect.width
-        break
-      case 'bottomCenter':
-      default:
-        top = aimElementRect.bottom
-        left = aimElementRect.left + aimElementRect.width / 2 - tooltipRect.width / 2
-    }
-
-    // getBoundingClientRect() gives coordinates relative to the visible viewport, not the full page, so below we adjust for scroll
-    tooltipElement.style.top = `${top + window.scrollY}px`
-    tooltipElement.style.left = `${left + window.scrollX}px`
-  }
+  const positionTooltip = createPositionPopover({
+    position,
+    popoverElement: () => tooltipElement,
+    aimElement: componentProps.aimElement,
+  })
 
   const mergedClass = createMemo(() => mergeStrings(
     'ace-tooltip',
@@ -162,6 +132,3 @@ function TooltipComponent(componentProps: {
 
 
 export type RefTooltipProps = Parameters<typeof refTooltip>[0]
-
-
-export type TooltipPosition = 'topCenter' | 'bottomCenter' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'

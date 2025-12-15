@@ -11,17 +11,17 @@
 
 
 
-/** How many seconds in a second */
+/** 1 second */
 export const sec = 1
 
-/** How many seconds in a minute */
+/** Number of seconds in a minute */
 export const secMinute = sec * 60
 
-/** How many seconds in an hour */
+/** Number of seconds in an hour */
 export const secHour = secMinute * 60
 
-/** How many seconds in a day */
+/** Number of seconds in a day */
 export const secDay = secHour * 24
 
-/** How many seconds in a week */
+/** Number of seconds in a week */
 export const secWeek = secDay * 7

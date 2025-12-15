@@ -1,3 +1,10 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - Plugin: solid
+ *     - import { Async } from '@ace/async'
+ */
+
+
 import { parseError } from './parseError'
 import { type Accessor, createSignal } from 'solid-js'
 import type { AsyncStatus, BaseApiReq, AceResData, AceResEither, FetchFn, RequiredKeys, AllowUndefinedIfNoRequired } from './types'
@@ -6,9 +13,8 @@ import type { AsyncStatus, BaseApiReq, AceResData, AceResEither, FetchFn, Requir
 /**
  * - If you'd love to get Api data during page load please use `Load` or `Stream`
  * - If you'd love to query an Api function off page load (ex: onClick) please use `Async`
- * - `Async` let's us pass a desired `req` (request data to be sent to the Api) when we call `run()`
- * - The creation of the Async instance is not an async happening, but calling `run()` is so that will need to be in an axync function
- * @example
+ * - The creation of the Async instance is not an async happening, but calling `run()` is so that will need to be in an async function
+ * - The `Async` instance includes a status function to access the current status a `run()` function to call the Api and an `fd()` function to call the Api w/ `FormData`
   ```ts
   const save = new Async(apiSaveChatMessage)
 
@@ -29,6 +35,8 @@ export class Async<T_Req extends BaseApiReq, T_Res_Data extends AceResData> {
 
   run: AsyncRun<T_Req, T_Res_Data>
 
+  fd: (formData: FormData) => Promise<AceResEither<T_Res_Data>>
+
   constructor(fn: FetchFn<T_Req, T_Res_Data>) {
     const [status, setStatus] = createSignal<AsyncStatus>('idle')
     this.status = status
@@ -37,7 +45,7 @@ export class Async<T_Req extends BaseApiReq, T_Res_Data extends AceResData> {
       setStatus('loading')
 
       try {
-        const parsed = await fn(req as T_Req) as unknown as AceResEither<T_Res_Data>
+        const parsed = await fn(req as T_Req) as AceResEither<T_Res_Data>
 
         setStatus(parsed?.error ? 'error' : 'success')
         return parsed
@@ -46,6 +54,20 @@ export class Async<T_Req extends BaseApiReq, T_Res_Data extends AceResData> {
         return parseError(e)
       }
     }) as AsyncRun<T_Req, T_Res_Data>
+
+    this.fd = async (formData: FormData) => {
+      setStatus('loading')
+
+      try {
+        const parsed = await fn(formData as unknown as T_Req) as AceResEither<T_Res_Data>
+
+        setStatus(parsed?.error ? 'error' : 'success')
+        return parsed
+      } catch (e) {
+        setStatus('error')
+        return parseError(e)
+      }
+    }
   }
 }
 

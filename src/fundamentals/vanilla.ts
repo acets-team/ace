@@ -34,3 +34,8 @@ export type JWTValidateFailure<T_JWTPayload extends BaseJWTPayload = {}> = {
 }
 
 export type JWTValidateResponse<T_JWTPayload extends BaseJWTPayload = {}> = JWTValidateSuccess<T_JWTPayload> | JWTValidateFailure<T_JWTPayload>
+
+
+export type FormDataValue = string | File
+
+export type FormDataObject = Record<string, FormDataValue | FormDataValue[]>

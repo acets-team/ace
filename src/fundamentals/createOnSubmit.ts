@@ -19,18 +19,48 @@ import { dateFromInput } from './dateFromInput'
  * 
  * ---
  * 
+ * ### If submitting store data
  * @example
- ```ts
-  const onSubmit = createOnSubmit(async ({ fd, event }) => {
-    const body = kParse(signUpParser, { email: fd('email') })
+  ```ts
+    const {sync, store} = useStore()
 
-    const res = await apiSignUp({ body, bitKey: 'save' }) // a bit is a boolean signal
+    const save = new Async(apiSaveChatMessage)
+    
+    const onSubmit = createOnSubmit(async ({ event }) => {
+      const body = vParser.body(info.parser, { chatMessage: store.chatMessage })
 
-    if (res.error?.message) showToast({type: 'danger', value: res.error.message})
-    else {
-      event.currentTarget.reset()
-      showToast({type: 'success', value: 'Success!'})
-    }
+      const res = await save.run({ body })
+
+      if (res.data) {
+        event.currentTarget.reset() // reset form
+        sync('chatMessages', mergeArrays(store.chatMessages, res.data))
+      }
+    })
+  ```
+ * 
+ * ---
+ * 
+ * ### If submitting form data
+ * @example
+  ```ts
+  const save = new Async(apiFormData)
+
+  const onSubmit = createOnSubmit(async ({ fd, event, formData }) => {
+    const body = vParser.body(info.parser, { 
+      email: fd('email'),
+      picture: fd('picture'),
+      expiration: fd('expiration'),
+    })
+
+    // IF input type is date AND you'd like to send data to BE in the local timezone THEN
+    // override the form data value w/ the fd() value
+    // b/c fd() gives the date in the local timezone!
+    // Helpful when we wanna insert a date into the db w/ the browser timezone and not the server timezone
+    formData.set('expiration', body.expiration)
+
+    const res = await save.fd(formData)
+    event.currentTarget.reset() // reset form
+    console.log('res', res)
   })
   ```
  * 
@@ -48,27 +78,49 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
       event.preventDefault()
       scope.messages.clearAll()
 
-      if (!(event.currentTarget instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
+      const form = event.currentTarget
+      if (!(form instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
 
-      const formData = new FormData(event.currentTarget)
+      const formData = new FormData(form)
 
-      /** `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />` 🚨 If the input type is a `date` the value is the local iso string */
+      /** 
+       * - `fd()` helps us get `values` from the `<form>` that was submitted
+       * - Example: `fd('example')` provides the value from `<input name="example" />`
+       * - 🚨 If the input type is a `date` the value is the local iso string
+       * - 🚨 If the input type is a `checkbox` an array of name values is provided for each that is checked ex: `['dark']`
+       */
       const fd: FormDataFunction = (name: string) => {
-        if (!(event.currentTarget instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
+        const values = formData.getAll(name)
 
-        const value = formData.get(name)
-        if (value === null || value === '') return null
+        const input = form.elements.namedItem(name)
 
-        const input = event.currentTarget.elements.namedItem(name)
-        if (input instanceof HTMLInputElement && typeof value === 'string' && (input.type === 'date' || input.type === 'datetime-local')) return dateFromInput(value, input.type).toISOString()
+        if (input instanceof HTMLSelectElement && input.multiple) {
+          return values
+        }
 
-        return value
+        if (input instanceof HTMLInputElement) {
+          if ((input.type === 'date' || input.type === 'datetime-local') && typeof values[0] === 'string' && values[0]) {
+            return dateFromInput(values[0], input.type).toISOString()
+          }
+
+          if (input.type === 'file') {
+            if (input.multiple) return input.files ? Array.from(input.files) : []
+            else if (input.files?.[0] !== undefined) return input.files[0]
+            else return null
+          }
+
+          if (input.type === 'checkbox') {
+            return values
+          }
+        }
+
+        return values[0] ?? null
       }
 
-      await onSubmit({ fd, event: { ...event, currentTarget: event.currentTarget } })
+      await onSubmit({ fd, formData, event: event as SubmitEvent & { currentTarget: HTMLFormElement } })
     } catch (e) {
       scope.messages.align(e)
-      if (onError) onError(e)
+      if (onError) await onError(e)
     }
   }
 }
@@ -77,7 +129,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
 /**
  * - When a form onSubmit happens, `OnSubmitCallback` happens
  */
-export type OnSubmitCallback = (props: { fd: FormDataFunction, event: SubmitEvent & { currentTarget: HTMLFormElement } }) => Promise<any> | any
+export type OnSubmitCallback = (props: { fd: FormDataFunction, formData: FormData, event: SubmitEvent & { currentTarget: HTMLFormElement } }) => Promise<any> | any
 
 
 /**
@@ -89,4 +141,4 @@ export type OnErrorCallback = (error: any) => Promise<any> | any
 /**
  * - With `name`, searches the form's input items. If there is a match, return's it's value, else returns null
  */
-export type FormDataFunction = (name: string) => FormDataEntryValue | null
+export type FormDataFunction = (name: string) => FormDataEntryValue | FormDataEntryValue[] | null | boolean

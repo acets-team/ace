@@ -1,8 +1,8 @@
 /**
  * 🧚‍♀️ How to use:
- *   Plugin solid
- *   import { indexDB } from '@ace/indexDB'
- *   import type { IDBWrite } from '@ace/indexDB'
+ *     - Plugin: solid
+ *     - import { indexDB } from '@ace/indexDB'
+ *     - import type { IDBWrite } from '@ace/indexDB'
  */
 
 

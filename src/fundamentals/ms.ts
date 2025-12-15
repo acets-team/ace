@@ -11,17 +11,17 @@
 
 
 
-/** How many ms in a second */
+/** Number of ms in a second */
 export const msSecond = 1000
 
-/** How many ms in a minute */
+/** Number of ms in a minute */
 export const msMinute = msSecond * 60
 
-/** How many ms in an hour */
+/** Number of ms in an hour */
 export const msHour = msMinute * 60
 
-/** How many ms in a day */
+/** Number of ms in a day */
 export const msDay = msHour * 24
 
-/** How many ms in a week */
+/** Number of ms in a week */
 export const msWeek = msDay * 7
