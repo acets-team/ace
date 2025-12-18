@@ -124,7 +124,7 @@ export class SmoothFor {
   /**
    * - `preSync()` records the starting position of all child elements
    * - `sync()` is called but then immediately after `postSync()` is called w/ a `requestAnimationFrame()`
-   * - `postSync()` calculates the `Last` position and uses `node.animate()` to instantaneously move the element back to its `First` powi5ion
+   * - `postSync()` calculates the `Last` position and uses `node.animate()` to instantaneously move the element back to its `First` position
    * - Crucially, this `Invert` step and the subsequent `Play` step are both inside a single `requestAnimationFrame()` block which ensures the browser never paints the intermediate, jumped position
    * @param props.scrollParent - Helpful when you'd like the parent to scroll to the `top` or `bottom` after the addition is made to see recent additions immediately
    * @param props.animateOptions - Like `duration` or `easing`

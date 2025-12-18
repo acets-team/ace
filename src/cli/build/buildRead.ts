@@ -1,7 +1,7 @@
 import { parse } from 'tsconfck'
-import path, { join, resolve } from 'node:path'
+import { LayoutsMapRoute, Build } from './build.js'
+import path, { sep, join, resolve } from 'node:path'
 import { readdir, readFile } from 'node:fs/promises'
-import { BuildRoute, Build, type Writes, type ApiMethods } from './build.js'
 import { pathname2Segments } from '../../pathname2Segments.js'
 
 
@@ -24,14 +24,12 @@ export async function buildRead(build: Build) {
 
     await setTsconfigPaths(build)
 
-    const [fsSolidTypes, fsApp] = await Promise.all([
+    const [fsSolidTypes] = await Promise.all([
       readFile(join(build.dirDistBuildJs, '../../../fundamentals/types.d.txt'), 'utf-8'),
-      readFile(join(build.dirDistBuildJs, '../../../fundamentals/createApp.txt'), 'utf-8'),
       readApiDirectory(resolve(build.cwd, build.config.apiDir), build),
       readAppDirectory(resolve(build.cwd, build.config.appDir), build),
     ])
 
-    build.fsApp = fsApp
     build.fsSolidTypes = fsSolidTypes
   }
 }
@@ -133,7 +131,7 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
     if (entry.isDirectory()) await readAppDirectory(fsPath, build)
     else if (entry.isFile() && fsPath.endsWith('.tsx')) {
       const src = removeComments(await readFile(fsPath,'utf-8'))
-      let { routePath, fsLayouts } = doRouteRegex(dir, src, build) // check to see if new Route() is present
+      let { routePath, fsLayout } = doRouteRegex(dir, src, build) // check to see if new Route() is present
 
       if (!routePath && !build.found404) { // no new Route() AND no 404 route found yet => check to see if new Route404()
         const res404 = doRoute404Regex(dir, src, build)
@@ -141,8 +139,12 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
         if (res404.routePath) {
           build.found404 = true
           routePath = res404.routePath
-          fsLayouts = res404.fsLayouts
+          fsLayout = res404.fsLayout
         }
+      }
+
+      if (!routePath && src.includes('export default new RootLayout')) {
+        build.rootLayoutFsPath = fsPath
       }
   
       if (!routePath) continue // this tsx file has no propertly formatted export default new Route or new Route404
@@ -161,21 +163,19 @@ async function readAppDirectory(dir: string, build: Build): Promise<void> {
     buildUrl: (props?: MapBuildUrlProps) => buildUrl({ ...props, segments: ${JSON.stringify(segments)} }),
   },
 `
-      const route: BuildRoute = { fsPath, routePath }
 
-      let node = build.tree
+      const route: LayoutsMapRoute = { fsPath, routePath }
 
-      if (fsLayouts.length === 0) node.routes.push(route) // if no layouts, it lives under root
+      if (!fsLayout) build.layoutsMap.Root?.routes.push(route)
       else {
-        for (const fsLayoutPath of fsLayouts) {
-          if (!node.layouts.has(fsLayoutPath)) { // create that child node if it doesn't exist
-            node.layouts.set(fsLayoutPath, { root: false, fsPath: fsLayoutPath, routes: [], layouts: new Map() })
-          }
+        const split = fsLayout.split(sep)
+        if (!split) continue
 
-          node = node.layouts.get(fsLayoutPath)! // descend into it
-        }
+        const fsLayoutName = split[split.length - 1]
+        if (!fsLayoutName) continue
 
-        node.routes.push(route) // finally attach our route at this nested level
+        if (build.layoutsMap[fsLayoutName]) build.layoutsMap[fsLayoutName].routes.push(route)
+        else build.layoutsMap[fsLayoutName] = { fsPath: fsLayout, routes: [route]}
       }
     }
   }
@@ -190,7 +190,7 @@ function removeComments(code: string): string {
 
 type RouteResult = {
   routePath: string,
-  fsLayouts: string[],
+  fsLayout: null | string,
 }
 
 
@@ -211,30 +211,23 @@ function getImportsMap(content: string): Map<string, string> {
 }
 
 
-/** Extract filesystem layout paths from a `.layouts([A, B])` call */
-function extractLayouts(dir: string, content: string, build: Build): string[] {
-  const fsLayouts: string[] = []
-  const regexLayouts = /\.layouts\(\s*\[\s*([^\]]+?)\s*\]\s*\)/
-  const matchLayouts = regexLayouts.exec(content)
+/** Extract filesystem layout path from a `.layout(A)` call */
+function extractLayout(dir: string, content: string, build: Build): null | string {
+  const regexLayout = /\.layout\(\s*([^)]+?)\s*\)/
+  const matchLayout = regexLayout.exec(content)
 
-  if (!matchLayouts || !matchLayouts[1]) return fsLayouts
+  if (!matchLayout || !matchLayout[1]) return null
 
   const importsMap = getImportsMap(content)
-  const layoutNames = matchLayouts[1]
-    .split(/\s*,\s*/)
-    .filter(name => name.length > 0)
+  const name = matchLayout[1].trim()
 
-    for (const name of layoutNames) {
-      const importFrom = importsMap.get(name)
-      if (!importFrom) continue
+  const importFrom = importsMap.get(name)
+  if (!importFrom) return null
 
-      const resolvedPath = resolveImport(importFrom, dir, build)
-      if (!resolvedPath) continue
+  const resolvedPath = resolveImport(importFrom, dir, build)
+  if (!resolvedPath) return null
 
-      fsLayouts.push(resolvedPath)
-  }
-
-  return fsLayouts
+  return resolvedPath
 }
 
 
@@ -276,7 +269,7 @@ function extractRoutePath(tail: string): string | undefined {
 
 /** Parses a file for `export default new Route(path)` */
 export function doRouteRegex(dir: string, content: string, build: Build): RouteResult {
-  const res: RouteResult = { routePath: '', fsLayouts: [] }
+  const res: RouteResult = { routePath: '', fsLayout: null }
 
   const regexExportDefault = /export\s+default\s+new\s+Route\s*\(\s*/m
   const match = regexExportDefault.exec(content)
@@ -286,19 +279,19 @@ export function doRouteRegex(dir: string, content: string, build: Build): RouteR
   const pathStr = extractRoutePath(tail)
   if (pathStr) res.routePath = pathStr
 
-  res.fsLayouts = extractLayouts(dir, content, build)
+  res.fsLayout = extractLayout(dir, content, build)
   return res
 }
 
 
 /** Parses a file for `export default new Route404()` */
 export function doRoute404Regex(dir: string, content: string, build: Build): RouteResult {
-  const res: RouteResult = { routePath: '', fsLayouts: [] }
+  const res: RouteResult = { routePath: '', fsLayout: null }
 
   const regex404 = /export\s+default\s+new\s+Route404\s*\(\s*\)/m
   if (!regex404.test(content)) return res
 
   res.routePath = '*'
-  res.fsLayouts = extractLayouts(dir, content, build)
+  res.fsLayout = extractLayout(dir, content, build)
   return res
 }

@@ -5,7 +5,7 @@
  */
 
 
-import type { Layout } from './layout'
+import type { SubLayout } from './subLayout'
 import type { RouteComponent, BaseRouteReq, Parser, Parser2Req } from './types'
 
 
@@ -13,7 +13,7 @@ import type { RouteComponent, BaseRouteReq, Parser, Parser2Req } from './types'
 export class Route<T_Req extends BaseRouteReq = BaseRouteReq> {
   /** Typed loosely so we may freely mutate it at runtime */
   #storage: RouteStorage
-  
+
 
   constructor(path: string) {
     this.#storage = { path }
@@ -45,17 +45,19 @@ export class Route<T_Req extends BaseRouteReq = BaseRouteReq> {
       })
     ```
    */
-  component(component: RouteComponent<T_Req>): this {    this.#storage.component = component
+  component(component: RouteComponent<T_Req>): this {
+    this.#storage.component = component
     return this
   }
 
 
   /** 
-   * - Group funcitionality & styling
-   * - The first layout provided will wrap all the remaining layouts & the current route
+   * - Group funcitionality, styling & api data
+   * - All routes will already be w/in the RootLayout, that is not this
+   * - This is defining a SubLayout for a group of routes
    */
-  layouts(arr: Layout[]): this {
-    this.#storage.layouts = arr
+  layout(layout: SubLayout): this {
+    this.#storage.layout = layout
     return this
   }
 
@@ -69,7 +71,7 @@ export class Route<T_Req extends BaseRouteReq = BaseRouteReq> {
 
 export type RouteValues<T_Req extends BaseRouteReq> = {
   path: string
-  layouts?: Layout[]
+  layout?: SubLayout
   component?: RouteComponent<T_Req>
   requestParser?: Parser<T_Req>
 }
@@ -77,7 +79,7 @@ export type RouteValues<T_Req extends BaseRouteReq> = {
 
 export type RouteStorage = {
   path: string
-  layouts?: Layout[]
+  layout?: SubLayout
   component?: RouteComponent<any>
   requestParser?: Parser<any>
 }

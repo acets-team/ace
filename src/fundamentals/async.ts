@@ -24,7 +24,7 @@ import type { AsyncStatus, BaseApiReq, AceResData, AceResEither, FetchFn, Requir
     const res = await save.run({ body })
 
     if (res.data) {
-      event.currentTarget.reset() // reset form
+      event.target.reset() // reset form
       sync('chatMessages', mergeArrays(store.chatMessages, res.data))
     }
   })

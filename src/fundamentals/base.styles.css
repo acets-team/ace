@@ -46,16 +46,12 @@ body {
   background: var(--ace-background-gradient, var(--ace-background));
 }
 
-p {
-  margin-bottom: var(--ace-spacing-md);
-}
-
 input,
 select,
 textarea {
   background: var(--ace-input);
-  border-radius: var(--ace-radius);
-  padding: var(--ace-spacing-sm) var(--ace-spacing-md);
+  color: var(--ace-input-foreground);
+  border-radius: calc(var(--ace-radius) * 2);
 }
 
 input,
@@ -64,13 +60,13 @@ textarea,
 button {
   font-family: var(--ace-font-family);
   font-size: var(--ace-font-size);
-  color: var(--ace-foreground);
+  padding-block: var(--ace-space);
+  padding-inline: calc(var(--ace-space) * 2);
 }
 
 button {
   cursor: pointer;
-  border-radius: var(--ace-radius);
-  padding: var(--ace-spacing-sm) var(--ace-spacing-md);
+  border-radius: calc(var(--ace-radius) * 2);
 }
 
 .ace-text-gradient {

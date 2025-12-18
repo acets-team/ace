@@ -28,7 +28,6 @@ export class Build {
   cwd: string
   env: string
   space = '\n'
-  fsApp?: string
   fsEnv?: string
   found404 = false
   config: AceConfig
@@ -38,6 +37,7 @@ export class Build {
   dirDistBuildJs: string
   fsVanillaTypes?: string
   routes: RouteArray = []
+  rootLayoutFsPath?: string
   apis: {
     GET: ApiArray,
     POST: ApiArray,
@@ -47,18 +47,11 @@ export class Build {
   dirWriteFundamentals: string
   fsParseMarkdownFolders?: string
   whiteList = new FundamentalWhiteList()
+  layoutsMap: LayoutsMap = { Root: { routes: [] } }
   tsConfigPaths?: { regex: RegExp, targets: string[] }[]
   static apiMethods = new Enums(['GET', 'POST', 'PUT', 'DELETE']) // yes we have this in vars but vars has imports that do not have .js extensions
   commandOptions = new Set(process.argv.filter(arg => arg.startsWith('--')))
   writes: Writes = { types: '', mapApis: '', mapRoutes: '' }
-
-  /**
-   * - We start off with a single root node
-   * - Root Node: Virtual, top‑level container that always exists
-   * - Each time we discover a Route @ `bindAppData()` we insert it into this tree
-   * - If the route has no layouts => it goes into root.routes
-   */
-  tree: CreateAppTreeNode = { root: true, routes: [], layouts: new Map() }
 
 
   /**
@@ -200,24 +193,18 @@ class FundamentalWhiteList {
 }
 
 
-export type BuildRoute = {
+export type LayoutsMap = Record<string, LayoutsMapValue>
+
+export type LayoutsMapValue = {
+  fsPath?: string
+  routes: LayoutsMapRoute[]
+}
+
+export type LayoutsMapRoute = {
   /** Path starting from fs root */
   fsPath: string,
   /** Path defined @ new Route() */
   routePath: string,
-}
-
-
-/**
- * - Each node has it's own value (`moduleName`, `fsPath`, `routes`) and a map to more nodes (`layouts`)
- * - Routes that do not have layouts go into the root routes
- * - This way we can print the routes like a tree
- */
-export type CreateAppTreeNode = {
-  root: boolean,
-  fsPath?: string,
-  routes: BuildRoute[],
-  layouts: Map<string,CreateAppTreeNode>
 }
 
 

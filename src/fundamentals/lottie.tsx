@@ -20,7 +20,7 @@ import { DotLottie, type Config } from '@lottiefiles/dotlottie-web'
  * - Requires the following npm dev imports:
  *     - `@lottiefiles/dotlottie-web`
  * - Provides 2 elements:
- *     1. A full-stack `div` that accepts props via `$div` & has a defualt class of `ace-lottie-wrapper`. Full stack let's us set styling which avoid jitter when we have `FE` components and can only style the `FE` elements
+ *     1. A full-stack `div` that accepts props via `$div` & has a defualt class of `ace-lottie-wrapper`. Full stack let's us set styling & avoid jitter when we have `FE` components and can only style the `FE` elements
  *     1. A `FE` component that is just a canvas that has a default class of `ace-lottie` and accepts props via `$canvas`. Defining as a `FE` component ensures `@lottiefiles/dotlottie-web` does not enter your `BE` build
  * - 🚨 Styling tip: Go to the lottie editor, get the canvas dimensions and then add this css:
     ```css

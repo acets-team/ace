@@ -1,19 +1,14 @@
 import type { JSX } from 'solid-js'
-import type { ScopeComponent } from './fundamentals/scopeComponent'
 
 
 /**
- * - WeakMap keys are weak references
- *     — If the scope instance is no longer in use elsewhere, the key-value pair is garbage collected
- *     - A normal Map keeps keys alive and can cause memory leaks
+ * - Allows us to keep track of children w/o adding a setter to ScopeComponent
  */
-const childrenMap = new WeakMap<ScopeComponent, JSX.Element>()
+export class ScopeComponentChildren {
+  static getSub: () => undefined | JSX.Element
+  static getRoot: () => undefined | JSX.Element
 
-
-export function setScopeComponentChildren(scope: ScopeComponent, children: JSX.Element) {
-  childrenMap.set(scope, children)
-}
-
-export function getScopeComponentChildren(scope: ScopeComponent): JSX.Element | undefined {
-  return childrenMap.get(scope)
+  static set(type: 'sub' | 'root', children: () => undefined | JSX.Element) {
+    ScopeComponentChildren[type === 'sub' ? 'getSub' : 'getRoot'] = children
+  }
 }

@@ -1,8 +1,8 @@
 import { join, resolve } from 'node:path'
-import { fundamentals } from '../../fundamentals.js'
-import { Build, type CreateAppTreeNode } from './build.js'
-import { mkdir, copyFile, writeFile } from 'node:fs/promises'
 import { treeCreate } from '../../treeCreate.js'
+import { fundamentals } from '../../fundamentals.js'
+import { Build, type LayoutsMapRoute } from './build.js'
+import { mkdir, copyFile, writeFile } from 'node:fs/promises'
 
 
 
@@ -40,7 +40,8 @@ function getPromises(build: Build) {
   if (build.config.plugins.solid) {
     promises.push(
       fsWrite({ build, dir: build.dirWriteFundamentals, content: build.fsSolidTypes || '', fileName: 'types.d.ts' }),
-      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderCreateApp(build), fileName: 'createApp.tsx' }),
+      renderRoutes(build),
+      fsWrite({ build, dir: build.dirWriteFundamentals, content: renderBaseApp(build), fileName: 'baseApp.tsx' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreeRoutes(build), fileName: 'treeRoutes.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreeGets(build), fileName: 'treeGET.ts' }),
       fsWrite({ build, dir: build.dirWriteFundamentals, content: renderTreePosts(build), fileName: 'treePOST.ts' }),
@@ -79,6 +80,50 @@ function renderEnv(build: Build) {
   if (!build.fsEnv) throw new Error('!build.fsEnv')
 
   return build.fsEnv.replace('{/* gen */}', build.env)
+}
+
+
+function renderBaseApp(build: Build) {
+  if (build.rootLayoutFsPath) {
+    return `import RootLayout from ${build.fsPath2Relative(build.rootLayoutFsPath)}
+import { Router } from '@solidjs/router'
+import { MetaProvider } from '@solidjs/meta'
+import { FileRoutes } from '@solidjs/start/router'
+import { ScopeComponentContextProvider } from '@ace/scopeComponent'
+
+
+export function BaseApp() {
+  return <>
+    <ScopeComponentContextProvider>
+      <MetaProvider>
+        <Router root={RootLayout.layout}>
+          <FileRoutes />
+        </Router>
+      </MetaProvider>
+    </ScopeComponentContextProvider>
+  </>
+}\n`
+  } else {
+    return `import { Suspense } from 'solid-js'
+import { Router } from '@solidjs/router'
+import { MetaProvider } from '@solidjs/meta'
+import { FileRoutes } from '@solidjs/start/router'
+import type { RouteSectionProps } from '@solidjs/router'
+import { ScopeComponentContextProvider } from '@ace/scopeComponent'
+
+
+export function BaseApp() {
+  return <>
+    <ScopeComponentContextProvider>
+      <MetaProvider>
+        <Router root={(props: RouteSectionProps) => <Suspense>{props.children}</Suspense>}>
+          <FileRoutes />
+        </Router>
+      </MetaProvider>
+    </ScopeComponentContextProvider>
+  </>
+}\n`
+  }
 }
 
 
@@ -136,11 +181,160 @@ ${build.writes.mapApis ? build.writes.mapApis.slice(0, -1) : ''}
 }
 
 
-function renderCreateApp(build: Build) {
-  if (!build.fsApp) throw new Error('!build.fsApp')
+async function renderRoutes(build: Build) {
+  const createdDirs = new Set<string>()
+  const writtenLayouts = new Set<string>()
+  const dirRoutes = resolve(build.cwd, 'src/routes')
 
-  return build.fsApp.replace('{/* gen */}', walkTree(build, build.tree).trimEnd())
+  await mkdir(dirRoutes, { recursive: true })
+
+  await writeApiFile(dirRoutes)
+
+  for (const [layoutName, layout] of Object.entries(build.layoutsMap)) {
+    if (layoutName === 'Root') {
+      for (const route of layout.routes) {
+        await writeRouteFile(dirRoutes, route)
+      }
+    } else if (layout.fsPath) {
+      const dirRoute = await createDir(dirRoutes, layoutName)
+      await writeLayoutFile(dirRoutes, layoutName, `import Layout from ${build.fsPath2Relative(layout.fsPath, dirRoutes)}
+
+export default Layout.layout\n`)
+
+      for (const route of layout.routes) {
+        await writeRouteFile(dirRoute, route)
+      }
+    }
+  }
+
+
+  async function writeApiFile(dirRoutes: string) {
+    const dirApi = resolve(dirRoutes, 'api')
+    await mkdir(dirApi, { recursive: true })
+
+    await writeFile(resolve(dirApi, '[...api].ts'), `import { callApi } from '@ace/callApi'
+import { treeGET } from '@ace/treeGET'
+import { treePUT } from '@ace/treePUT'
+import { treePOST } from '@ace/treePOST'
+import type { APIEvent } from '@ace/types'
+import { treeDELETE } from '@ace/treeDELETE'
+
+
+export async function GET(event: APIEvent) {
+  'use server'
+  return await callApi(event, treeGET)
 }
+
+
+export async function POST(event: APIEvent) {
+  'use server'
+  return await callApi(event, treePOST)
+}
+
+
+export async function PUT(event: APIEvent) {
+  'use server'
+  return await callApi(event, treePUT)
+}
+
+
+export async function DELETE(event: APIEvent) {
+  'use server'
+  return await callApi(event, treeDELETE)
+}\n`)
+  }
+
+
+  async function createDir(dirRoutes: string, layoutName: string) {
+    const dir = resolve(dirRoutes, `(${layoutName})`)
+    if (createdDirs.has(dir)) return dir
+    await mkdir(dir, { recursive: true })
+    createdDirs.add(dir)
+    return dir
+  }
+
+
+  async function writeLayoutFile(dirRoutes: string, layoutName: string, content: string) {
+    if (writtenLayouts.has(layoutName)) return
+
+    const filePath = resolve(dirRoutes, `(${layoutName}).tsx`)
+
+    await writeFile(filePath, content)
+
+    writtenLayouts.add(layoutName)
+  }
+
+
+  async function writeRouteFile(dirRoutes: string, route: LayoutsMapRoute) {
+    const fsParts = routePathToFsParts(route.routePath)
+    if (!fsParts.length) return
+
+    // removes the last item from the array and return it
+    // important to remove fileName BEFORE we mkdir
+    const fileName = fsParts.pop() + '.tsx'
+
+    let dirRoute = dirRoutes
+
+    if (fsParts.length) {
+      // [ 'test2', '[id]' ] -> /routes/test2/[id]
+      dirRoute = resolve(dirRoutes, ...fsParts)
+      await mkdir(dirRoute, { recursive: true })
+    }
+
+    await writeFile(`${dirRoute}/${fileName}`, `import Route from ${build.fsPath2Relative(route.fsPath, dirRoute)}
+import type { RouteSectionProps } from '@solidjs/router'
+import { callRouteComponent } from '@ace/callRouteComponent'
+
+
+export default (props: RouteSectionProps) => callRouteComponent(props, Route)`)
+  }
+
+
+  /**
+   * - Converts `/post/:id/:slug?` to `['post', '[id]', '[[slug]]']`
+   * - Which later becomes: `routes/post/[id]/[[slug]].tsx`
+   */
+  function routePathToFsParts(routePath: string): string[] {
+    // handle special cases first
+    if (routePath === '/') return ['index']
+    if (routePath === '*') return ['[...404]']
+
+    // normalize the path BEFORE we split on forward slash
+    // `/post/:id` -> `post/:id`
+    if (routePath[0] === '/') routePath = routePath.slice(1)
+
+    return routePath.split('/').map(getFsPart)
+  }
+
+
+  function getFsPart(segment: string): string {
+    // catch-all
+    // SolidStart catch-alls look like [...param]
+    // segment.slice(1) removes the *
+    // IF nothing is left after the * THEN we default to 404
+    if (segment.startsWith('*')) {
+      return `[...${segment.slice(1) || '404'}]`
+    }
+
+    // optional param
+    // :id? -> [[id]]
+    if (segment.startsWith(':') && segment.endsWith('?')) {
+      return `[[${segment.slice(1, -1)}]]`
+    }
+
+    // required param
+    // :id -> [id]
+    if (segment.startsWith(':')) {
+      return `[${segment.slice(1)}]`
+    }
+
+    // static segment
+    // IF none of the above (folder)
+    // post -> post
+    return segment
+  }
+}
+
 
 
 function renderParseMarkdownFolders(build: Build) {
@@ -162,35 +356,4 @@ function renderParseMarkdownFolders(build: Build) {
   const replaceStr = `${imports}\nconst map = { ${map.slice(0, -2)} } as const\n\n`
 
   return build.fsParseMarkdownFolders.replace(regex, `\n\n\n${replaceStr}\n`)
-}
-
-
-
-/**
- * Walk the entire tree, once, building the accumulator (routes string)
- * @param build - Build helper
- * @param node - The current route we're printing
- * @param indent - Where the indent starts
- * @param accumulator - Routes string
- */
-function walkTree(build: Build, node: CreateAppTreeNode, indent = 8, accumulator = {routes: ''}) {
-  if (!node.root && node.fsPath) { // open <Route>, for layout, unless virtual root
-    accumulator.routes += (' '.repeat(indent) + `<Route component={props => lazyLayout(props, () => import(${build.fsPath2Relative(node.fsPath)}))}>\n`)
-    indent += 2
-  }
-
-  for (const r of node.routes) { // TreeNode for each route in this layout
-    accumulator.routes += (' '.repeat(indent) + `<Route path="${r.routePath}" component={lazyRoute(() => import(${build.fsPath2Relative(r.fsPath)}))} />\n`) // set routes entry
-  }
-
-  for (const child of node.layouts.values()) { // recurse into each child layout
-    walkTree(build, child, indent, accumulator)
-  }
-
-  if (!node.root) { // if not root => close wrapper 
-    indent -= 2
-    accumulator.routes += (' '.repeat(indent) + `</Route>\n`)
-  }
-
-  return accumulator.routes
 }

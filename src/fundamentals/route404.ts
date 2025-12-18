@@ -5,7 +5,7 @@
  */
 
 
-import type { Layout } from './layout'
+import type { SubLayout } from './subLayout'
 import type { RouteComponent } from './types'
 
 
@@ -45,7 +45,7 @@ export class Route404 {
   constructor() {
     this.#storage = { path: '*' }
   }
-  
+
   /** Public .values getter that casts #storage into RouteValues<…>, giving us perfect intelliSense */
   public get values(): Rou404teValues {
     return this.#storage
@@ -79,11 +79,12 @@ export class Route404 {
 
 
   /** 
-   * - Group funcitionality, context & styling
-   * - The first layout provided will wrap all the remaining layouts & the current route
+   * - Group funcitionality, styling & api data
+   * - All routes will already be w/in the RootLayout, that is not this
+   * - This is defining a SubLayout for a group of routes
    */
-  layouts(arr: Layout[]): this {
-    this.#storage.layouts = arr
+  layouts(layout: SubLayout): this {
+    this.#storage.layout = layout
     return this
   }
 }
@@ -91,7 +92,7 @@ export class Route404 {
 
 export type Route404Storage = {
   path: '*'
-  layouts?: Layout[]
+  layout?: SubLayout
   component?: RouteComponent<any>
 }
 
@@ -99,6 +100,6 @@ export type Route404Storage = {
 
 export type Rou404teValues = {
   path: string
-  layouts?: Layout[]
+  layout?: SubLayout
   component?: RouteComponent<any>
 }

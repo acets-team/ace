@@ -17,7 +17,6 @@ try {
   promises.push(copyFile(join(cwd, 'src/fundamentals/env.ts'), join(dirFundamentals, `env.txt`)))
   promises.push(copyFile(join(cwd, 'src/fundamentals/types.ts'), join(dirFundamentals, `types.d.txt`)))
   promises.push(copyFile(join(cwd, 'src/fundamentals/vanilla.ts'), join(dirFundamentals, `vanilla.d.txt`)))
-  promises.push(copyFile(join(cwd, 'src/fundamentals/createApp.tsx'), join(dirFundamentals, `createApp.txt`)))
   promises.push(copyFile(join(cwd, 'src/fundamentals/parseMarkdownFolders.ts'), join(dirFundamentals, `parseMarkdownFolders.txt`)))
 
   for (const [name, f] of fundamentals) {

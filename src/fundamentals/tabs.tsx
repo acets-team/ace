@@ -10,6 +10,7 @@ import { mergeStrings } from './merge'
 import { isServer } from 'solid-js/web'
 import { treeSearch } from '../treeSearch'
 import { Tron, type TronProps } from './tron'
+import { useLocation } from '@solidjs/router'
 import type { TreeCreateNode } from '../treeCreate'
 import type { Routes, RoutePath2PathParams, RoutePath2SearchParams, MapRoutes } from './types'
 import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, type Accessor, Signal } from 'solid-js'
@@ -95,7 +96,7 @@ export function Tabs(props: {
   /** Optional, Setter, helpful when you'd like to know what tab was just selected */
   setCurrentTab?: (tab: Tab) => void
   /** Optional, IF defined AND `variant` is `tron` THEN props passed to `Tron` */
-  $Tron?: Omit<TronProps, 'type'>
+  $Tron?: Omit<TronProps, 'type' | 'children'>
 }) {
   const defaultTabsProps: Partial<TabsProps> = { scrollMargin: 0, mode: 'content', variant: 'pill' }
   props = mergeProps(defaultTabsProps, props)
@@ -134,13 +135,16 @@ export function Tabs(props: {
     createEffect(async () => {
       if (props.mode !== 'route' || !treeRoutes()) return
 
-      const result = treeSearch(treeRoutes() as TreeCreateNode, location.pathname)
+      const result = treeSearch(treeRoutes() as TreeCreateNode, useLocation().pathname)
       if (!result) return
 
       const tabIndex = pathToTabIndex.get(result.key as Routes)
+      if (tabIndex === undefined || !(props.tabs()[tabIndex] instanceof RouteTab)) return
 
-      if (tabIndex === undefined || !props.tabs()[tabIndex]) return
-      onTabClick(tabIndex, props.tabs()[tabIndex] as ContentTab)
+      const tab = props.tabs()[tabIndex]
+      if (!(tab instanceof RouteTab)) return
+
+      onTabClick(tabIndex, tab)
     })
   }
 

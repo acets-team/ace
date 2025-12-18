@@ -13,12 +13,10 @@
   opacity: 0;
   z-index: var(--ace-z-popover);
   transition: opacity var(--ace-prop-transition);
-
   &.visible {
     opacity: 1;
     pointer-events: auto;
   }
-
   &.position-topCenter {
     left: 50%;
     transform: translateY(-0.6rem);
@@ -30,7 +28,6 @@
       clip-path: polygon(50% 100%, 0 0, 100% 0);
     }
   }
-
   &.position-topRight {
     transform: translateY(-0.6rem);
 
@@ -41,7 +38,6 @@
       clip-path: polygon(50% 100%, 0 0, 100% 0);
     }
   }
-
   &.position-topLeft {
     transform: translateY(-0.6rem);
 
@@ -52,7 +48,6 @@
       clip-path: polygon(50% 100%, 0 0, 100% 0);
     }
   }
-
   &.position-bottomCenter {
     left: 50%;
     transform: translateY(0.57rem);
@@ -64,7 +59,6 @@
       clip-path: polygon(50% 0, 0 100%, 100% 100%);
     }
   }
-
   &.position-bottomRight {
     transform: translateY(0.57rem);
 
@@ -75,7 +69,6 @@
       clip-path: polygon(50% 0, 0 100%, 100% 100%);
     }
   }
-
   &.position-bottomLeft {
     transform: translateY(0.57rem);
 
@@ -89,9 +82,9 @@
 
   .content {
     background: var(--ace-popover);
-    border-radius: 0.6rem;
     box-shadow: var(--ace-shadow);
     border: 1px solid var(--ace-border);
+    border-radius: calc(var(--ace-radius) * 3);
 
     .label,
     .item {
@@ -119,14 +112,15 @@
       background: transparent;
       justify-content: space-between;
       gap: calc(var(--ace-space) * 2);
-      border-radius: calc(var(--ace-radius) / 5);
+      padding: calc(var(--ace-space) * 2);
       transition: var(--ace-fast-transition);
-      padding-inline: calc(var(--ace-space) * 2);
-      padding-block: calc(var(--ace-space) * 3);
-
+      border-radius: calc(var(--ace-radius) * 2);
       &:hover {
         background: var(--ace-accent);
         color: var(--ace-accent-foreground);
+      }
+      &:focus {
+        box-shadow: 0 0 0 var(--ace-ring-width) var(--ace-ring);
       }
     }
   }

@@ -32,7 +32,7 @@ import { dateFromInput } from './dateFromInput'
       const res = await save.run({ body })
 
       if (res.data) {
-        event.currentTarget.reset() // reset form
+        event.target.reset() // reset form
         sync('chatMessages', mergeArrays(store.chatMessages, res.data))
       }
     })
@@ -59,7 +59,7 @@ import { dateFromInput } from './dateFromInput'
     formData.set('expiration', body.expiration)
 
     const res = await save.fd(formData)
-    event.currentTarget.reset() // reset form
+    event.target.reset() // reset form
     console.log('res', res)
   })
   ```
@@ -78,7 +78,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
       event.preventDefault()
       scope.messages.clearAll()
 
-      const form = event.currentTarget
+      const form = event.target // currentTarget turns into the html doc after async but target does not
       if (!(form instanceof HTMLFormElement)) throw new Error('Please ensure onSubmit is on a <form> element')
 
       const formData = new FormData(form)
@@ -117,7 +117,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
         return values[0] ?? null
       }
 
-      await onSubmit({ fd, formData, event: event as SubmitEvent & { currentTarget: HTMLFormElement } })
+      await onSubmit({ fd, formData, event: event as SubmitEvent & { target: HTMLFormElement } })
     } catch (e) {
       scope.messages.align(e)
       if (onError) await onError(e)
@@ -129,7 +129,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
 /**
  * - When a form onSubmit happens, `OnSubmitCallback` happens
  */
-export type OnSubmitCallback = (props: { fd: FormDataFunction, formData: FormData, event: SubmitEvent & { currentTarget: HTMLFormElement } }) => Promise<any> | any
+export type OnSubmitCallback = (props: { fd: FormDataFunction, formData: FormData, event: SubmitEvent & { target: HTMLFormElement } }) => Promise<any> | any
 
 
 /**

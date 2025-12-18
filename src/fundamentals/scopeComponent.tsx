@@ -11,12 +11,12 @@ import { isServer } from 'solid-js/web'
 import { mapRoutes } from './mapRoutes'
 import { parseResponse } from '../fetch'
 import { parseError } from './parseError'
-import { useLocation } from '@solidjs/router'
+import { RouteSectionProps, useLocation } from '@solidjs/router'
 import { createAceKey } from './createAceKey'
 import { destructureReady } from './destructureReady'
 import { ScopeComponentMessages } from '../scopeComponentMessages'
-import { getScopeComponentChildren } from '../scopeComponentChildren'
-import { createContext, type JSX, type Accessor, type ParentComponent } from 'solid-js'
+import { ScopeComponentChildren } from '../scopeComponentChildren'
+import { createContext, type JSX, type Accessor, type ParentComponent, Suspense } from 'solid-js'
 import type { RoutePath2PathParams, Routes, AceResData, RoutePath2SearchParams, BaseRouteReq, RouteReq2PathParams, RouteReq2SearchParams, AceResEither, AceResErrorEither, AceResError, AceKey } from './types'
 
 
@@ -133,13 +133,24 @@ export class ScopeComponent<T_Req extends BaseRouteReq = BaseRouteReq> {
   }
 
 
-  /**
-   * - Get the children for a layout
-   * - Returns the jsx elemement or undefined if no children
-   * - With `Ace` only a `Layout` has children, routes do not
-   */
-  get children(): JSX.Element | undefined {
-    return getScopeComponentChildren(this)
+  routeSectionProps: Accessor<undefined | RouteSectionProps> = () => undefined
+
+
+  get childrenRootLayout() {
+    return <>
+      <Suspense>
+        {ScopeComponentChildren.getRoot()}
+      </Suspense>
+    </>
+  }
+
+
+  get childrenSubLayout() {
+    return <>
+      <Suspense>
+        {ScopeComponentChildren.getSub()}
+      </Suspense>
+    </>
   }
 
 

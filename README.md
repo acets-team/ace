@@ -395,7 +395,7 @@
       apiUpdateEmail({
         body: kParse(updateEmailParser, { email: store.newsletterForm.email }),
         onSuccess() {
-          event.currentTarget.reset()
+          event.target.reset()
           showToast({ type: 'success', value: 'Updated!' })
         }
       })
@@ -524,7 +524,7 @@
         apiUpdateEmail({ // API Function! ❤️
           body: kParse(updateEmailParser, { email: store.newsletterForm.email }),
           onSuccess() {
-            event.currentTarget.reset()
+            event.target.reset()
             showToast({ type: 'success', value: 'Updated!' }) // from @ace/toast
           }
         })
@@ -1210,7 +1210,6 @@ export default new Route404()
     ```tsx
     // @refresh reload
     import swRegister from '@ace/swRegister?raw'
-    import swStyles from '@ace/sw.styles.css?raw'
     import { createHandler, StartServer } from '@solidjs/start/server'
 
     export default createHandler(() => (
@@ -1219,7 +1218,6 @@ export default new Route404()
           <html lang="en">
             <head>
               <meta charset="utf-8" />
-              <style>{swStyles}</style>
               <link rel="icon" href="/favicon.ico" />
               <link rel="manifest" href="/manifest.json" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1704,7 +1702,7 @@ export function SignIn() {
         - On FE or BE errors => Routes errors to `<Messages />` components by the `name` property
     - `refFormReset()`
         - A [`ref` function](#bind-dom-elements) is a way to define what we'd love an element to do w/in a function
-        - Ensures `<Messages />` clear when `event.currentTarget.reset()` is called
+        - Ensures `<Messages />` clear when `event.target.reset()` is called
     - `<Submit />`
         - Show the `<Loading />` when `scope.bits.get(bitKey)` is `true`
         - `$button` forwards props to the inner `<button />`

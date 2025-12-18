@@ -1,4 +1,3 @@
-import layout from './layout'
 import { mode } from './vars'
 import apiGetB from './apiGetB'
 import apiPostA from './apiPostA'
@@ -10,7 +9,6 @@ import { vParser } from '../fundamentals/vParser'
 
 
 export default new Route('/route/:id')
-  .layouts([layout])
   .parser(vParser.route({
     pathParams: { id: vNum() }
   }))

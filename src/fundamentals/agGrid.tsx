@@ -18,7 +18,7 @@ import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community'
  * - Requires the following npm dev imports:
  *     - `ag-grid-community`
  * - Provides 2 elements:
- *     1. A full-stack `div` that accepts props via `$div` & has a defualt class of `ace-ag-grid-wrapper`. Full stack let's us set styling which avoid jitter when we have `FE` components and can only style the `FE` elements
+ *     1. A full-stack `div` that accepts props via `$div` & has a defualt class of `ace-ag-grid-wrapper`. Full stack let's us set styling & avoid jitter when we have `FE` components and can only style the `FE` elements
  *     1. A `FE` component that is just a div that has a default class of `ace-ag-grid`. Defining as a `FE` component ensures `ag-grid-community` does not enter your `BE` build
  * @link https://www.ag-grid.com/
  * @example

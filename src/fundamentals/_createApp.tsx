@@ -6,7 +6,7 @@
 */
 
 
-import { Layout } from './layout'
+// import { Layout } from './layout'
 import { config } from 'ace.config'
 import { Route404 } from './route404'
 import { isServer } from 'solid-js/web'
@@ -14,7 +14,7 @@ import { Route as AceRoute } from './route'
 import { MetaProvider } from '@solidjs/meta'
 import { FileRoutes } from '@solidjs/start/router'
 import { MessagesCleanup } from '../messagesCleanup'
-import { setScopeComponentChildren } from '../scopeComponentChildren'
+// import { setScopeComponentChildren } from '../scopeComponentChildren'
 import { scope, ScopeComponentContextProvider } from './scopeComponent'
 import { createMemo, createRenderEffect, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
 import { Route, Router, useLocation, useParams, type RouteSectionProps } from '@solidjs/router'
@@ -159,24 +159,24 @@ function lazyRoute(loader:() => Promise<any>) {
 
 
 
-function lazyLayout(props: RouteSectionProps<unknown>, loader:() => Promise<any>) {
-  const LazyRootLayout = lazy(async () => {
-    const mod = await loader()
+// function lazyLayout(props: RouteSectionProps<unknown>, loader:() => Promise<any>) {
+//   const LazyRootLayout = lazy(async () => {
+//     const mod = await loader()
 
-    const layout = mod.default
-    if (!(layout instanceof Layout)) throw new Error('invalid layout module')
+//     const layout = mod.default
+//     if (!(layout instanceof Layout)) throw new Error('invalid layout module')
         
-    return {
-      default (props: RouteSectionProps<unknown>) {
-        if (!layout.values.component) throw new Error('!layout.values.component')
-        setScopeComponentChildren(scope, props.children)
-        return layout.values.component(scope)
-      }
-    }
-  })
+//     return {
+//       default (props: RouteSectionProps<unknown>) {
+//         if (!layout.values.component) throw new Error('!layout.values.component')
+//         // setScopeComponentChildren(scope, props.children)
+//         return layout.values.component(scope)
+//       }
+//     }
+//   })
 
-  return <LazyRootLayout {...props} />
-}
+//   return <LazyRootLayout {...props} />
+// }
 
 
 

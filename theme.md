@@ -1,24 +1,24 @@
 ## Typography
 
-| Variable | Meaning  |
-| -------- | -------- |
-| `--ace-font-family`    | Base font stack |
-| `--ace-font-size`      | Base UI size (ex: `1.6rem` or `1.8rem`) |
-| `--ace-line-height`    | Global rhythm |
-| `--ace-font-semibold`  | Semibold font-weight |
-| `--ace-font-bold`      | Bold font-weight |
+| Variable | Description  | Default |
+| -------- | -------- | --- |
+| `--ace-font-family`    | Base font stack | `system-ui, sans-serif`|
+| `--ace-font-size`      | Base UI size | `1.8rem` |
+| `--ace-line-height`    | Base line height | `1.41` |
+| `--ace-font-semibold`  | Semibold font-weight | `500` |
+| `--ace-font-bold`      | Bold font-weight | `600` |
 
 
 ## Colors
-- `oklch` is recommended & gives us more:
+- `oklch` is recommended b/c gives us more:
     - Consistent lightness across all hues, which is crucial for predictable accessible contrast
     - Consistent Hues when adjusting lightness or chroma, making for better color ramps
     - Smooth and vibrant gradients, avoiding the dull, grayish midpoint
 
-| Variable                         | Meaning                                                                         |
-| -------------------------------- | ------------------------------------------------------------------------------- |
-| `--ace-background`               | Apply to `html`                                               |
-| `--ace-background-gradient`      | Apply to `body`, If not defined we'll apply `--ace-background` to body (ex: `background: var(--ace-background-gradient, var(--ace-background));`), the  `html` style is what is seen when ios fast bounce scroll at top or bottom of page happens     |
+| Variable | Description  | Default |
+| -------- | -------- | --- |
+| `--ace-background`               | Apply to `html` | `oklch(0.17 0.06 254.82)` |
+| `--ace-background-gradient`      | Apply to `body`, If not defined we'll apply `--ace-background` to body (ex: `background: var(--ace-background-gradient, var(--ace-background));`), the  `html` style is what is seen when ios fast bounce scroll at top or bottom of page happens     | `N/A` |
 | `--ace-foreground`               | Primary text color on the main background                                       |
 | `--ace-card`                     | Background color for `card` surfaces                                            |
 | `--ace-card-foreground`          | Text and icon color on `card` surfaces                                          |
@@ -35,15 +35,17 @@
 | `--ace-destructive`              | Color used for destructive actions (e.g. delete, error)                         |
 | `--ace-destructive-foreground`   | Text and icon color on destructive backgrounds                                  |
 | `--ace-border`                   | Default border color for structural elements                                    |
-| `--ace-input`                    | Background color for input fields                                               |
+| `--ace-input`                    | Background color for input/select/textarea fields                               |
+| `--ace-input-foreground`         | Text color for input/select/textarea fields                                     |
 | `--ace-ring`                     | Color used for focus rings and keyboard focus indicators                        |
 | `--ace-code`                     | Inline code text color                                                          |
+| `--ace-anchor`                   | Anchor / link text color                                                        |
 
 
 
 
 ## Focus Ring
-| Variable                | Meaning                                      |
+| Variable                | Description                                      |
 | ----------------------- | ---------------------------------------------|
 | `--ace-ring-width`      | Thickness of the focus ring outline          |
 | `--ace-ring-offset`     | Space between the element and its focus ring |
@@ -52,27 +54,26 @@
 
 
 ## Radius
+- To increase radius: `calc(var(--ace-radius) * 3)`
 
-| Variable | Meaning  |
+| Variable | Description  |
 | -------- | -------- |
-| `--ace-radius`     | Used everywhere: `buttons`, `cards`, `inputs` |
+| `--ace-radius` | Base radius (ex: `0.45`) |
 
 
 
 ## Spacing
+- To increase space: `calc(var(--ace-space) * 3)`
 
-| Variable | Meaning  |
+| Variable | Description  |
 | -------- | -------- |
-| `--ace-spacing-xs`     | Tight padding (chips, icons)        |
-| `--ace-spacing-sm`     | Things we click, tap, or type into  |
-| `--ace-spacing-md`     | Card padding                        |
-| `--ace-spacing-lg`     | Section spacing                     |
-| `--ace-spacing-xl`     | Page-level spacing                  |
+| `--ace-space` | Base spacing (ex: `0.45`) |
+
 
 
 ## Width
 
-| Variable                  | Meaning                                    |
+| Variable                  | Description                                    |
 | ------------------------- | ------------------------------------------ |
 | `--ace-content-max-width` | Maximum readable content width for layouts |
 
@@ -81,21 +82,19 @@
 
 ## Motion
 
-| Variable | Meaning  |
+| Variable | Description  |
 | -------- | -------- |
-| `--ace-duration-fast`     | Fast transitions (`hover`, `focus`, `micro-interactions`) |
-| `--ace-duration-normal`     | Standard UI transitions and animations |
-| `--ace-easing`     | Default easing function for UI motion |
+| `--ace-duration-fast`    | Fast transitions (`hover`, `focus`, `micro-interactions`) |
+| `--ace-duration-normal`  | Standard UI transitions and animations |
+| `--ace-easing`           | Default easing function for UI motion |
 
 
 
 ## Shadows
 
-| Variable | Meaning  |
+| Variable | Description  |
 | -------- | -------- |
-| `--ace-shadow-sm`     | Subtle elevation |
 | `--ace-shadow`        | Default `card` |
-| `--ace-shadow-lg`     | `Modal` |
 | `--ace-shadow-inset`  | `buttons` & `inputs` |
 
 
@@ -103,7 +102,7 @@
 ## Z-Index
 - To place something a little higher: `z-index: calc(var(--ace-z-content) + 1);`
 
-| Variable | Meaning |
+| Variable | Description |
 | -------- | --------|
 | `--ace-z-base`     | Base document level: `body` |
 | `--ace-z-content`  | Standard content (text, cards, inline elements) |

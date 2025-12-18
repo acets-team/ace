@@ -101,22 +101,23 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
 
     this.resAsync = resAsync
 
-    const _resAsync = unwrap(resAsync())
-    const _resStore = baseStore?.store && constructorProps.store ? unwrap(baseStore.store[constructorProps.store[1]]) : null
-
-    if (_resStore && !_resAsync) { // IF store data AND no BE data -> 'storeRendered'
-      setStatus('storeRendered')
-    } else if (!_resStore && !_resAsync) { // IF no store data AND no BE data -> 'loading'
-      setStatus('loading')
-    }
-
+    // purpose
+    // determine the initial status
+    // call onResponse once we have a BE response
+    // never run this init code again after we get our first BE response
     createEffect(() => {
       if (!this.#initialLoadComplete) {
-        const _resAsync = unwrap(resAsync())
+        const _resAsync = unwrap(resAsync()) // IF not in a createEffect() THEN streaming breaks (entire page waits for response)
+        const _resStore = baseStore?.store && constructorProps.store ? unwrap(baseStore.store[constructorProps.store[1]]) : null // IF not in a createEffect THEN when idb gives us data we won't know
+
+        if (_resStore && !_resAsync) { // IF store data AND no BE data -> 'storeRendered'
+          setStatus('storeRendered')
+        } else if (!_resStore && !_resAsync) { // IF no store data AND no BE data -> 'loading'
+          setStatus('loading')
+        }
 
         if (_resAsync) {
           this.#onResponse()
-          this.#initialLoadComplete = true
         }
       }
     })

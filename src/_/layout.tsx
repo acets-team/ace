@@ -1,4 +1,5 @@
-import { Layout } from '../fundamentals/layout'
+import { RootLayout } from '../fundamentals/rootLayout'
 
-export default new Layout()
-  .component((scope) => <>{scope.children}</>)
+export default new RootLayout(
+  (scope) => <>{scope.childrenRootLayout}</>
+)

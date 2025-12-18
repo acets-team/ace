@@ -10,6 +10,17 @@ import { createEffect, createSignal, untrack, type Accessor } from 'solid-js'
 import { Chart, type ChartConfiguration, type ChartTypeRegistry } from 'chart.js'
 
 
+/**
+ * - Create a Chart.js
+ * 
+ * - Requires the following npm dev imports:
+ *     - `chart.js`
+ * @param props.map Standard way to pass data to ag grid as `{ id: string; amount: number; }`, an accessor so when the data changes the chart is rewritten
+ * @param props.ref HTML DOM Canvas ref variable
+ * @param props.config Chartjs configuration: type `ChartConfiguration`
+ * @param props.register Optional, py passing the register function to the component we can ensure chartjs is registered w/ your desired configurations before being created
+ * @returns Chartjs chart instance
+ */
 export function useChartJs<T extends keyof ChartTypeRegistry>(props: {
   map: Accessor<undefined | ChartJsMap[]>,
   ref: Accessor<undefined | HTMLCanvasElement>,
