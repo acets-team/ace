@@ -1,11 +1,11 @@
 .ace-modal {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background: oklch(0 0 0 / 0.6);
   z-index: var(--ace-z-popover);
   display: flex;
   justify-content: center;
-  padding: 1rem;
+  padding: calc(var(--ace-space) * 2);
   overflow: hidden;
 
   .content {
@@ -17,9 +17,9 @@
   }
 
   .modal {
-    background-color: white;
-    border-radius: 0.6rem;
-    padding: 0.9rem;
+    background-color: var(--ace-popover);
+    border-radius: calc(var(--ace-radius) * 2);
+    padding: calc(var(--ace-space) * 2);
     width: 69rem;
     max-width: 90vw;
     max-height: 100%;

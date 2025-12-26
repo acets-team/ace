@@ -30,7 +30,7 @@ export async function hashValidate({ password, hash }: HashValidateProps): Promi
   if (!reqHashB64) return error('FALSY_HASH_FN', 'Hash Function in hash must be truthy')
   if (!hashFn) return error('FALSY_HASH_FN', 'Hash function name in hash must be truthy')
 
-  const iterations = parseInt(iterationsString ?? '', 10)
+  const iterations = Number(iterationsString || '')
   if (isNaN(iterations) || iterations <= 0) return error('INVALID_ITERATIONS', `Invalid iterations in hash, current: ${iterationsString}`)
 
   const encoder = new TextEncoder()

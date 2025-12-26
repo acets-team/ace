@@ -1,12 +1,14 @@
 import { createMemo } from 'solid-js'
 import { Route } from './fundamentals/route'
-import { scope } from './fundamentals/scopeComponent'
+import { useScope } from './fundamentals/useScope'
 import type { Route404 } from './fundamentals/route404'
 import { ScopeComponentChildren } from './scopeComponentChildren'
 import { useParams, useLocation, type RouteSectionProps } from '@solidjs/router'
 
 
 export function populateScopeComponent(props: RouteSectionProps, item: Route<any> | Route404 | 'RootLayout' | 'SubLayout') {
+  const scope = useScope()
+
   // populate routeSectionProps
   scope.routeSectionProps = () => props
 

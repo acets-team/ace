@@ -24,12 +24,16 @@ export async function buildRead(build: Build) {
 
     await setTsconfigPaths(build)
 
-    const [fsSolidTypes] = await Promise.all([
+    const [fsSolidTypes, fsApi, fsBaseApp] = await Promise.all([
       readFile(join(build.dirDistBuildJs, '../../../fundamentals/types.d.txt'), 'utf-8'),
+      readFile(join(build.dirDistBuildJs, '../../../[...api].txt'), 'utf-8'),
+      readFile(join(build.dirDistBuildJs, '../../../baseApp.txt'), 'utf-8'),
       readApiDirectory(resolve(build.cwd, build.config.apiDir), build),
       readAppDirectory(resolve(build.cwd, build.config.appDir), build),
     ])
 
+    build.fsApi = fsApi
+    build.fsBaseApp = fsBaseApp
     build.fsSolidTypes = fsSolidTypes
   }
 }

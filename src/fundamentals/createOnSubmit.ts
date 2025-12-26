@@ -5,7 +5,7 @@
  */
 
 
-import { scope } from './scopeComponent'
+import { useScope } from './useScope'
 import { dateFromInput } from './dateFromInput'
 
 
@@ -69,10 +69,12 @@ import { dateFromInput } from './dateFromInput'
  * @param onSubmit - Async function to call on submit
  * @param onSubmit.fd - The 1st param provided to `onSubmit()`. `fd()` helps us get `values` from the `<form>` that was submitted, example: `fd('example')` provides the value from `<input name="example" />` 🚨 If the input type is a `date` OR `datetime-local` the value will be the local iso string
  * @param onSubmit.event - The 2nd param provided to `onSubmit()`. The `event`, of type `SubmitEvent`, is typically used when `fd()` is not low level enough
- * @param onError - Optional, `scope.messages.align(e)` alwaays happens on default but feel free to pass an async or not async function on error
+ * @param onError - Optional, `scope.messages.align(e)` always happens on default but feel free to pass an async or not async function on error
  * @param onError.error - The error that was thrown
  */
 export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCallback) {
+  const scope = useScope() // must be outside the async function or else hydration error
+
   return async function (event: SubmitEvent) {
     try {
       event.preventDefault()
@@ -94,7 +96,7 @@ export function createOnSubmit(onSubmit: OnSubmitCallback, onError?: OnErrorCall
 
         const input = form.elements.namedItem(name)
 
-        if (input instanceof HTMLSelectElement && input.multiple) {
+        if (input instanceof RadioNodeList || (input instanceof HTMLSelectElement && input.multiple)) {
           return values
         }
 

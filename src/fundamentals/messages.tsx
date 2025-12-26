@@ -6,7 +6,7 @@
 
 
 import { config } from 'ace.config'
-import { scope } from './scopeComponent'
+import { useScope } from './useScope'
 import { feComponent } from './feComponent'
 import { defaultMessageName } from './vars'
 import { For, Show, type JSX } from 'solid-js'
@@ -27,6 +27,7 @@ export const Messages = feComponent(({ name = config.defaultMessageName || defau
   /** Props to put on the wrapper div that already has the class `ace-messages` */
   $div?: JSX.HTMLAttributes<HTMLDivElement>
 }) => {
+  const scope = useScope()
   const [messages] = scope.messages.get(name)
 
   const baseClass = 'ace-messages'

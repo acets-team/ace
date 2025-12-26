@@ -8,10 +8,9 @@ import type { Accessor } from 'solid-js'
 import type { PopoverPosition } from './fundamentals/types'
 
 
-export function createPositionPopover(props: { aimElement: HTMLElement, position: Accessor<PopoverPosition>, popoverElement: Accessor<undefined | HTMLDivElement> }) {
+export function createPositionPopover(props: { aimElement: HTMLElement, position: Accessor<PopoverPosition>, popoverElement: Accessor<undefined | HTMLDivElement>, isDropdown?: boolean }) {
   return () => {
     const _popoverElement = props.popoverElement()
-
     if (!_popoverElement) return
 
     let top = 0, left = 0
@@ -48,5 +47,11 @@ export function createPositionPopover(props: { aimElement: HTMLElement, position
     // getBoundingClientRect() gives coordinates relative to the visible viewport, not the full page, so below we adjust for scroll
     _popoverElement.style.top = `${top + window.scrollY}px`
     _popoverElement.style.left = `${left + window.scrollX}px`
+
+    if (props.isDropdown) {
+      const content = _popoverElement.querySelector<HTMLDivElement>('.ace-dropdown-content')
+
+      if (content) content.style.maxHeight = `calc(100vh - ${top + 20}px)`
+    }
   }
 }

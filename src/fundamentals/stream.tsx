@@ -6,10 +6,11 @@
 
 
 
+import { useScope } from './useScope'
 import { unwrap } from 'solid-js/store'
 import { query, type AccessorWithLatest } from '@solidjs/router'
 import { createEffect, createSignal, type JSX, Show, Suspense, type Accessor } from 'solid-js'
-import type { BaseApiReq, FetchFn, StreamStatus, UIProps, AceResData, BaseStoreCtx, FetchStoreResponse, AceResErrorEither, AceResEither, Array2ArrayItem, RequiredKeys, Atoms } from './types'
+import type { BaseApiReq, FetchFn, StreamStatus, UIProps, AceResData, InferAtoms, FetchStoreResponse, AceResErrorEither, AceResEither, Array2ArrayItem, RequiredKeys, Atoms } from './types'
 import { createRun, createShowBE, createShowStore, fetchCreateAsync, innerQuery, onResponse, render, runOnNetworkToggle, runOnWindowToggle, tsxDefaultError, tsxDefaultOnLoad } from '../fetch'
 
 
@@ -27,18 +28,18 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
   #initialLoadComplete = false
 
   /** 
-   * - Requires a `store` prop to be passed in the constructor in order to work
-   * - When a `store` prop is set we automatically sync `BE` data w/ `store` data
-   * - `showStore()` is helpful when you'd love `store` data to show in the `ui`
+   * - Requires an `atom` prop to be passed in the constructor in order to work
+   * - When an `atom` prop is set we automatically sync `BE` data w/ `atom` data
+   * - `showAtom()` is helpful when you'd love `atom` data to show in the `ui`
    * - Typically called if you'd love to show data that is different then `BE` data
-   * - In this case first call `showStore()`, then update the store data & the ui will show the updated data
-   * - IF `run()` is called after `showStore()`, BE data will once again be shown automatically
+   * - In this case first call `showAtom()`, then update the atom data & the ui will show the updated data
+   * - IF `run()` is called after `showAtom()`, BE data will once again be shown automatically
    * - IF you'd love to toggle back to showing `BE` data w/o calling `run()` call `showBE()`
   */
-  showStore: () => void
+  showAtom: () => void
 
   /**
-   * - IF `run()` is called after `showStore()`, BE data will once again be shown automatically
+   * - IF `run()` is called after `showAtom()`, BE data will once again be shown automatically
    * - IF you'd love to toggle back to showing `BE` data w/o calling `run()` call `showBE()`
    */
   showBE: () => void
@@ -46,14 +47,14 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
   /**
    * 1. Sets `status` to `loading`
    * 1. Calls Solid's `revalidate()`
-   * 1. IF `store` prop provided THEN updates `store` w/ response
+   * 1. IF `atom` prop provided THEN updates `atom` w/ response
    * 1. Set's status to `success` or error based on `response`
    */
   run: () => Promise<void>
 
   /**
-   * - Options: `'loading' | 'error' | 'storeRendered' | 'success'` 
-   * - `storeRendered`: The status IF `showStore()` is called OR on refresh IF we have store data
+   * - Options: `'loading' | 'error' | 'atomRendered' | 'success'` 
+   * - `atomRendered`: The status IF `showAtom()` is called OR on refresh IF we have atom data
    */
   status: Accessor<StreamStatus>
 
@@ -67,7 +68,8 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
   ui: <T_For_Item_Actual extends AceResData = Array2ArrayItem<T_Res_Data>>(props: UIProps<T_Res_Data, T_For_Item_Actual>) => JSX.Element;
 
   constructor(constructorProps: StreamProps<T_Req, T_Res_Data, T_Atoms>) {
-    const baseStore = constructorProps.store?.[0]
+    const scope = useScope()
+    const baseAtom = constructorProps.atom?.[0]
 
     const [status, setStatus] = createSignal<StreamStatus>('success') // don't start on loading b/c that can cause hydration errors when the data is available on the BE
 
@@ -75,16 +77,16 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
 
     this.showBE = createShowBE(setStatus)
 
-    this.showStore = createShowStore(setStatus, constructorProps.store)
+    this.showAtom = createShowStore(setStatus, constructorProps.atom)
 
     this.#onResponse = () => {
-      onResponse({ store: constructorProps.store, resAsync, setStatus, baseStore })
+      onResponse({ atom: constructorProps.atom, resAsync, setStatus, baseAtom })
     }
 
     this.run = createRun(setStatus, constructorProps.queryKey, this.#onResponse)
 
     const queryFn = async (req: T_Req) => {
-      return innerQuery<T_Req, T_Res_Data>(await constructorProps.fn(req), setStatus)
+      return innerQuery<T_Req, T_Res_Data>(await constructorProps.fn(req, scope), setStatus)
     }
 
     const resQuery = query(
@@ -93,6 +95,7 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
     )
 
     const resAsync = fetchCreateAsync<T_Req, T_Res_Data>(
+      scope,
       resQuery,
       constructorProps.req,
       constructorProps.reconcileKey,
@@ -108,11 +111,11 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
     createEffect(() => {
       if (!this.#initialLoadComplete) {
         const _resAsync = unwrap(resAsync()) // IF not in a createEffect() THEN streaming breaks (entire page waits for response)
-        const _resStore = baseStore?.store && constructorProps.store ? unwrap(baseStore.store[constructorProps.store[1]]) : null // IF not in a createEffect THEN when idb gives us data we won't know
+        const _resStore = baseAtom?.store && constructorProps.atom ? unwrap(baseAtom.store[constructorProps.atom[1]]) : null // IF not in a createEffect THEN when idb gives us data we won't know
 
-        if (_resStore && !_resAsync) { // IF store data AND no BE data -> 'storeRendered'
-          setStatus('storeRendered')
-        } else if (!_resStore && !_resAsync) { // IF no store data AND no BE data -> 'loading'
+        if (_resStore && !_resAsync) { // IF atom data AND no BE data -> 'atomRendered'
+          setStatus('atomRendered')
+        } else if (!_resStore && !_resAsync) { // IF no atom data AND no BE data -> 'loading'
           setStatus('loading')
         }
 
@@ -131,8 +134,8 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
 
       const feRender = () => <>
         {
-          baseStore && constructorProps.store
-            ? render({ status, uiProps, res: baseStore.store[constructorProps.store[1]] as FetchStoreResponse<T_Res_Data> })
+          baseAtom && constructorProps.atom
+            ? render({ status, uiProps, res: baseAtom.store[constructorProps.atom[1]] as FetchStoreResponse<T_Res_Data> })
             : null
         }
       </>
@@ -144,7 +147,7 @@ export class Stream<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_A
       </>
 
       return <>
-        <Show when={status() === 'storeRendered'} fallback={beRender()}>
+        <Show when={status() === 'atomRendered'} fallback={beRender()}>
           {feRender()}
         </Show>
       </>
@@ -187,12 +190,12 @@ type BaseStreamProps<
   queryKey: string,
 
   /**
-   * - When a `store` prop is set we automatically sync `BE` data w/ `store` data
-   * - On Refresh if we have store data defined & BE data is loading, we'll show store data, and then when BE data is ready we'll show BE data automatically
-   * - The first prop passed to the tuple is `useStore`
-   * - The 2nd prop passed to the tuple is the key w/in the store that we should sync w/
+   * - When an `atom` prop is set we automatically sync `BE` data w/ the `atom`
+   * - On Refresh if we have `atom` data defined & BE data is loading, we'll show atom data, and then when the BE data is ready we'll show BE data automatically
+   * - The first prop passed to the tuple is `baseAtom`
+   * - The 2nd prop passed to the tuple is the key w/in the atoms object that we should sync w/
    */
-  store?: [BaseStoreCtx<T_Atoms>, keyof T_Atoms],
+  atom?: [InferAtoms<T_Atoms>, keyof T_Atoms],
 
   /**
    * - Optional, defaults to `id`, used when data is an array

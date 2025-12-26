@@ -38,7 +38,7 @@ import { clientOnly } from '@solidjs/start'
  * 
  */
 export function feComponent<T_Props extends Record<string, any> = {}>(Component: (props: T_Props) => JSX.Element): (props: T_Props) => JSX.Element {
-  return clientOnly(async () => ({ // mimic default export: clientOnly(() => import('./SomeComponent'))
+  return clientOnly(async () => ({ // mimic default export: clientOnly(() => import('./Example'))
     default: (props: T_Props) => <Component {...props} />
   }))
 }

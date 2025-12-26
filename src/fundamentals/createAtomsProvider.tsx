@@ -1,32 +1,23 @@
-/**
- * 🧚‍♀️ How to use:
- *   Plugin solid
- *   import { createStore } from '@ace/createStore'
- */
-
-
 import type { Atom } from './atom'
 import { isServer } from 'solid-js/web'
+import { Context, onMount, type JSX } from 'solid-js'
 import { IndexDB, type IDBOptions } from './indexDB'
 import { createStoreRefBind } from './createStoreRefBind'
 import { createStoreReconcile } from './createStoreReconcile'
 import { idbDefaultDbName, idbDefaultStoreName } from './vars'
-import { createContext, onMount, useContext, type JSX } from 'solid-js'
-import type { Atoms, BaseStoreCtx, BaseStoreInternal, InferAtom } from './types'
+import type { Atoms, InferAtoms, BaseStoreInternal, Atom2Type } from './types'
 import { unwrap, createStore as createSolidStore, SetStoreFunction as SetSolidStore } from 'solid-js/store'
 
 
-
-export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string }) {
+export function createAtomsProvider<T_Atoms extends Atoms>(createStoreProps: { atoms: T_Atoms, idbDbName?: string, idbStoreName?: string, AtomsContext: Context<InferAtoms<T_Atoms> | undefined> }) {
   const idb = new IndexDB()
-  const StoreContext = createContext<BaseStoreCtx<T_Atoms>>()
   let _: BaseStoreInternal = { dontLoad: new Set(), trackDontLoad: true }
   const idbOpts: IDBOptions = { dbName: createStoreProps.idbDbName ?? idbDefaultDbName, storeName: createStoreProps.idbStoreName ?? idbDefaultStoreName }
 
-  const StoreProvider = (providerProps: { children: JSX.Element }) => {
+  return (providerProps: { children: JSX.Element }) => {
     const init = Object.fromEntries(
       Object.entries(createStoreProps.atoms).map(([k, v]) => [k, v.init])
-    ) as { [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }
+    ) as { [K in keyof T_Atoms]: Atom2Type<T_Atoms[K]> }
 
     const [store, setStore] = createSolidStore(init)
 
@@ -55,7 +46,7 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
     }
 
 
-    const context: BaseStoreCtx<T_Atoms> = {
+    const context: InferAtoms<T_Atoms> = {
       _,
       idb,
       set,
@@ -70,32 +61,11 @@ export function createStore<T_Atoms extends Atoms>(createStoreProps: { atoms: T_
     onMount(() => loadStore({ _, idb, set, store, atoms: createStoreProps.atoms }))
 
     return <>
-      <StoreContext.Provider value={context}>
+      <createStoreProps.AtomsContext.Provider value={context}>
         {providerProps.children}
-      </StoreContext.Provider>
+      </createStoreProps.AtomsContext.Provider>
     </>
   }
-
-  /**
-   * - `useStore()` gives back a reference to the same object in memory every time
-   * - `useStore()` may be called **100's** of times :)
-   * @example
-   * ```ts
-   * const {set, save, store, reconcile, produce, refBind} = useStore()
-   * ```
-   * - From `useStore()`:
-   *     - SolidJS provides `store` & `setStore()`: https://docs.solidjs.com/concepts/stores
-   *     - Ace provides `save()`: persists an Atom
-   *     - Ace provides `set()`: calls `setStore()` and then `save()`
-   *     - `push()`, `reconcile()` and `produce()` call `save()`
-   */
-  const useStore = () => {
-    const context = useContext(StoreContext)
-    if (!context) throw new Error('!useContext(StoreContext)')
-    return context
-  }
-
-  return { useStore, StoreProvider }
 }
 
 
@@ -103,8 +73,8 @@ async function loadStore<T_Atoms extends Atoms>(props: {
   _: BaseStoreInternal,
   idb: IndexDB,
   atoms: T_Atoms,
-  store: { [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>; },
-  set: SetSolidStore<{ [K in keyof T_Atoms]: InferAtom<T_Atoms[K]> }>,
+  store: { [K in keyof T_Atoms]: Atom2Type<T_Atoms[K]>; },
+  set: SetSolidStore<{ [K in keyof T_Atoms]: Atom2Type<T_Atoms[K]> }>,
 }) {
   if (isServer) return
 
@@ -164,7 +134,6 @@ function persist(key: string, value: any, atom: Atom<any>, idbOpts: IDBOptions, 
     console.error(`Failed to persist ${key}:`, e)
   }
 }
-
 
 
 function serialize(atom: Atom<any>, value: any): string {

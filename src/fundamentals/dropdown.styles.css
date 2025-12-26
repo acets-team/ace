@@ -80,7 +80,8 @@
     }
   }
 
-  .content {
+  .ace-dropdown-content {
+    overflow-y: auto;
     background: var(--ace-popover);
     box-shadow: var(--ace-shadow);
     border: 1px solid var(--ace-border);

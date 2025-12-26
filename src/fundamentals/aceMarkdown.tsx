@@ -132,7 +132,7 @@ function RenderItem(props: { md: markdownit, item: AceMarkdownItem, componentMap
 
     case 'component':
       const Component = props.componentMap.get(props.item.name)
-      if (!Component) throw new Error(`@ <AceMarkdown /> we arre missing the component: ${props.item.name}`)
+      if (!Component) throw new Error(`@ <AceMarkdown /> we are missing the component: ${props.item.name}`)
       return <Component {...props.item.props} />
 
 

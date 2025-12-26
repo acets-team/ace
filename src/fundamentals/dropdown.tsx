@@ -138,6 +138,7 @@ function DropdownComponent(componentProps: {
 
   const positionDropdown = createPositionPopover({
     position,
+    isDropdown: true,
     popoverElement: () => dropdownRef,
     aimElement: componentProps.aimElement,
   })
@@ -158,7 +159,7 @@ function DropdownComponent(componentProps: {
       {...componentProps.refProps().$div}
       class={mergedClass()}
     >
-      <div class="content">{componentProps.refProps().content({ isVisible, aimElement: componentProps.aimElement, setIsVisible })}</div>
+      <div class="ace-dropdown-content">{componentProps.refProps().content({ isVisible, aimElement: componentProps.aimElement, setIsVisible })}</div>
     </div>
   </>
 }

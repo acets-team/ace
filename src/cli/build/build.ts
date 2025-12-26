@@ -28,9 +28,11 @@ export class Build {
   cwd: string
   env: string
   space = '\n'
+  fsApi?: string
   fsEnv?: string
   found404 = false
   config: AceConfig
+  fsBaseApp?: string
   dirWriteRoot: string
   fsSolidTypes?: string
   /** `./dist/src/cli/build/build.js` */

@@ -6,10 +6,11 @@
 
 
 
+import { useScope } from './useScope'
 import { unwrap } from 'solid-js/store'
 import { query, type AccessorWithLatest } from '@solidjs/router'
 import { createEffect, createSignal, Suspense, type JSX, type Accessor } from 'solid-js'
-import type { BaseApiReq, AceResData, BaseStoreCtx, Array2ArrayItem, FetchFn, LoadStatus, UIProps, AceResEither, AceResErrorEither, RequiredKeys, Atoms } from './types'
+import type { BaseApiReq, AceResData, InferAtoms, Array2ArrayItem, FetchFn, LoadStatus, UIProps, AceResEither, AceResErrorEither, RequiredKeys, Atoms } from './types'
 import { createRun as createRun, createShowBE, createShowStore, fetchCreateAsync, innerQuery, onResponse, render, runOnNetworkToggle, runOnWindowToggle, tsxDefaultError, tsxDefaultOnLoad } from '../fetch'
 
 
@@ -24,18 +25,18 @@ export class Load<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_Ato
   #initialLoadComplete = false
 
   /**
-   * - Requires a `store` prop to be passed in the constructor in order to work
-   * - When a `store` prop is set we automatically sync `BE` data w/ `store` data
-   * - `showStore()` is helpful when you'd love `store` data to show in the `ui`
+   * - Requires an `atom` prop to be passed in the constructor in order to work
+   * - When am `atom` prop is set we automatically sync `BE` data w/ `atom` data
+   * - `showAtom()` is helpful when you'd love `atom` data to show in the `ui`
    * - Typically called if you'd love to show data that is different then `BE` data
-   * - In this case first call `showStore()`, then update the store data & the ui will show the updated data
-   * - IF `run()` is called after `showStore()`, BE data will once again be shown automatically
+   * - In this case first call `showAtom()`, then update the atom data & the ui will show the updated data
+   * - IF `run()` is called after `showAtom()`, BE data will once again be shown automatically
    * - IF you'd love to toggle back to showing `BE` data w/o calling `run()` call `showBE()`
   */
-  showStore: () => void
+  showAtom: () => void
 
   /**
-   * - IF `run()` is called after `showStore()`, BE data will once again be shown automatically
+   * - IF `run()` is called after `showAtom()`, BE data will once again be shown automatically
    * - IF you'd love to toggle back to showing `BE` data w/o calling `run()` call `showBE()`
    */
   showBE: () => void
@@ -43,14 +44,14 @@ export class Load<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_Ato
   /**
    * 1. Sets `status` to `loading`
    * 1. Calls Solid's `revalidate()`
-   * 1. IF `store` prop provided THEN updates `store` w/ response
+   * 1. IF `atom` prop provided THEN updates `atom` w/ response
    * 1. Set's status to `success` or error based on `response`
    */
   run: () => Promise<void>
 
   /**
-   * - Options: `'loading' | 'error' | 'storeRendered' | 'success'` 
-   * - `storeRendered`: The status IF `showStore()` is called OR on refresh IF we have store data
+   * - Options: `'loading' | 'error' | 'atomRendered' | 'success'` 
+   * - `atomRendered`: The status IF `showAtom()` is called OR on refresh IF we have atom data
    */
   status: Accessor<LoadStatus>
 
@@ -65,7 +66,8 @@ export class Load<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_Ato
 
 
   constructor(constructorProps: LoadProps<T_Req, T_Res_Data, T_Atoms>) {
-    const baseStore = constructorProps.store?.[0]
+    const scope = useScope()
+    const baseAtom = constructorProps.atom?.[0]
 
     const [status, setStatus] = createSignal<LoadStatus>('success') // don't start on loading b/c then SEO will have loading indicator
 
@@ -73,16 +75,16 @@ export class Load<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_Ato
 
     this.showBE = createShowBE(setStatus)
 
-    this.showStore = createShowStore(setStatus, constructorProps.store)
+    this.showAtom = createShowStore(setStatus, constructorProps.atom)
 
     this.#onResponse = () => {
-      onResponse({ store: constructorProps.store, resAsync, setStatus, baseStore })
+      onResponse({ atom: constructorProps.atom, resAsync, setStatus, baseAtom })
     }
 
     this.run = createRun(setStatus, constructorProps.queryKey, this.#onResponse)
 
     const queryFn = async (req: T_Req) => {
-      return innerQuery<T_Req, T_Res_Data>(await constructorProps.fn(req), setStatus)
+      return innerQuery<T_Req, T_Res_Data>(await constructorProps.fn(req, scope), setStatus)
     }
 
     const resQuery = query(
@@ -91,6 +93,7 @@ export class Load<T_Req extends BaseApiReq, T_Res_Data extends AceResData, T_Ato
     )
 
     const resAsync = fetchCreateAsync<T_Req, T_Res_Data>(
+      scope,
       resQuery,
       constructorProps.req,
       constructorProps.reconcileKey,
@@ -161,11 +164,11 @@ type BaseLoadProps<
   queryKey: string,
 
   /**
-   * - When a `store` prop is set we automatically sync `BE` data w/ `store` data
-   * - The first prop passed to the tuple is `useStore`
-   * - The 2nd prop passed to the tuple is the key w/in the store that we should sync to
+   * - When a `atom` prop is set we automatically sync `BE` data w/ `atom` data
+   * - The first prop passed to the tuple is `baseAtom`
+   * - The 2nd prop passed to the tuple is the key w/in the atom that we should sync to
    */
-  store?: [BaseStoreCtx<T_Atoms>, keyof T_Atoms],
+  atom?: [InferAtoms<T_Atoms>, keyof T_Atoms],
 
   /**
    * - Optional, defaults to `id`, used when data is an array

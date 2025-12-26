@@ -61,7 +61,7 @@ export function mergeStrings(baseStr: string, ...reqStrs: (string | undefined)[]
  * @returns Merged object
  */
 export function mergeObjects<T_Obj extends Record<string, any>, T_Request = any, T_Required = any>(props: {
-  base: T_Obj,
+  base?: T_Obj,
   request?: T_Request,
   required?: T_Required
 }): T_Obj & T_Request & T_Required {

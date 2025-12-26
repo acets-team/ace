@@ -90,9 +90,12 @@ export type AceResponse2Data<T_Res> = T_Res extends AceResponse<infer T_Res_Data
 
 
 export type BaseApiReq = {
-  body?: BaseBody,
+  file?: File
+  body?: BaseBody
+  formData?: BaseBody,
   pathParams?: BasePathParams,
   searchParams?: BaseSearchParams,
+  requestInit?: Partial<RequestInit>,
 }
 
 
@@ -220,6 +223,27 @@ export type ApiName2Load<T_Name extends ApiNames> = Load<ApiName2Req<T_Name>, Ap
 export type ApiName2Async<T_Name extends ApiNames> = Async<ApiName2Req<T_Name>, ApiName2ResData<T_Name>>
 
 
+/** 
+ * - Receives: Async
+ * - Gives: ResData
+*/
+export type Async2ResData<T_Async> = T_Async extends Async<any, infer T_ResData> ? T_ResData : never
+
+
+/** 
+ * - Receives: Load
+ * - Gives: ResData
+*/
+export type Load2ResData<T_Load> = T_Load extends Load<any, infer T_ResData> ? T_ResData : never
+
+
+/** 
+ * - Receives: Stream
+ * - Gives: ResData
+*/
+export type Stream2ResData<T_Stream> = T_Stream extends Stream<any, infer T_ResData> ? T_ResData : never
+
+
 export type ApiResolver2ResData<T_Resolver extends ApiResolverFn<any, any>> = Awaited<ReturnType<T_Resolver>> extends infer T_Result
   ? T_Result extends AceResponse<infer T_Res_Data>
   ? T_Res_Data
@@ -241,6 +265,15 @@ export type ApiInfo2Req<T_ApiInfo extends ApiInfo> = Parser2Req<T_ApiInfo['parse
  */
 export type ApiReq2Body<T_Req extends BaseApiReq> = NonNullable<T_Req['body']> extends BaseBody
   ? NonNullable<T_Req['body']>
+  : BaseBody
+
+
+/**
+ * Receives: Api request type
+ * Gives: Form Data object type
+ */
+export type ApiReq2FormData<T_Req extends BaseApiReq> = NonNullable<T_Req['formData']> extends BaseBody
+  ? NonNullable<T_Req['formData']>
   : BaseBody
 
 
@@ -341,7 +374,7 @@ export type AnyValue<T> = ExactKeys<T, AllowAnyValue<T>>
 export type FetchFn<
   T_Req extends BaseApiReq,
   T_Res_Data extends AceResData
-> = (req: T_Req) => Promise<AceResponse<T_Res_Data>>
+> = (req: T_Req, scope?: ScopeComponent) => Promise<AceResponse<T_Res_Data>>
 
 
 /**
@@ -354,11 +387,11 @@ export type MaybeOptionalArg<T> = undefined extends AllowUndefinedIfNoRequired<T
   : [req: AllowUndefinedIfNoRequired<T>] // required keys → req required
 
 
-export type LoadStatus = 'loading' | 'error' | 'storeRendered' | 'success'
+export type LoadStatus = 'loading' | 'error' | 'atomRendered' | 'success'
 
 export type AsyncStatus = 'idle' | 'loading' | 'error' | 'success'
 
-export type StreamStatus = 'loading' | 'error' | 'storeRendered' | 'success'
+export type StreamStatus = 'loading' | 'error' | 'atomRendered' | 'success'
 
 
 export type UIProps<
@@ -569,7 +602,7 @@ export type AtomSaveLocations = InferEnums<typeof atomPersit>
  * - Receives: An Atom type (ex: Atom<string>)
  * - Gives: The type of the Atom, string
  */
-export type InferAtom<T> = T extends Atom<infer U> ? U : never
+export type Atom2Type<T> = T extends Atom<infer U> ? U : never
 
 
 /** `AtomIs` helps us ensure that we serialize and deserialize to and from persistance correctly */
@@ -588,7 +621,7 @@ export type Atom2Is<T> = T extends { is: infer I } ? I : never
  * - Gives: Store (Infer each atom)
 */
 export type Atoms2Store<T_Atoms extends Atoms> = {
-  [K in keyof T_Atoms]: InferAtom<T_Atoms[K]>
+  [K in keyof T_Atoms]: Atom2Type<T_Atoms[K]>
 }
 
 
@@ -634,7 +667,7 @@ export type PopoverPosition = 'topCenter' | 'bottomCenter' | 'topLeft' | 'topRig
 /** ❤️ Complex Store Types */
 
 
-export type BaseStoreCtx<T_Atoms extends Atoms> = {
+export type InferAtoms<T_Atoms extends Atoms> = {
   /**
    * - Showing the proper value for each Atom is important and this "_" variable helps us accomplish that
    * - IF an Atom has an init value we will start by showing that

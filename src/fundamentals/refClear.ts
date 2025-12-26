@@ -5,7 +5,7 @@
 
 
 import { onCleanup } from 'solid-js'
-import { scope } from './scopeComponent'
+import { useScope } from './useScope'
 
 
 /**
@@ -15,26 +15,29 @@ import { scope } from './scopeComponent'
  */
 export function refClear<T extends null | HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>() {
   return (el: T) => {
-    if (!el) return
-    let readyToClear = true
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+      let readyToClear = true
 
-    function onBlur () {
-      readyToClear = true
-    }
+      const scope = useScope()
 
-    function onInput () {
-      if (el && readyToClear) {
-        readyToClear = false
-        scope.messages.set({ name: el.name, value: [] })
+      function onBlur() {
+        readyToClear = true
       }
+
+      function onInput() {
+        if (el && readyToClear) {
+          readyToClear = false
+          scope.messages.set({ name: el.name, value: [] })
+        }
+      }
+
+      el.addEventListener('blur', onBlur)
+      el.addEventListener('input', onInput)
+
+      onCleanup(() => {
+        el.removeEventListener('blur', onBlur)
+        el.removeEventListener('input', onInput)
+      })
     }
-
-    el.addEventListener('blur', onBlur)
-    el.addEventListener('input', onInput)
-
-    onCleanup(() => {
-      el.removeEventListener('blur', onBlur)
-      el.removeEventListener('input', onInput)
-    })
   }
 }

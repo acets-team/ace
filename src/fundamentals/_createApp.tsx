@@ -1,197 +1,197 @@
-/**
-* 🧚‍♀️ How to access:
-*     - Plugin: solid
-*     - import { createApp } from '@ace/createApp'
-*     - import type { ParentComponentEntry, ParentComponentEntryWithProps } from '@ace/createApp'
-*/
+// /**
+// * 🧚‍♀️ How to access:
+// *     - Plugin: solid
+// *     - import { createApp } from '@ace/createApp'
+// *     - import type { ParentComponentEntry, ParentComponentEntryWithProps } from '@ace/createApp'
+// */
 
 
-// import { Layout } from './layout'
-import { config } from 'ace.config'
-import { Route404 } from './route404'
-import { isServer } from 'solid-js/web'
-import { Route as AceRoute } from './route'
-import { MetaProvider } from '@solidjs/meta'
-import { FileRoutes } from '@solidjs/start/router'
-import { MessagesCleanup } from '../messagesCleanup'
-// import { setScopeComponentChildren } from '../scopeComponentChildren'
-import { scope, ScopeComponentContextProvider } from './scopeComponent'
-import { createMemo, createRenderEffect, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
-import { Route, Router, useLocation, useParams, type RouteSectionProps } from '@solidjs/router'
-
-
-
-/** 
- * @param requestedParentComponents - The first component is the outermost, at the end of your list will automatically be added: `[FEContextProvider, MetaProvider, Suspense]` so if you provide `export default createApp([AuthProvider])` the result is `[AuthProvider, FEContextProvider, MetaProvider, Suspense]`
- * @returns A function that when called provided an <App /> component
- * @example
-```ts
-import './app.css'
-import '@ace/toast.styles.css'
-import '@ace/tooltip.styles.css'
-import '@ace/loading.styles.css'
-import { createApp } from '@ace/createApp'
-import { AuthProvider } from '@src/AuthProvider/AuthProvider'
-
-
-export default createApp([AuthProvider])
-```
- */
-export function createApp(requestedParentComponents: ParentComponentEntry<any>[] = []) {
-  const parentComponents = [...requestedParentComponents, ...defaultParentComponents]
-
-  const Root: ParentComponent<any> = (props: RouteSectionProps) => {
-    let RootAccumulator: ParentComponent<any> = (p) => <>{p.children}</> // will become our Root, starts w/ the children and with each loop adds a Wrapper
-
-    for (let i = parentComponents.length - 1; i >= 0; i--) {
-      const entry = parentComponents[i]
-      if (!entry) continue
-
-      const { parentComponent: Wrapper, props } = normalizeParentComponent(entry)
-
-      const CurrentRoot = RootAccumulator // get Wrapper children
-
-      // place ParentComponent around CurrentRoot AND update the RootAccumulator
-      RootAccumulator = (p) => <>
-        <Wrapper {...props}>
-          <CurrentRoot>{p.children}</CurrentRoot>
-        </Wrapper>
-      </>
-    }
-
-    return <RootAccumulator>{props.children}</RootAccumulator> // now render RootAccumulator around props.children
-  }
-
-  return function App(): JSX.Element {
-    if (config.sw && !isServer) {
-      createRenderEffect(() => {
-        document.body.classList.add('sw-ready')
-      })
-    }
-
-    return <>
-      <Router root={Root}>
-        <FileRoutes />
-{/* gen */}
-      </Router>
-    </>
-  }
-}
+// // import { Layout } from './layout'
+// import { config } from 'ace.config'
+// import { Route404 } from './route404'
+// import { isServer } from 'solid-js/web'
+// import { Route as AceRoute } from './route'
+// import { MetaProvider } from '@solidjs/meta'
+// import { FileRoutes } from '@solidjs/start/router'
+// import { MessagesCleanup } from '../messagesCleanup'
+// // import { setScopeComponentChildren } from '../scopeComponentChildren'
+// import { scope, ScopeComponentContextProvider } from './scopeComponent'
+// import { createMemo, createRenderEffect, lazy, Suspense, type JSX, type ParentComponent } from 'solid-js'
+// import { Route, Router, useLocation, useParams, type RouteSectionProps } from '@solidjs/router'
 
 
 
-const defaultParentComponents: ParentComponentEntry<any>[] = [
-  ScopeComponentContextProvider,
-  MetaProvider,
-  Suspense,
-]
+// /** 
+//  * @param requestedParentComponents - The first component is the outermost, at the end of your list will automatically be added: `[FEContextProvider, MetaProvider, Suspense]` so if you provide `export default createApp([AuthProvider])` the result is `[AuthProvider, FEContextProvider, MetaProvider, Suspense]`
+//  * @returns A function that when called provided an <App /> component
+//  * @example
+// ```ts
+// import './app.css'
+// import '@ace/toast.styles.css'
+// import '@ace/tooltip.styles.css'
+// import '@ace/loading.styles.css'
+// import { createApp } from '@ace/createApp'
+// import { AuthProvider } from '@src/AuthProvider/AuthProvider'
 
 
+// export default createApp([AuthProvider])
+// ```
+//  */
+// export function createApp(requestedParentComponents: ParentComponentEntry<any>[] = []) {
+//   const parentComponents = [...requestedParentComponents, ...defaultParentComponents]
 
-function lazyRoute(loader:() => Promise<any>) {
-  return lazy(async () => {
-    const mod = await loader()
+//   const Root: ParentComponent<any> = (props: RouteSectionProps) => {
+//     let RootAccumulator: ParentComponent<any> = (p) => <>{p.children}</> // will become our Root, starts w/ the children and with each loop adds a Wrapper
 
-    return {
-      default: () => {
-        const route = mod?.default
-        if (!(route instanceof AceRoute) && !(route instanceof Route404)) throw new Error('invalid route module')
+//     for (let i = parentComponents.length - 1; i >= 0; i--) {
+//       const entry = parentComponents[i]
+//       if (!entry) continue
 
-        const component = route.values.component
-        if (!component) throw new Error('!component')
+//       const { parentComponent: Wrapper, props } = normalizeParentComponent(entry)
 
-        if (route instanceof AceRoute) {
-          const rawPathParams = {...(useParams())}
-          const rawSearchParams = Object.fromEntries(new URLSearchParams({...(useLocation())}.search).entries())
+//       const CurrentRoot = RootAccumulator // get Wrapper children
 
-          const parsedRequest = route.values.requestParser
-            ? route.values.requestParser({ pathParams: rawPathParams, searchParams: rawSearchParams })
-            : { pathParams: rawPathParams, searchParams: rawSearchParams }
-
-          scope.pathParams = parsedRequest.pathParams
-          scope.searchParams = parsedRequest.searchParams
-
-          scope.PathParams = createMemo(() => {
-            const currentRawPathParams = { ...(useParams()) }
-            const currentRawSearchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
-
-            const currentParsedRequest = route.values.requestParser
-              ? route.values.requestParser({ pathParams: currentRawPathParams, searchParams: currentRawSearchParams })
-              : { pathParams: currentRawPathParams, searchParams: currentRawSearchParams }
-
-            return currentParsedRequest.pathParams
-          })
-
-          scope.SearchParams = createMemo(() => {
-            const currentRawPathParams = { ...(useParams()) }
-            const currentRawSearchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
-
-            const currentParsedRequest = route.values.requestParser
-              ? route.values.requestParser({ pathParams: currentRawPathParams, searchParams: currentRawSearchParams })
-              : { pathParams: currentRawPathParams, searchParams: currentRawSearchParams }
-
-            return currentParsedRequest.searchParams
-          })
-        } else {
-          scope.pathParams = { ...(useParams()) }
-
-          scope.PathParams = createMemo(() => {
-            return { ...(useParams()) }
-          })
-
-          scope.searchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
-
-          scope.SearchParams = createMemo(() => {
-            return Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
-          })
-        }
-
-        const jsx = component(scope)
-
-        return !jsx ? undefined : <>
-          {jsx}
-          <MessagesCleanup />
-        </>
-      }
-    }
-  })
-}
-
-
-
-// function lazyLayout(props: RouteSectionProps<unknown>, loader:() => Promise<any>) {
-//   const LazyRootLayout = lazy(async () => {
-//     const mod = await loader()
-
-//     const layout = mod.default
-//     if (!(layout instanceof Layout)) throw new Error('invalid layout module')
-        
-//     return {
-//       default (props: RouteSectionProps<unknown>) {
-//         if (!layout.values.component) throw new Error('!layout.values.component')
-//         // setScopeComponentChildren(scope, props.children)
-//         return layout.values.component(scope)
-//       }
+//       // place ParentComponent around CurrentRoot AND update the RootAccumulator
+//       RootAccumulator = (p) => <>
+//         <Wrapper {...props}>
+//           <CurrentRoot>{p.children}</CurrentRoot>
+//         </Wrapper>
+//       </>
 //     }
-//   })
 
-//   return <LazyRootLayout {...props} />
+//     return <RootAccumulator>{props.children}</RootAccumulator> // now render RootAccumulator around props.children
+//   }
+
+//   return function App(): JSX.Element {
+//     if (config.sw && !isServer) {
+//       createRenderEffect(() => {
+//         document.body.classList.add('sw-ready')
+//       })
+//     }
+
+//     return <>
+//       <Router root={Root}>
+//         <FileRoutes />
+// {/* gen */}
+//       </Router>
+//     </>
+//   }
 // }
 
 
 
-function normalizeParentComponent<T_Props extends Record<string, any> = {}>(entry: ParentComponentEntry<T_Props>): ParentComponentEntryWithProps<T_Props> {
-  if (typeof entry === 'function') return { parentComponent: entry, props: {} as T_Props }  // bare ParentComponent<P>
-  else return { parentComponent: entry.parentComponent, props: entry.props ?? ({} as T_Props) } // obj ParentComponent
-}
+// const defaultParentComponents: ParentComponentEntry<any>[] = [
+//   ScopeComponentContextProvider,
+//   MetaProvider,
+//   Suspense,
+// ]
 
 
 
-export type ParentComponentEntry<T_Props extends Record<string, any> = {}> = ParentComponent<T_Props> | ParentComponentEntryWithProps<T_Props>
+// function lazyRoute(loader:() => Promise<any>) {
+//   return lazy(async () => {
+//     const mod = await loader()
+
+//     return {
+//       default: () => {
+//         const route = mod?.default
+//         if (!(route instanceof AceRoute) && !(route instanceof Route404)) throw new Error('invalid route module')
+
+//         const component = route.values.component
+//         if (!component) throw new Error('!component')
+
+//         if (route instanceof AceRoute) {
+//           const rawPathParams = {...(useParams())}
+//           const rawSearchParams = Object.fromEntries(new URLSearchParams({...(useLocation())}.search).entries())
+
+//           const parsedRequest = route.values.requestParser
+//             ? route.values.requestParser({ pathParams: rawPathParams, searchParams: rawSearchParams })
+//             : { pathParams: rawPathParams, searchParams: rawSearchParams }
+
+//           scope.pathParams = parsedRequest.pathParams
+//           scope.searchParams = parsedRequest.searchParams
+
+//           scope.PathParams = createMemo(() => {
+//             const currentRawPathParams = { ...(useParams()) }
+//             const currentRawSearchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
+
+//             const currentParsedRequest = route.values.requestParser
+//               ? route.values.requestParser({ pathParams: currentRawPathParams, searchParams: currentRawSearchParams })
+//               : { pathParams: currentRawPathParams, searchParams: currentRawSearchParams }
+
+//             return currentParsedRequest.pathParams
+//           })
+
+//           scope.SearchParams = createMemo(() => {
+//             const currentRawPathParams = { ...(useParams()) }
+//             const currentRawSearchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
+
+//             const currentParsedRequest = route.values.requestParser
+//               ? route.values.requestParser({ pathParams: currentRawPathParams, searchParams: currentRawSearchParams })
+//               : { pathParams: currentRawPathParams, searchParams: currentRawSearchParams }
+
+//             return currentParsedRequest.searchParams
+//           })
+//         } else {
+//           scope.pathParams = { ...(useParams()) }
+
+//           scope.PathParams = createMemo(() => {
+//             return { ...(useParams()) }
+//           })
+
+//           scope.searchParams = Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
+
+//           scope.SearchParams = createMemo(() => {
+//             return Object.fromEntries(new URLSearchParams({ ...(useLocation()) }.search).entries())
+//           })
+//         }
+
+//         const jsx = component(scope)
+
+//         return !jsx ? undefined : <>
+//           {jsx}
+//           <MessagesCleanup />
+//         </>
+//       }
+//     }
+//   })
+// }
 
 
 
-export type ParentComponentEntryWithProps<T_Props extends Record<string, any> = {}> = {
-  parentComponent: ParentComponent<T_Props>
-  props: T_Props
-}
+// // function lazyLayout(props: RouteSectionProps<unknown>, loader:() => Promise<any>) {
+// //   const LazyRootLayout = lazy(async () => {
+// //     const mod = await loader()
+
+// //     const layout = mod.default
+// //     if (!(layout instanceof Layout)) throw new Error('invalid layout module')
+        
+// //     return {
+// //       default (props: RouteSectionProps<unknown>) {
+// //         if (!layout.values.component) throw new Error('!layout.values.component')
+// //         // setScopeComponentChildren(scope, props.children)
+// //         return layout.values.component(scope)
+// //       }
+// //     }
+// //   })
+
+// //   return <LazyRootLayout {...props} />
+// // }
+
+
+
+// function normalizeParentComponent<T_Props extends Record<string, any> = {}>(entry: ParentComponentEntry<T_Props>): ParentComponentEntryWithProps<T_Props> {
+//   if (typeof entry === 'function') return { parentComponent: entry, props: {} as T_Props }  // bare ParentComponent<P>
+//   else return { parentComponent: entry.parentComponent, props: entry.props ?? ({} as T_Props) } // obj ParentComponent
+// }
+
+
+
+// export type ParentComponentEntry<T_Props extends Record<string, any> = {}> = ParentComponent<T_Props> | ParentComponentEntryWithProps<T_Props>
+
+
+
+// export type ParentComponentEntryWithProps<T_Props extends Record<string, any> = {}> = {
+//   parentComponent: ParentComponent<T_Props>
+//   props: T_Props
+// }

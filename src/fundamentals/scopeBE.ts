@@ -1,3 +1,4 @@
+import { R2 } from './r2'
 import { config } from 'ace.config'
 import { mapRoutes } from './mapRoutes'
 import { env, configOrigins } from './env'
@@ -8,24 +9,30 @@ import { destructureReady } from './destructureReady'
 import type { CookieSerializeOptions } from 'cookie-es'
 import { setCookie, getCookie, deleteCookie } from 'h3'
 import { createAceResponse, type AceResponse } from './aceResponse'
-import type { BaseApiReq, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals, ApiReq2Body, ApiReq2PathParams, ApiReq2SearchParams, AceResData, AceResError, AceKey } from './types'
+import type { BaseApiReq, Routes, RoutePath2PathParams, RoutePath2SearchParams, BaseEventLocals, ApiReq2Body, ApiReq2PathParams, ApiReq2SearchParams, AceResData, AceResError, AceKey, ApiReq2FormData } from './types'
 
 
 
 /** Base scope for both API and B4 (middleware) scopes */
 export class ScopeBE<T_Req extends BaseApiReq = {}, T_Locals extends BaseEventLocals = {}> {
-  readonly body: ApiReq2Body<T_Req>
-  readonly pathParams: ApiReq2PathParams<T_Req>
-  readonly searchParams: ApiReq2SearchParams<T_Req>
+  r2 = new R2()
+  body: ApiReq2Body<T_Req>
+  requestHeaders: Record<string, string>
+  formData: ApiReq2FormData<T_Req>
   defaultHeaders: Record<string, string>
+  pathParams: ApiReq2PathParams<T_Req>
+  readableStream = new ReadableStream<Uint8Array>()
+  searchParams: ApiReq2SearchParams<T_Req>
   readonly event: Omit<ReturnType<typeof getRequestEvent>, 'locals'> & { locals: T_Locals }
 
 
   constructor(request: T_Req) {
+    this.formData = ({}) as ApiReq2FormData<T_Req> // will be defined @ api.ts
     this.body = (request.body ?? {}) as ApiReq2Body<T_Req>
     this.pathParams = (request.pathParams ?? {}) as ApiReq2PathParams<T_Req>
     this.searchParams = (request.searchParams ?? {}) as ApiReq2SearchParams<T_Req>
     this.event = getRequestEvent() as Omit<ReturnType<typeof getRequestEvent>, 'locals'> & { locals: T_Locals }
+    this.requestHeaders = Object.fromEntries(this.event.request.headers || [])
     this.defaultHeaders = {
       'Access-Control-Expose-Headers': goHeaderName,
       ...this.#getCorsHeaders(),

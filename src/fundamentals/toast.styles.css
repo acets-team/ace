@@ -27,7 +27,7 @@
     align-items: center;
     color: var(--ace-toast-text-color);
     border: var(--ace-toast-border, none);
-    background: var(--ace-toast-bg);
+    background: var(--ace-popover);
     animation: toast-animation 0.9s;
     transition: var(--ace-toast-transition, all 0.6s ease);
     max-width: calc(100vw - 3rem);

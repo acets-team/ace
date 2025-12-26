@@ -5,6 +5,7 @@
  */
 
 
+import { useScope } from './useScope'
 import { parseError } from './parseError'
 import { type Accessor, createSignal } from 'solid-js'
 import type { AsyncStatus, BaseApiReq, AceResData, AceResEither, FetchFn, RequiredKeys, AllowUndefinedIfNoRequired } from './types'
@@ -30,22 +31,25 @@ import type { AsyncStatus, BaseApiReq, AceResData, AceResEither, FetchFn, Requir
   })
   ```
  */
-export class Async<T_Req extends BaseApiReq, T_Res_Data extends AceResData> {
+export class Async<
+  T_Req extends BaseApiReq,
+  T_Res_Data extends AceResData,
+> {
   status: Accessor<AsyncStatus>
 
-  run: AsyncRun<T_Req, T_Res_Data>
-
-  fd: (formData: FormData) => Promise<AceResEither<T_Res_Data>>
+  run: AsyncRun<ToAsyncReq<T_Req>, T_Res_Data>
 
   constructor(fn: FetchFn<T_Req, T_Res_Data>) {
+    const scope = useScope()
+
     const [status, setStatus] = createSignal<AsyncStatus>('idle')
     this.status = status
 
-    this.run = (async (req?: AllowUndefinedIfNoRequired<T_Req>) => {
+    this.run = (async (req?: any) => {
       setStatus('loading')
 
       try {
-        const parsed = await fn(req as T_Req) as AceResEither<T_Res_Data>
+        const parsed = await fn(req as unknown as T_Req, scope) as AceResEither<T_Res_Data>
 
         setStatus(parsed?.error ? 'error' : 'success')
         return parsed
@@ -53,21 +57,7 @@ export class Async<T_Req extends BaseApiReq, T_Res_Data extends AceResData> {
         setStatus('error')
         return parseError(e)
       }
-    }) as AsyncRun<T_Req, T_Res_Data>
-
-    this.fd = async (formData: FormData) => {
-      setStatus('loading')
-
-      try {
-        const parsed = await fn(formData as unknown as T_Req) as AceResEither<T_Res_Data>
-
-        setStatus(parsed?.error ? 'error' : 'success')
-        return parsed
-      } catch (e) {
-        setStatus('error')
-        return parseError(e)
-      }
-    }
+    }) as any
   }
 }
 
@@ -83,9 +73,20 @@ export type AsyncProps<T_Req extends BaseApiReq, T_Res_Data extends AceResData> 
  */
 export type AsyncRun<T_Req extends BaseApiReq, T_Res_Data extends AceResData> = RequiredKeys<T_Req> extends never
   ? {
-    (): Promise<AceResEither<T_Res_Data>>;
-    (req: AllowUndefinedIfNoRequired<T_Req>): Promise<AceResEither<T_Res_Data>>;
+    (): Promise<AceResEither<T_Res_Data>>
+    (req?: AllowUndefinedIfNoRequired<T_Req>): Promise<AceResEither<T_Res_Data>>
   }
   : {
-    (req: AllowUndefinedIfNoRequired<T_Req>): Promise<AceResEither<T_Res_Data>>;
+    (req: T_Req): Promise<AceResEither<T_Res_Data>>
   }
+
+
+/**
+ * - Transforms an Api defined `req` into a Frontend-compatible Request
+ *     1. Omit 'headers' Let the browser create and Api validate headers
+ *     1. Transmute 'formData' from an object type into a native browser `FormData` type
+ *     1. Preserve all else (`body`, `pathParams`, `searchParams`)
+ */
+type ToAsyncReq<T extends BaseApiReq> = {
+  [K in keyof T as K extends 'headers' ? never : K]: K extends 'formData' ? FormData : T[K]
+} & {}

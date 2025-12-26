@@ -43,7 +43,14 @@ export function buildUrl(props: { absoluteUrl?: boolean, segments: PathnameSegme
       const value = props.searchParams[key]
 
       if (value !== undefined && value !== null) { // only include if value is not null or undefined
-        urlSearchParams.append(key, String(value))
+        if (!Array.isArray(value)) urlSearchParams.append(key, String(value)) // Standard single value
+        else { // place each item from array on one at a time
+          value.forEach((item) => {
+            if (item !== undefined && item !== null) {
+              urlSearchParams.append(key, String(item))
+            }
+          })
+        }
       }
     }
 

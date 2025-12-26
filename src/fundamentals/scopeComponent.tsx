@@ -11,34 +11,20 @@ import { isServer } from 'solid-js/web'
 import { mapRoutes } from './mapRoutes'
 import { parseResponse } from '../fetch'
 import { parseError } from './parseError'
-import { RouteSectionProps, useLocation } from '@solidjs/router'
 import { createAceKey } from './createAceKey'
+import { type Accessor, Suspense } from 'solid-js'
 import { destructureReady } from './destructureReady'
+import { RouteSectionProps, useLocation } from '@solidjs/router'
 import { ScopeComponentMessages } from '../scopeComponentMessages'
 import { ScopeComponentChildren } from '../scopeComponentChildren'
-import { createContext, type JSX, type Accessor, type ParentComponent, Suspense } from 'solid-js'
 import type { RoutePath2PathParams, Routes, AceResData, RoutePath2SearchParams, BaseRouteReq, RouteReq2PathParams, RouteReq2SearchParams, AceResEither, AceResErrorEither, AceResError, AceKey } from './types'
 
-
-export let scope!: ScopeComponent // the "!" tells ts: we'll assign this before it’s used but, ex: if a scope.GET() is done before the provider has run, we'll get a standard “fe is undefined” runtime error
-
-
-export const ScopeComponentContext = createContext<ScopeComponent | null>(null)
 
 
 /**
  * - Wrap app w/ Provider
  * - Assign exported fe
  */
-export const ScopeComponentContextProvider: ParentComponent = (props) => {
-  scope = new ScopeComponent()
-
-  return <>
-    <ScopeComponentContext.Provider value={scope}>
-      {props.children}
-    </ScopeComponentContext.Provider>
-  </>
-}
 
 
 /** 

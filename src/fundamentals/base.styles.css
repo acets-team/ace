@@ -68,10 +68,3 @@ button {
   cursor: pointer;
   border-radius: calc(var(--ace-radius) * 2);
 }
-
-.ace-text-gradient {
-  background-image: var(--ace-text-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}

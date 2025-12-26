@@ -14,6 +14,8 @@ try {
   const promises = []
 
   promises.push(copyFile(join(cwd, 'src/index.ts'), join(dirDist, `index.d.ts`)))
+  promises.push(copyFile(join(cwd, 'src/[...api].ts'), join(dirDist, `[...api].txt`)))
+  promises.push(copyFile(join(cwd, 'src/baseApp.tsx'), join(dirDist, `baseApp.txt`)))
   promises.push(copyFile(join(cwd, 'src/fundamentals/env.ts'), join(dirFundamentals, `env.txt`)))
   promises.push(copyFile(join(cwd, 'src/fundamentals/types.ts'), join(dirFundamentals, `types.d.txt`)))
   promises.push(copyFile(join(cwd, 'src/fundamentals/vanilla.ts'), join(dirFundamentals, `vanilla.d.txt`)))

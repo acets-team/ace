@@ -6,9 +6,10 @@ import { parseError } from './fundamentals/parseError'
 import { AceResponse } from './fundamentals/aceResponse'
 import type { StreamProps } from './fundamentals/stream'
 import { useNetworkStatus } from './fundamentals/useNetworkStatus'
+import type { ScopeComponent } from './fundamentals/scopeComponent'
 import { createAsyncStore, redirect, revalidate, type AccessorWithLatest } from '@solidjs/router'
 import { onMount, onCleanup, createEffect, For, Index, type Setter, type Accessor } from 'solid-js'
-import type { BaseApiReq, AceResData, AceResEither, UILoopDataFn, FetchFn, UISuspenseFn, FetchStoreResponse, LoadStatus, StreamStatus, UIProps, AceResErrorEither, BaseStoreCtx } from './fundamentals/types'
+import type { BaseApiReq, AceResData, AceResEither, UILoopDataFn, FetchFn, UISuspenseFn, FetchStoreResponse, LoadStatus, StreamStatus, UIProps, AceResErrorEither, InferAtoms } from './fundamentals/types'
 
 
 
@@ -25,7 +26,7 @@ export function render<T_Res_Data extends AceResData, T_Item extends AceResData>
     return props.uiProps.error?.(props.res.error) ?? null
   }
 
-  const data = props.res?.data // status is 'success' or 'storeRendered' here, and no error exists
+  const data = props.res?.data // status is 'success' or 'atomRendered' here, and no error exists
 
   if (props.uiProps.for || props.uiProps.index) { // for / index
     const getLoopArray = () => { // get array via data and/or loopData
@@ -87,7 +88,7 @@ export async function innerQuery<T_Req extends BaseApiReq, T_Res_Data extends Ac
 
 
 
-export function fetchCreateAsync<T_Req extends BaseApiReq, T_Res_Data extends AceResData>(resQuery: (req: T_Req) => Promise<AceResEither<T_Res_Data>>, constructorReq: (() => T_Req) | undefined, reconcileKey: string | undefined, deferStream: boolean) {
+export function fetchCreateAsync<T_Req extends BaseApiReq, T_Res_Data extends AceResData>(scope: ScopeComponent, resQuery: (req: T_Req) => Promise<AceResEither<T_Res_Data>>, constructorReq: (() => T_Req) | undefined, reconcileKey: string | undefined, deferStream: boolean) {
   const defaultReq: BaseApiReq = {} // default request object that satisfies the T_Req constraint if req is not provided
 
   const asyncFn = async () => {
@@ -168,16 +169,16 @@ export const tsxDefaultOnLoad = () => <Loading />
 
 export const createShowBE = (setStatus: Setter<StreamStatus>) => () => setStatus('success')
 
-export const createShowStore = (setStatus: Setter<StreamStatus>, store: StreamProps<any, any, any>['store']) => () => {
-  if (store) setStatus('storeRendered')
+export const createShowStore = (setStatus: Setter<StreamStatus>, atom: StreamProps<any, any, any>['atom']) => () => {
+  if (atom) setStatus('atomRendered')
 }
 
 
 
-export function onResponse(props: { store?: StreamProps<any, any, any>['store'], resAsync?: AccessorWithLatest<AceResErrorEither<any> | AceResEither<any> | undefined>, setStatus: Setter<StreamStatus>, baseStore?: BaseStoreCtx<any> }) {
+export function onResponse(props: { atom?: StreamProps<any, any, any>['atom'], resAsync?: AccessorWithLatest<AceResErrorEither<any> | AceResEither<any> | undefined>, setStatus: Setter<StreamStatus>, baseAtom?: InferAtoms<any> }) {
   const _resAsync = unwrap(props.resAsync?.())
 
-  props.baseStore?.set(props.store?.[1] as any, _resAsync as any) // set() + generics is crazy w/o any
+  props.baseAtom?.set(props.atom?.[1] as any, _resAsync as any) // set() + generics is crazy w/o any
 
   if (typeof _resAsync === 'object') {
     if ('data' in _resAsync && _resAsync.data) props.setStatus('success')

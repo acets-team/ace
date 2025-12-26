@@ -84,45 +84,25 @@ function renderEnv(build: Build) {
 
 
 function renderBaseApp(build: Build) {
-  if (build.rootLayoutFsPath) {
-    return `import RootLayout from ${build.fsPath2Relative(build.rootLayoutFsPath)}
-import { Router } from '@solidjs/router'
-import { MetaProvider } from '@solidjs/meta'
-import { FileRoutes } from '@solidjs/start/router'
-import { ScopeComponentContextProvider } from '@ace/scopeComponent'
+  if (!build.fsBaseApp) throw new Error('!build.fsBaseApp')
 
+  if (!build.rootLayoutFsPath) return build.fsBaseApp
+  else {
+    const rootLayoutImport = `import RootLayout from ${build.fsPath2Relative(build.rootLayoutFsPath)}\n`
 
-export function BaseApp() {
-  return <>
-    <ScopeComponentContextProvider>
-      <MetaProvider>
-        <Router root={RootLayout.layout}>
-          <FileRoutes />
-        </Router>
-      </MetaProvider>
-    </ScopeComponentContextProvider>
-  </>
-}\n`
-  } else {
-    return `import { Suspense } from 'solid-js'
-import { Router } from '@solidjs/router'
-import { MetaProvider } from '@solidjs/meta'
-import { FileRoutes } from '@solidjs/start/router'
-import type { RouteSectionProps } from '@solidjs/router'
-import { ScopeComponentContextProvider } from '@ace/scopeComponent'
+    const rootLayoutRouter = '        <Router root={RootLayout.layout}>'
+    const defaultRouter = '        <Router root={(props: RouteSectionProps) => <Suspense>{props.children}</Suspense>}>'
 
+    const rootSectionPropsImport = `import type { RouteSectionProps } from '@solidjs/router'\n`
 
-export function BaseApp() {
-  return <>
-    <ScopeComponentContextProvider>
-      <MetaProvider>
-        <Router root={(props: RouteSectionProps) => <Suspense>{props.children}</Suspense>}>
-          <FileRoutes />
-        </Router>
-      </MetaProvider>
-    </ScopeComponentContextProvider>
-  </>
-}\n`
+    const suspenseImport = `import { Suspense } from 'solid-js'\n`
+
+    const baseApp = build.fsBaseApp
+      .replace(defaultRouter, rootLayoutRouter)
+      .replace(suspenseImport, '')
+      .replace(rootSectionPropsImport, '')
+
+    return rootLayoutImport + baseApp
   }
 }
 
@@ -209,39 +189,12 @@ export default Layout.layout\n`)
 
 
   async function writeApiFile(dirRoutes: string) {
+    if (!build.fsApi) throw new Error('!build.fsApi')
+
     const dirApi = resolve(dirRoutes, 'api')
     await mkdir(dirApi, { recursive: true })
 
-    await writeFile(resolve(dirApi, '[...api].ts'), `import { callApi } from '@ace/callApi'
-import { treeGET } from '@ace/treeGET'
-import { treePUT } from '@ace/treePUT'
-import { treePOST } from '@ace/treePOST'
-import type { APIEvent } from '@ace/types'
-import { treeDELETE } from '@ace/treeDELETE'
-
-
-export async function GET(event: APIEvent) {
-  'use server'
-  return await callApi(event, treeGET)
-}
-
-
-export async function POST(event: APIEvent) {
-  'use server'
-  return await callApi(event, treePOST)
-}
-
-
-export async function PUT(event: APIEvent) {
-  'use server'
-  return await callApi(event, treePUT)
-}
-
-
-export async function DELETE(event: APIEvent) {
-  'use server'
-  return await callApi(event, treeDELETE)
-}\n`)
+    await writeFile(resolve(dirApi, '[...api].ts'), build.fsApi)
   }
 
 

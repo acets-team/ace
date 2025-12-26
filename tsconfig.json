@@ -22,6 +22,7 @@
     ],
     "paths": {
       "acets": ["./src/index.ts"],
+      "@ace/*": ["./src/fundamentals/*"],
       "ace.config": ["./ace.config.js"],
     }
   },
