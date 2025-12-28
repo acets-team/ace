@@ -69,8 +69,10 @@
   --ace-radius: 0.45rem;
 
   /* modal */
+  --ace-modal-width: 69rem;
+  --ace-modal-bottom-space: 0;
   --ace-modal-backdrop-bg: oklch(0 0 0 / 0.6);
-  --ace-modal-margin-top: calc(var(--ace-space) * 9);
+  --ace-modal-top-space: calc(var(--ace-space) * 9);
 
   /** tabs */
   --ace-tabs-background: oklch(60.483% 0.21664 257.23);
@@ -80,7 +82,7 @@
   --ace-tron-width: 0.3rem;
   --ace-tron-bg: var(--ace-card);
   --ace-tron-z-index: var(--ace-z-content);
-  --ace-tron-border-radius: calc(var(--ace-radius) * 3);
+  --ace-tron-radius: calc(var(--ace-radius) * 3);
   --ace-tron-opacity-speed: var(--ace-duration-normal);
   --ace-tron-speed: calc(var(--ace-duration-normal) * 9);
   --ace-tron-colors: oklch(62.793% 0.25768 29.223), oklch(96.798% 0.21094 109.783), oklch(79.268% 0.17097 70.665), oklch(51.976% 0.17685 142.511), oklch(45.203% 0.3133 264.073), oklch(76.189% 0.18621 327.188), oklch(62.793% 0.25768 29.223);
@@ -223,4 +225,35 @@ button {
 
 button {
   cursor: pointer;
+}
+
+@keyframes ace-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes ace-fade-slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ace-fade-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

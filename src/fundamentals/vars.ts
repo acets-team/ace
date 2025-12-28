@@ -72,4 +72,4 @@ export const r2CustomMetadataHeader = 'x-ace-r2-custom-metadata'
 
 
 /** Optional modal variants */
-export const modalVariant = new Enums(['top', 'center'])
+export const modalVariant = new Enums(['top', 'center', 'bottom'])

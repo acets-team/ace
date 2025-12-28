@@ -24,7 +24,7 @@ import { createStyleFactory } from './createStyleFactory'
  * @param props.zIndex Optional, zIndex for tron light, IF defined THEN sets value of `--ace-tron-z-index`
  * @param props.opacitySpeed Optional, how quickly does the tron light become visible, IF defined THEN sets value of `--ace-tron-opacity-speed`
  * @param props.status Optional, `off` is not visible, `infinite` always shows & `hover` shows on hover, default is `hover`
- * @param props.borderRadius Optional, tron light & inner content radius, IF defined THEN sets value of `--ace-tron-border-radius`
+ * @param props.borderRadius Optional, tron light & inner content radius, IF defined THEN sets value of `--ace-tron-radius`
  * @param props.$div Optional, html props to add to wrapper div, class of `ace-tron` is added by default, IF setting `style` THEN must be of type object
  */
 export function Tron(props: {
@@ -40,7 +40,7 @@ export function Tron(props: {
   colors?: string,
   /** Optional, zIndex for tron light, IF defined THEN sets value of `--ace-tron-z-index` */
   zIndex?: string,
-  /** Optional, tron light & inner content radius, IF defined THEN sets value of `--ace-tron-border-radius` */
+  /** Optional, tron light & inner content radius, IF defined THEN sets value of `--ace-tron-radius` */
   borderRadius?: string,
   /** 🚨 Will not look good if the root child is `display: inline` (ex: `anchor`) in this case please set display to `inline-block` */
   children: JSX.Element,
@@ -58,7 +58,7 @@ export function Tron(props: {
     sm('width', '--ace-tron-width'),
     sm('speed', '--ace-tron-speed'),
     sm('zIndex', '--ace-tron-z-index'),
-    sm('borderRadius', '--ace-tron-border-radius'),
+    sm('borderRadius', '--ace-tron-radius'),
     sm('opacitySpeed', '--ace-tron-opacity-speed'),
     sm('colors', '--ace-tron-colors'),
     sm('color', (propsValue) => ({ '--ace-tron-colors': `transparent, transparent, ${propsValue}` })),

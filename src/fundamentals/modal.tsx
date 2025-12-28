@@ -48,8 +48,10 @@ const id2Signal = new Map<string, ReturnType<typeof createSignal<boolean>>>()
  * @param props.hideOnBackdropClick Optional, defaults to `true`, if you'd love a click on the modal to hide it
  * @param props.$div Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  * @param props.variant Optional, defaults to `center`, IF `center` then the modal is in the `center` of the screen, IF `top` then the modal is at the `top` of the screen
- * @param props.marginTop Optional, does nothing unless variant is `top`, space from top of screen, IF defined THEN sets value of of `--ace-modal-margin-top`
  * @param props.backdropBackground Optional, backdrop background color, IF defined THEN sets value of of `--ace-modal-backdrop-bg`
+ * @param props.width Optional, max modal width, IF defined THEN sets value of of `--ace-modal-width`
+ * @param props.topSpace Optional, does nothing unless variant is `top`, space from top of screen, IF defined THEN sets value of of `--ace-modal-top-space`
+ * @param props.bottomSpace Optional, does nothing unless variant is `bottom`, space from bottom of screen, IF defined THEN sets value of of `--ace-modal-bottom-space`
  */
 export const Modal = feComponent((props: {
   /** How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">` */
@@ -62,15 +64,19 @@ export const Modal = feComponent((props: {
   $div?: JSX.HTMLAttributes<HTMLDivElement>
   /** Optional, defaults to `center`, IF `center` then the modal is in the `center` of the screen, IF `top` then the modal is at the `top` of the screen */
   variant?: InferEnums<typeof modalVariant>
-  /** Optional, does nothing unless variant is `top`, space from top of screen, IF defined then adds margin to top of modal from top of screen by seting value of `--ace-modal-margin-top` */
-  marginTop?: string
   /** Optional, color of backdrop background, IF defined THEN sets value of of `--ace-modal-backdrop-bg` */
   backdropBackground?: string
+  /** Optional, max modal width, IF defined THEN sets value of of `--ace-modal-width` */
+  width?: string
+  /** Optional, does nothing unless variant is `top`, space from top of screen, IF defined THEN sets value of of `--ace-modal-top-space` */
+  topSpace?: string
+  /** Optional, does nothing unless variant is `bottom`, space from bottom of screen, IF defined THEN sets value of of `--ace-modal-bottom-space` */
+  bottomSpace?: string
 }) => {
   if (modalVariant.has(props.id)) throw new Error('Please ensure the id for this modal is not the same as one of the modal variant options', { cause: { id: props.id } })
 
   // defaults, not using mergeProps to maintain reactivity
-  if (props.variant == undefined) props.variant = 'center'
+  if (props.variant == undefined) props.variant = 'top'
   if (props.hideOnBackdropClick == undefined) props.hideOnBackdropClick = true
 
   let modalRef: undefined | HTMLDivElement
@@ -80,7 +86,9 @@ export const Modal = feComponent((props: {
   const { sm, createStyle } = createStyleFactory({ componentProps: props, requestStyle: props.$div?.style })
 
   const style = createStyle([
-    sm('marginTop', '--ace-modal-margin-top'),
+    sm('width', '--ace-modal-width'),
+    sm('topSpace', '--ace-modal-top-space'),
+    sm('bottomSpace', '--ace-modal-bottom-space'),
     sm('backdropBackground', '--ace-modal-backdrop-bg'),
   ])
 

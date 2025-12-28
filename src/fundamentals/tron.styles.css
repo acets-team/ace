@@ -6,7 +6,7 @@
  *     - 🚨 `--ace-tron-z-index`: zIndex for tron light
  *     - 🚨 `--ace-tron-speed`: Speed that tron light flows around
  *     - 🚨 `--ace-tron-opacity-speed`: How quickly does the tron light become visible
- *     - 🚨 `--ace-tron-border-radius`: Tron light & inner content radius
+ *     - 🚨 `--ace-tron-radius`: Tron light & inner content radius
  *     - 🚨 `--ace-tron-colors`: Visible tron lightsvisible tron lights
  *     - 🚨 `--ace-tron-bg`: Background for the visible ace-tron__content
 */
@@ -24,7 +24,7 @@
 
 .ace-tron {
   position: relative;
-  border-radius: var(--ace-tron-border-radius);
+  border-radius: var(--ace-tron-radius);
   padding: var(--ace-tron-width);
 
   display: flex; /** w/o this the width will be 100%, flex-inline works too */
@@ -97,7 +97,7 @@
   z-index: calc(var(--ace-tron-z-index) + 1);
 
   > :first-child {
-    border-radius: var(--ace-tron-border-radius);
+    border-radius: var(--ace-tron-radius);
   }
 
   .ace-tron__center {

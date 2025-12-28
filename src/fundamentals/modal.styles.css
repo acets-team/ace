@@ -2,50 +2,105 @@
  * 🧚‍♀️ How to access:
  *     - Plugin: solid
  *     - import '@ace/modal.styles.css'
+ *     - 🚨 `--ace-modal-width`: Width of modal
  *     - 🚨 `--ace-modal-backdrop-bg`: Backdrop background color
- *     - 🚨 `--ace-tabs-margin-top`: Space from top of screen
+ *     - 🚨 `--ace-modal-top-space`: Space from top of screen, only applied if variant is top
+ *     - 🚨 `--ace-modal-bottom-space`: Space from bottom of screen, only applied if variant is bottom
  */
 
 
+ /* backdrop */
 .ace-modal {
   position: fixed;
+  z-index: var(--ace-z-popover);
   inset: 0;
   background: var(--ace-modal-backdrop-bg);
-  z-index: var(--ace-z-popover);
   display: flex;
-  justify-content: center;
-  padding: calc(var(--ace-space) * 2);
+  align-items: center;
   overflow: hidden;
+  animation: ace-fade-in var(--ace-prop-transition);
 }
 
+
+/* variants */
+.ace-modal--top,
 .ace-modal--center {
-  align-items: center;
+  .ace-modal__modal {
+    border-radius: calc(var(--ace-radius) * 2);
+  }
 }
 
 .ace-modal--top {
   align-items: start;
 
+  .ace-modal__modal {
+    position: sticky;
+    z-index: var(--ace-z-popover);
+    top: 0;
+  }
+
   .ace-modal__content {
-    margin-top: var(--ace-modal-margin-top);
+    animation: ace-fade-slide-down var(--ace-prop-transition);
+    padding:
+      var(--ace-modal-top-space)
+      calc(var(--ace-space) * 2)
+      calc(var(--ace-space) * 2)
+      calc(var(--ace-space) * 2);
   }
 }
 
-.ace-modal__content {
-  display: flex;
-  justify-content: center;
+.ace-modal--center {
   align-items: center;
+
+  .ace-modal__content {
+    animation: ace-fade-in var(--ace-prop-transition);
+  }
+
+  .ace-modal__modal {
+    padding: calc(var(--ace-space) * 2);
+  }
+}
+
+.ace-modal--bottom {
+  align-items: end;
+
+  .ace-modal__content {
+    animation: ace-fade-slide-up var(--ace-prop-transition);
+    padding:
+      calc(var(--ace-space) * 2)
+      calc(var(--ace-space) * 2)
+      var(--ace-modal-bottom-space)
+      calc(var(--ace-space) * 2);
+  }
+
+  .ace-modal__modal {
+    position: sticky;
+    z-index: var(--ace-z-popover);
+    bottom: 0;
+    border-top-left-radius: calc(var(--ace-radius) * 2);
+    border-top-right-radius: calc(var(--ace-radius) * 2);
+  }
+}
+
+
+/* children */
+.ace-modal__modal,
+.ace-modal__content {
+  margin: 0 auto;
+}
+
+.ace-modal__content {
   overflow-y: auto;
   max-height: 100vh;
-  padding: calc(var(--ace-space) * 2);
 }
 
 .ace-modal__modal {
   background-color: var(--ace-popover);
-  border-radius: calc(var(--ace-radius) * 2);
   padding: calc(var(--ace-space) * 2);
   box-shadow: var(--ace-shadow-subtle);
-  width: 69rem;
-  max-width: 90vw;
+  width: var(--ace-modal-width);
+  max-width: 100%;
   max-height: 100%;
   overflow: auto;
+  margin: 0 auto;
 }
