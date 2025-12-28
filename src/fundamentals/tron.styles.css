@@ -2,10 +2,17 @@
  * 🧚‍♀️ How to access:
  *     - Plugin: solid
  *     - import '@ace/tron.styles.css'
- */
+ *     - 🚨 `--ace-tron-width`: Width of the tron light
+ *     - 🚨 `--ace-tron-z-index`: zIndex for tron light
+ *     - 🚨 `--ace-tron-speed`: Speed that tron light flows around
+ *     - 🚨 `--ace-tron-opacity-speed`: How quickly does the tron light become visible
+ *     - 🚨 `--ace-tron-border-radius`: Tron light & inner content radius
+ *     - 🚨 `--ace-tron-colors`: Visible tron lightsvisible tron lights
+ *     - 🚨 `--ace-tron-bg`: Background for the visible ace-tron__content
+*/
 
 
-@keyframes tron-spin {
+@keyframes ace-tron-spin {
   from {
     transform: rotate(0deg);
   }
@@ -15,95 +22,87 @@
   }
 }
 
-:root {
-  --tron-width: 0.3rem;
-  --tron-z-index: var(--ace-z-content);
-  --tron-opacity-speed: var(--ace-duration-normal);
-  --tron-border-radius: calc(var(--ace-radius) * 3);
-  --tron-speed: calc(var(--ace-duration-normal) * 9);
-  --tron-colors: red, yellow, orange, green, blue, violet, red;
-  --tron-bg: linear-gradient(to bottom right, rgb(0 22 26),rgb(26, 21, 21)ba(10, 10, 20, 0.9));
-}
-
-.tron {
+.ace-tron {
   position: relative;
-  border-radius: var(--tron-border-radius);
-  padding: var(--tron-width);
+  border-radius: var(--ace-tron-border-radius);
+  padding: var(--ace-tron-width);
 
   display: flex; /** w/o this the width will be 100%, flex-inline works too */
   flex-direction: column; /** gives us typical display block inner element stacking behavior */
   width: fit-content; /** width is only as wide as its content */
-  &.hover:hover,
-  &.infinite {
-    .tron-light-wrapper {
-      opacity: 1;
-    }
+}
 
-    .tron-light {
-      animation-play-state: running;
-    }
-  }
-  &.off {
-    .tron-light-wrapper {
-      opacity: 0;
-    }
-
-    .tron-light {
-      animation-play-state: paused;
-    }
+.ace-tron--infinite,
+.ace-tron--hover:hover {
+  .ace-tron__light-wrapper {
+    opacity: 1;
   }
 
-  .tron-light-trim {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: var(--tron-z-index);
-    overflow: hidden;
-    border-radius: inherit;
-
-    .tron-light-wrapper {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      opacity: 0;
-      transition: opacity var(--tron-opacity-speed);
-      pointer-events: none;
-
-      .tron-light {
-        content: '';
-        animation-play-state: paused;
-        background-image: conic-gradient(var(--tron-colors));
-        animation: tron-spin var(--tron-speed) linear infinite;
-
-        /** Enlarge light to window size: pick largest dimension so that we fill the viewport */
-        /** Divide by -1: Gives us a negative number so that we move out from the content by the length of the viewport */
-        position: absolute;
-        top: calc(max(100vw, 100vh) / -1);
-        right: calc(max(100vw, 100vh) / -1);
-        bottom: calc(max(100vw, 100vh) / -1);
-        left: calc(max(100vw, 100vh) / -1);
-      }
-    }
+  .ace-tron__light {
+    animation-play-state: running;
+  }
+}
+  
+.ace-tron--off {
+  .ace-tron__light-wrapper {
+    opacity: 0;
   }
 
-  .tron-content {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    z-index: calc(var(--tron-z-index) + 1);
+  .ace-tron__light {
+    animation-play-state: paused;
+  }
+}
+  
+.ace-tron__light-trim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--ace-tron-z-index);
+  overflow: hidden;
+  border-radius: inherit;
+}
 
-    > :first-child {
-      border-radius: var(--tron-border-radius);
-    }
+.ace-tron__light-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transition: opacity var(--ace-tron-opacity-speed);
+  pointer-events: none;
+}
 
-    .tron-center {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.ace-tron__light {
+  content: '';
+  animation-play-state: paused;
+  background-image: conic-gradient(var(--ace-tron-colors));
+  animation: ace-tron-spin var(--ace-tron-speed) linear infinite;
+
+  /** Enlarge light to window size: pick largest dimension so that we fill the viewport */
+  /** Divide by -1: Gives us a negative number so that we move out from the content by the length of the viewport */
+  position: absolute;
+  top: calc(max(100vw, 100vh) / -1);
+  right: calc(max(100vw, 100vh) / -1);
+  bottom: calc(max(100vw, 100vh) / -1);
+  left: calc(max(100vw, 100vh) / -1);
+}
+  
+.ace-tron__content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: calc(var(--ace-tron-z-index) + 1);
+
+  > :first-child {
+    border-radius: var(--ace-tron-border-radius);
+  }
+
+  .ace-tron__center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

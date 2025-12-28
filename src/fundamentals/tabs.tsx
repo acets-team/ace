@@ -14,7 +14,7 @@ import { useLocation } from '@solidjs/router'
 import type { TreeCreateNode } from '../treeCreate'
 import { createStyleFactory } from './createStyleFactory'
 import type { Routes, RoutePath2PathParams, RoutePath2SearchParams, MapRoutes } from './types'
-import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, type Accessor } from 'solid-js'
+import { onMount, createSignal, createEffect, For, Show, type JSX, type Accessor } from 'solid-js'
 
 
 /**
@@ -77,7 +77,7 @@ import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, t
  * @param props.mode - `content` requires each tab to be a `ContentTab` and shows different content based on which tab is selected. `scroll` requires each tab to be a `HashTab` and scrolls to different content based on which tab is selected. `route` requires each tab to be a `RouteTab` and navigates to different pages based on which tab is selected.
  * @param props.variant - Optional, defaults to `pill`, `underline` is google style, `classic` is bootstrap style, and `pill` looks like rounded buttons
  * @param props.scrollMargin - Optional, defaults to `0`, if `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item
- * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
+ * @param props.$div - Optional, html props to add to wrapper div, class of `ace-tabs` is added by default, IF setting `style` THEN must be of type object
  * @param props.setCurrentTab -  Optional, Setter, helpful when you'd like to know what tab was just selected
  * @param props.$Tron - Optional, IF defined AND `variant` is `tron` THEN props passed to `Tron`
  * @param props.background Optional, background active color, IF defined sets value of `--ace-tabs-background`, Ignored if variant is `tron`
@@ -94,7 +94,7 @@ export function Tabs(props: {
   variant?: 'underline' | 'pill' | 'classic' | 'tron'
   /** Optional, defaults to `0`, if `props.mode` is `scroll` set `scrollMargin` if you'd love the scroll to end some pixels above the scrolled to item */
   scrollMargin?: number
-  /** Optional, set to add props in wrapper `<div />` w/in `<Tabs/>` */
+  /** Optional, html props to add to wrapper div, class of `ace-tabs` is added by default, IF setting `style` THEN must be of type object */
   $div?: JSX.HTMLAttributes<HTMLDivElement>
   /** Optional, Setter, helpful when you'd like to know what tab was just selected */
   setCurrentTab?: (tab: Tab) => void
@@ -105,23 +105,16 @@ export function Tabs(props: {
   /** Optional, foreground active color, IF defined sets value of `--ace-tabs-foreground`, Ignored if variant is `tron` */
   foreground?: string,
 }) {
-  const defaultTabsProps: Partial<TabsProps> = { scrollMargin: 0, mode: 'content', variant: 'pill' }
-  props = mergeProps(defaultTabsProps, props)
+  // defaults, not using mergeProps to maintain reactivity
+  if (typeof props.mode == undefined) props.mode = 'content'
+  if (typeof props.variant == undefined) props.variant = 'pill'
+  if (typeof props.scrollMargin == undefined) props.scrollMargin = 0
 
   const pathToTabIndex = new Map<Routes, number>()
   const hashToTabIndex = new Map<string, number>()
 
   let initialContentIndex = 0
   let foundContentInitial = false
-
-  props.tabs()?.forEach((tab: any, i: number) => {
-    if (tab instanceof RouteTab) pathToTabIndex.set(tab.path, i)
-    else if (tab instanceof HashTab) hashToTabIndex.set(tab.hash, i)
-    else if (tab instanceof ContentTab && tab.isInitiallyActive && !foundContentInitial) {
-      initialContentIndex = i
-      foundContentInitial = true
-    }
-  })
 
   let initialIndex: number | undefined = undefined
 
@@ -132,6 +125,40 @@ export function Tabs(props: {
 
   const [mapRoutes, setMapRoutes] = createSignal<MapRoutes>()
   const [treeRoutes, setTreeRoutes] = createSignal<TreeCreateNode>()
+
+  let divTabs: HTMLDivElement | undefined
+  let divActiveIndicator: HTMLDivElement | undefined
+
+  const scrollData: { idx: number; top: number }[] = []
+  const hashCache = new Map<string, { el: HTMLElement; idx: number }>()
+
+  let ticking = false
+  let scrollingProgrammatic = false
+  let scrollEndTimeout = 0
+
+  const accessibilityProps: JSX.HTMLAttributes<HTMLDivElement> = props.mode === 'content'
+    ? { role: 'tablist', 'aria-orientation': 'horizontal' }
+    : {}
+
+  const { sm, createStyle } = createStyleFactory({ componentProps: props, requestStyle: props.$div?.style })
+
+  const style = createStyle([
+    sm('background', '--ace-tabs-background'),
+    sm('foreground', '--ace-tabs-foreground'),
+  ])
+
+  createEffect(positionIndicator)
+
+
+  props.tabs()?.forEach((tab: any, i: number) => {
+    if (tab instanceof RouteTab) pathToTabIndex.set(tab.path, i)
+    else if (tab instanceof HashTab) hashToTabIndex.set(tab.hash, i)
+    else if (tab instanceof ContentTab && tab.isInitiallyActive && !foundContentInitial) {
+      initialContentIndex = i
+      foundContentInitial = true
+    }
+  })
+
 
   if (props.mode === 'route' && !isServer) {
     (async () => {
@@ -155,107 +182,6 @@ export function Tabs(props: {
     })
   }
 
-
-  let divTabs: HTMLDivElement | undefined
-  let divActiveIndicator: HTMLDivElement | undefined
-
-  const scrollData: { idx: number; top: number }[] = []
-  const hashCache = new Map<string, { el: HTMLElement; idx: number }>()
-
-  let ticking = false
-  let scrollingProgrammatic = false
-  let scrollEndTimeout = 0
-
-  function computeScrollData() {
-    if (props.scrollMargin === undefined) return
-
-    scrollData.length = 0
-
-    for (const { el, idx } of hashCache.values()) {
-      scrollData.push({ idx, top: el.offsetTop })
-    }
-
-    scrollData.sort((a, b) => a.top - b.top)
-
-    let currentTabIndex = 0
-    const point = window.scrollY + props.scrollMargin
-
-    for (const { idx, top } of scrollData) {
-      if (top <= point) currentTabIndex = idx
-      else break
-    }
-
-    setActive(currentTabIndex)
-  }
-
-  function onScrollRAF() {
-    ticking = false
-
-    if (scrollingProgrammatic || props.scrollMargin === undefined) return
-
-    const point = window.scrollY + props.scrollMargin
-    let newIdx = 0
-
-    for (const { idx, top } of scrollData) {
-      if (top <= point) newIdx = idx
-      else break
-    }
-
-    if (newIdx !== active()) setActive(newIdx)
-  }
-
-  function onScroll() {
-    clearTimeout(scrollEndTimeout)
-
-    scrollEndTimeout = window.setTimeout(() => {
-      scrollingProgrammatic = false
-    }, 100)
-
-    if (!ticking) {
-      ticking = true
-      window.requestAnimationFrame(onScrollRAF)
-    }
-  }
-
-  function positionIndicator() {
-    if (!divTabs || !divActiveIndicator) return
-
-    const _active = active()
-    if (typeof _active !== 'number') return
-
-    const tabEl = divTabs.children[_active] as HTMLElement
-    if (!tabEl) return
-
-    if (props.variant !== 'tron') {
-      divActiveIndicator.style.width = `${tabEl.offsetWidth}px`
-      divActiveIndicator.style.transform = `translateX(${tabEl.offsetLeft}px)`
-
-      if (props.variant !== 'underline') {
-        divActiveIndicator.style.height = `${tabEl.offsetHeight}px`
-      }
-    }
-  }
-
-  function onTabClick(i: number, tab: RouteTab<any> | HashTab | ContentTab, ev?: MouseEvent) {
-    if (i === active()) return // do nothing if clicking the active tab
-
-    if (props.mode === 'content' || props.mode === 'route') setActive(i)
-    else if (props.mode === 'scroll' && tab instanceof HashTab && props.scrollMargin !== undefined) {
-      ev?.preventDefault()
-      scrollingProgrammatic = true
-      setActive(i)
-      const el = hashCache.get(tab.hash)?.el
-      if (!el) return
-
-      const override = Number(el.dataset.tabsScrollMargin)
-      const margin = isNaN(override) ? props.scrollMargin : override
-      const top = el.getBoundingClientRect().top + window.scrollY - margin
-
-      window.scrollTo({ top, behavior: 'smooth' })
-    }
-
-    props.setCurrentTab?.(tab) // notify parent with current tab object
-  }
 
   onMount(() => {
     if (props.name) {
@@ -316,18 +242,102 @@ export function Tabs(props: {
     }
   })
 
-  createEffect(positionIndicator)
 
-  const accessibilityProps: JSX.HTMLAttributes<HTMLDivElement> = props.mode === 'content'
-    ? { role: 'tablist', 'aria-orientation': 'horizontal' }
-    : {}
+  function computeScrollData() {
+    if (props.scrollMargin === undefined) return
 
-  const { sm, createStyle } = createStyleFactory({ componentProps: props, requestStyle: props.$div?.style })
-  
-  const style = createStyle([
-    sm('background', '--ace-tabs-background'),
-    sm('foreground', '--ace-tabs-foreground'),
-  ])
+    scrollData.length = 0
+
+    for (const { el, idx } of hashCache.values()) {
+      scrollData.push({ idx, top: el.offsetTop })
+    }
+
+    scrollData.sort((a, b) => a.top - b.top)
+
+    let currentTabIndex = 0
+    const point = window.scrollY + props.scrollMargin
+
+    for (const { idx, top } of scrollData) {
+      if (top <= point) currentTabIndex = idx
+      else break
+    }
+
+    setActive(currentTabIndex)
+  }
+
+
+  function onScrollRAF() {
+    ticking = false
+
+    if (scrollingProgrammatic || props.scrollMargin === undefined) return
+
+    const point = window.scrollY + props.scrollMargin
+    let newIdx = 0
+
+    for (const { idx, top } of scrollData) {
+      if (top <= point) newIdx = idx
+      else break
+    }
+
+    if (newIdx !== active()) setActive(newIdx)
+  }
+
+
+  function onScroll() {
+    clearTimeout(scrollEndTimeout)
+
+    scrollEndTimeout = window.setTimeout(() => {
+      scrollingProgrammatic = false
+    }, 100)
+
+    if (!ticking) {
+      ticking = true
+      window.requestAnimationFrame(onScrollRAF)
+    }
+  }
+
+
+  function positionIndicator() {
+    if (!divTabs || !divActiveIndicator) return
+
+    const _active = active()
+    if (typeof _active !== 'number') return
+
+    const tabEl = divTabs.children[_active] as HTMLElement
+    if (!tabEl) return
+
+    if (props.variant !== 'tron') {
+      divActiveIndicator.style.width = `${tabEl.offsetWidth}px`
+      divActiveIndicator.style.transform = `translateX(${tabEl.offsetLeft}px)`
+
+      if (props.variant !== 'underline') {
+        divActiveIndicator.style.height = `${tabEl.offsetHeight}px`
+      }
+    }
+  }
+
+
+  function onTabClick(i: number, tab: RouteTab<any> | HashTab | ContentTab, ev?: MouseEvent) {
+    if (i === active()) return // do nothing if clicking the active tab
+
+    if (props.mode === 'content' || props.mode === 'route') setActive(i)
+    else if (props.mode === 'scroll' && tab instanceof HashTab && props.scrollMargin !== undefined) {
+      ev?.preventDefault()
+      scrollingProgrammatic = true
+      setActive(i)
+      const el = hashCache.get(tab.hash)?.el
+      if (!el) return
+
+      const override = Number(el.dataset.tabsScrollMargin)
+      const margin = isNaN(override) ? props.scrollMargin : override
+      const top = el.getBoundingClientRect().top + window.scrollY - margin
+
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+
+    props.setCurrentTab?.(tab) // notify parent with current tab object
+  }
+
 
   return <>
     <div {...props.$div} style={style()} class={mergeStrings('ace-tabs', `ace-tabs--` + props.variant, props.$div?.class)}>
