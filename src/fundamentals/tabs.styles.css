@@ -2,8 +2,8 @@
  * 🧚‍♀️ How to access:
  *     - Plugin: solid
  *     - import '@ace/tabs.styles.css'
- *     - 🚨 To change the background active color, the css variable is: `--ace-tabs-active`
- *     - 🚨 To change the foreground active color, the css variable is: `--ace-tabs-active-foreground`
+ *     - 🚨 `--ace-tabs-background`: Background active color
+ *     - 🚨 `--ace-tabs-foreground`: Foreground active color
  */
 
 
@@ -14,7 +14,7 @@
     z-index: calc(var(--ace-z-content) - 1);
     top: 0;
     left: 0;
-    background: var(--ace-tabs-active);
+    background: var(--ace-tabs-background);
     transition: var(--ace-transition);
     will-change: transform, width, height, opacity;
     pointer-events: none;
@@ -22,7 +22,7 @@
 
   .ace-tabs__active,
   .ace-tabs__tab:hover {
-    color: var(--ace-tabs-active-foreground);
+    color: var(--ace-tabs-foreground);
   }
 }
 
@@ -40,14 +40,14 @@
     bottom: 0;
     border-radius: calc(var(--ace-radius) * 6);
     height: 0.3rem;
-    background: var(--ace-tabs-active);
+    background: var(--ace-tabs-background);
     transition: transform 0.3s ease, width 0.3s ease;
     will-change: transform, width;
   }
 
   .ace-tabs__active,
   .ace-tabs__tab:hover {
-    color: var(--ace-tabs-active-foreground);
+    color: var(--ace-tabs-foreground);
   }
 }
 

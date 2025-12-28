@@ -69,8 +69,8 @@
   --ace-radius: 0.45rem;
 
   /** tabs */
-  --ace-tabs-active: oklch(60.483% 0.21664 257.23);
-  --ace-tabs-active-foreground: oklch(100% 0.00011 271.152);
+  --ace-tabs-background: oklch(60.483% 0.21664 257.23);
+  --ace-tabs-foreground: oklch(100% 0.00011 271.152);
 }
 
 

@@ -57,6 +57,7 @@ export const fundamentals = new Map([
   ['createPositionPopover', new Fundamental('ts', 'solid', 'helper')],
   ['createRouteUrl', new Fundamental('ts', 'solid', 'copy')],
   ['createStreamGuard', new Fundamental('ts', 'vanilla', 'helper')],
+  ['createStyleFactory', new Fundamental('ts', 'solid', 'copy')],
   ['createAtomsProvider', new Fundamental('tsx', 'solid', 'copy')],
   ['createStoreReconcile', new Fundamental('ts', 'solid', 'copy')],
   ['createStoreRefBind', new Fundamental('ts', 'solid', 'copy')],

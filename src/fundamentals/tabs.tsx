@@ -12,14 +12,13 @@ import { treeSearch } from '../treeSearch'
 import { Tron, type TronProps } from './tron'
 import { useLocation } from '@solidjs/router'
 import type { TreeCreateNode } from '../treeCreate'
+import { createStyleFactory } from './createStyleFactory'
 import type { Routes, RoutePath2PathParams, RoutePath2SearchParams, MapRoutes } from './types'
 import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, type Accessor } from 'solid-js'
 
 
 /**
  * ### Show lovely tabs
- * - 🚨 To change the background active color, the css variable is: `--ace-tabs-active`
- * - 🚨 To change the foreground active color, the css variable is: `--ace-tabs-active-foreground`
  * - Add to `app.tsx` => `import '@ace/tabs.styles.css'` & then:
  * @example
   ```tsx
@@ -81,6 +80,8 @@ import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, t
  * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
  * @param props.setCurrentTab -  Optional, Setter, helpful when you'd like to know what tab was just selected
  * @param props.$Tron - Optional, IF defined AND `variant` is `tron` THEN props passed to `Tron`
+ * @param props.background Optional, background active color, IF defined sets value of `--ace-tabs-background`, Ignored if variant is `tron`
+ * @param props.foreground Optional, foreground active color, IF defined sets value of `--ace-tabs-foreground`, Ignored if variant is `tron`
  */
 export function Tabs(props: {
   /** An array of `RouteTab`, `HashTab` or `ContentTab` objects. Place the Tabs component in a layout when using a mode of `route` to keep the animation smooth between routes */
@@ -99,6 +100,10 @@ export function Tabs(props: {
   setCurrentTab?: (tab: Tab) => void
   /** Optional, IF defined AND `variant` is `tron` THEN props passed to `Tron` */
   $Tron?: Omit<TronProps, 'type' | 'children'>
+  /** Optional, background active color, IF defined sets value of `--ace-tabs-background`, Ignored if variant is `tron` */
+  background?: string,
+  /** Optional, foreground active color, IF defined sets value of `--ace-tabs-foreground`, Ignored if variant is `tron` */
+  foreground?: string,
 }) {
   const defaultTabsProps: Partial<TabsProps> = { scrollMargin: 0, mode: 'content', variant: 'pill' }
   props = mergeProps(defaultTabsProps, props)
@@ -317,8 +322,15 @@ export function Tabs(props: {
     ? { role: 'tablist', 'aria-orientation': 'horizontal' }
     : {}
 
+  const { sm, createStyle } = createStyleFactory({ componentProps: props, requestStyle: props.$div?.style })
+  
+  const style = createStyle([
+    sm('background', '--ace-tabs-background'),
+    sm('foreground', '--ace-tabs-foreground'),
+  ])
+
   return <>
-    <div {...props.$div} class={mergeStrings('ace-tabs', `ace-tabs--` + props.variant, props.$div?.class)}>
+    <div {...props.$div} style={style()} class={mergeStrings('ace-tabs', `ace-tabs--` + props.variant, props.$div?.class)}>
       <div class="ace-tabs__tabs" ref={divTabs} {...accessibilityProps}>
         <For each={props.tabs()}>
           {(tab, i) => {

@@ -7,8 +7,9 @@
  */
 
 
+import type {  JSX } from 'solid-js'
 import { mergeStrings } from './merge'
-import { createMemo, type JSX } from 'solid-js'
+import { createStyleFactory } from './createStyleFactory'
 
 
 /**
@@ -50,7 +51,18 @@ export function Tron(props: {
   /** Optional, html props to add to wrapper div, class of `tron` is added by default */
   $div?: JSX.HTMLAttributes<HTMLDivElement>,
 }) {
-  const style = createStyle(props)
+  const { sm, createStyle } = createStyleFactory({ componentProps: props, requestStyle: props.$div?.style })
+
+  const style = createStyle([
+    sm('bg', '--tron-bg'),
+    sm('width', '--tron-width'),
+    sm('speed', '--tron-speed'),
+    sm('zIndex', '--tron-z-index'),
+    sm('borderRadius', '--tron-border-radius'),
+    sm('opacitySpeed', '--tron-opacity-speed'),
+    sm('colors', '--tron-colors'),
+    sm('color', (propsValue) => ({ '--tron-colors': `transparent, transparent, ${propsValue}` })),
+  ])
 
   return <>
     <div {...props.$div} style={style()} class={mergeStrings('tron', props.$div?.class, props.status ?? 'hover')}>
@@ -65,24 +77,6 @@ export function Tron(props: {
       </div>
     </div>
   </>
-}
-
-
-function createStyle(props: TronProps) {
-  return createMemo<JSX.CSSProperties>(() => {
-    const style: JSX.CSSProperties = {}
-
-    if (props.bg) style['--tron-bg'] = props.bg
-    if (props.width) style['--tron-width'] = props.width
-    if (props.speed) style['--tron-speed'] = props.speed
-    if (props.colors) style['--tron-colors'] = props.colors
-    if (props.zIndex) style['--tron-z-index'] = props.zIndex
-    if (props.borderRadius) style['--tron-border-radius'] = props.borderRadius
-    if (props.opacitySpeed) style['--tron-opacity-speed'] = props.opacitySpeed
-    if (props.color) style['--tron-colors'] = `transparent, transparent, ${props.color}`
-
-    return style
-  })
 }
 
 
