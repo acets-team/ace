@@ -16,35 +16,35 @@ import { createStyleFactory } from './createStyleFactory'
  * ### Surround an item w/ a light that looks like the game `tron`
  * - Add to `app.tsx` => `import '@ace/dropdown.styles.css'`
  * @param props.children 🚨 Will not look good if the root child is `display: inline` (ex: `anchor`) in this case please set display to `inline-block`
- * @param props.bg Optional, Background for the visible `ace-tron__content`, IF defined sets value of `--ace-tron-bg`
- * @param props.width Optional, width of the tron light, IF defined sets value of `--ace-tron-width`
- * @param props.speed Optional, speed that tron light flows around, IF defined sets value of `--ace-tron-speed`
- * @param props.color Optional, helpful when you'd like one color rather then multiple, IF defined sets value of `--ace-tron-colors` to `transparent, transparent, color`
- * @param props.colors Optional, visible tron lights, ending w/ the color we start w/ is helpful visually for `conic-gradient`, IF defined sets value of `--ace-tron-colors`
- * @param props.zIndex Optional, zIndex for tron light, IF defined sets value of `--ace-tron-z-index`
- * @param props.opacitySpeed Optional, how quickly does the tron light become visible, IF defined sets value of `--ace-tron-opacity-speed`
+ * @param props.bg Optional, Background for the visible `ace-tron__content`, IF defined THEN sets value of `--ace-tron-bg`
+ * @param props.width Optional, width of the tron light, IF defined THEN sets value of `--ace-tron-width`
+ * @param props.speed Optional, speed that tron light flows around, IF defined THEN sets value of `--ace-tron-speed`
+ * @param props.color Optional, helpful when you'd like one color rather then multiple, IF defined THEN sets value of `--ace-tron-colors` to `transparent, transparent, color`
+ * @param props.colors Optional, visible tron lights, ending w/ the color we start w/ is helpful visually for `conic-gradient`, IF defined THEN sets value of `--ace-tron-colors`
+ * @param props.zIndex Optional, zIndex for tron light, IF defined THEN sets value of `--ace-tron-z-index`
+ * @param props.opacitySpeed Optional, how quickly does the tron light become visible, IF defined THEN sets value of `--ace-tron-opacity-speed`
  * @param props.status Optional, `off` is not visible, `infinite` always shows & `hover` shows on hover, default is `hover`
- * @param props.borderRadius Optional, tron light & inner content radius, IF defined sets value of `--ace-tron-border-radius`
+ * @param props.borderRadius Optional, tron light & inner content radius, IF defined THEN sets value of `--ace-tron-border-radius`
  * @param props.$div Optional, html props to add to wrapper div, class of `ace-tron` is added by default, IF setting `style` THEN must be of type object
  */
 export function Tron(props: {
-  /** Optional, Background for the visible `ace-tron__content`, IF defined sets value of `--ace-tron-bg` */
+  /** Optional, Background for the visible `ace-tron__content`, IF defined THEN sets value of `--ace-tron-bg` */
   bg?: string,
-  /** Optional, width of the tron light, IF defined sets value of `--ace-tron-width` */
+  /** Optional, width of the tron light, IF defined THEN sets value of `--ace-tron-width` */
   width?: string,
-  /** Optional, speed that tron light flows around, IF defined sets value of `--ace-tron-speed` */
+  /** Optional, speed that tron light flows around, IF defined THEN sets value of `--ace-tron-speed` */
   speed?: string,
-  /** Optional, helpful when you'd like one color rather then multiple, IF defined sets value of `--ace-tron-colors` to `transparent, transparent, color` */
+  /** Optional, helpful when you'd like one color rather then multiple, IF defined THEN sets value of `--ace-tron-colors` to `transparent, transparent, color` */
   color?: string,
-  /** Optional, visible tron lights, ending w/ the color we start w/ is helpful visually for `conic-gradient`, IF defined sets value of `--ace-tron-colors` */
+  /** Optional, visible tron lights, ending w/ the color we start w/ is helpful visually for `conic-gradient`, IF defined THEN sets value of `--ace-tron-colors` */
   colors?: string,
-  /** Optional, zIndex for tron light, IF defined sets value of `--ace-tron-z-index` */
+  /** Optional, zIndex for tron light, IF defined THEN sets value of `--ace-tron-z-index` */
   zIndex?: string,
-  /** Optional, tron light & inner content radius, IF defined sets value of `--ace-tron-border-radius` */
+  /** Optional, tron light & inner content radius, IF defined THEN sets value of `--ace-tron-border-radius` */
   borderRadius?: string,
   /** 🚨 Will not look good if the root child is `display: inline` (ex: `anchor`) in this case please set display to `inline-block` */
   children: JSX.Element,
-  /** Optional, how quickly does the tron light become visible, IF defined sets value of `--ace-tron-opacity-speed` */
+  /** Optional, how quickly does the tron light become visible, IF defined THEN sets value of `--ace-tron-opacity-speed` */
   opacitySpeed?: string,
   /** Optional, `off` is not visible, `infinite` always shows & `hover` shows on hover, default is `hover` */
   status?: TronPropsStatus,

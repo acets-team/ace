@@ -80,8 +80,8 @@ import { onMount, createSignal, createEffect, For, Show, type JSX, type Accessor
  * @param props.$div - Optional, html props to add to wrapper div, class of `ace-tabs` is added by default, IF setting `style` THEN must be of type object
  * @param props.setCurrentTab -  Optional, Setter, helpful when you'd like to know what tab was just selected
  * @param props.$Tron - Optional, IF defined AND `variant` is `tron` THEN props passed to `Tron`
- * @param props.background Optional, background active color, IF defined sets value of `--ace-tabs-background`, Ignored if variant is `tron`
- * @param props.foreground Optional, foreground active color, IF defined sets value of `--ace-tabs-foreground`, Ignored if variant is `tron`
+ * @param props.background Optional, background active color, IF defined THEN sets value of `--ace-tabs-background`, Ignored if variant is `tron`
+ * @param props.foreground Optional, foreground active color, IF defined THEN sets value of `--ace-tabs-foreground`, Ignored if variant is `tron`
  */
 export function Tabs(props: {
   /** An array of `RouteTab`, `HashTab` or `ContentTab` objects. Place the Tabs component in a layout when using a mode of `route` to keep the animation smooth between routes */
@@ -100,9 +100,9 @@ export function Tabs(props: {
   setCurrentTab?: (tab: Tab) => void
   /** Optional, IF defined AND `variant` is `tron` THEN props passed to `Tron` */
   $Tron?: Omit<TronProps, 'type' | 'children'>
-  /** Optional, background active color, IF defined sets value of `--ace-tabs-background`, Ignored if variant is `tron` */
+  /** Optional, background active color, IF defined THEN sets value of `--ace-tabs-background`, Ignored if variant is `tron` */
   background?: string,
-  /** Optional, foreground active color, IF defined sets value of `--ace-tabs-foreground`, Ignored if variant is `tron` */
+  /** Optional, foreground active color, IF defined THEN sets value of `--ace-tabs-foreground`, Ignored if variant is `tron` */
   foreground?: string,
 }) {
   // defaults, not using mergeProps to maintain reactivity

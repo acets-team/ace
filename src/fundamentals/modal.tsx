@@ -5,8 +5,12 @@
  */
 
 
+import { modalVariant } from './vars'
 import { Portal } from 'solid-js/web'
+import { mergeStrings } from './merge'
+import type { InferEnums } from './enums'
 import { feComponent } from './feComponent'
+import { createStyleFactory } from './createStyleFactory'
 import { createEffect, createSignal, Show, type JSX, type Signal } from 'solid-js'
 
 
@@ -40,12 +44,14 @@ const id2Signal = new Map<string, ReturnType<typeof createSignal<boolean>>>()
       }
     }
     ```
- * @param props.id - How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">`
- * @param props.hideOnBackdropClick - Optional, defaults to `true`, if you'd love a click on the modal to hide it
- * @param props.$div - Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
- * @param props.children - The tsx content to place into the modal
+ * @param props.id How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">`
+ * @param props.hideOnBackdropClick Optional, defaults to `true`, if you'd love a click on the modal to hide it
+ * @param props.$div Optional, additonal props to place on the wrapper html div, ex: `id`, `class`, `style`
+ * @param props.variant Optional, defaults to `center`, IF `center` then the modal is in the `center` of the screen, IF `top` then the modal is at the `top` of the screen
+ * @param props.marginTop Optional, does nothing unless variant is `top`, space from top of screen, IF defined THEN sets value of of `--ace-modal-margin-top`
+ * @param props.backdropBackground Optional, backdrop background color, IF defined THEN sets value of of `--ace-modal-backdrop-bg`
  */
-export const Modal = feComponent(({ id, children, hideOnBackdropClick = true, $div }: {
+export const Modal = feComponent((props: {
   /** How to identify a modal when using ex, `showModal(id)` and is set via `<Modal id="example">` */
   id: string
   /** The tsx content to place into the modal */
@@ -54,28 +60,44 @@ export const Modal = feComponent(({ id, children, hideOnBackdropClick = true, $d
   hideOnBackdropClick?: boolean
   /** Optional, html dom div props to the wrapper */
   $div?: JSX.HTMLAttributes<HTMLDivElement>
+  /** Optional, defaults to `center`, IF `center` then the modal is in the `center` of the screen, IF `top` then the modal is at the `top` of the screen */
+  variant?: InferEnums<typeof modalVariant>
+  /** Optional, does nothing unless variant is `top`, space from top of screen, IF defined then adds margin to top of modal from top of screen by seting value of `--ace-modal-margin-top` */
+  marginTop?: string
+  /** Optional, color of backdrop background, IF defined THEN sets value of of `--ace-modal-backdrop-bg` */
+  backdropBackground?: string
 }) => {
+  if (modalVariant.has(props.id)) throw new Error('Please ensure the id for this modal is not the same as one of the modal variant options', { cause: { id: props.id } })
+
+  // defaults, not using mergeProps to maintain reactivity
+  if (props.variant == undefined) props.variant = 'center'
+  if (props.hideOnBackdropClick == undefined) props.hideOnBackdropClick = true
+
   let modalRef: undefined | HTMLDivElement
 
-  const [isOpen] = getVisibilitySignal(id)
+  const [isOpen] = getVisibilitySignal(props.id)
+
+  const { sm, createStyle } = createStyleFactory({ componentProps: props, requestStyle: props.$div?.style })
+
+  const style = createStyle([
+    sm('marginTop', '--ace-modal-margin-top'),
+    sm('backdropBackground', '--ace-modal-backdrop-bg'),
+  ])
 
   createEffect(() => {
     if (isOpen() && modalRef) modalRef.focus()
   })
 
   function close() {
-    if (hideOnBackdropClick) hideModal(id)
+    if (props.hideOnBackdropClick) hideModal(props.id)
   }
-
-  const baseClass = 'ace-modal'
-  const mergedClass = $div?.class ? `${baseClass} ${$div.class}` : baseClass
 
   return <>
     <Show when={isOpen()}>
       <Portal>
-        <div id={`ace-modal--` + id} onClick={close} aria-hidden={isOpen() ? 'false' : 'true'} {...$div} class={mergedClass}>
+        <div id={`ace-modal--` + props.id} onClick={close} aria-hidden={isOpen() ? 'false' : 'true'} {...props.$div} style={style()} class={mergeStrings('ace-modal', `ace-modal--${props.variant}`, props.$div?.class)}>
           <div class="ace-modal__content" onClick={close}>
-            <div class="ace-modal__modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby={`${id}-label`} tabIndex={-1}>{children}</div>
+            <div class="ace-modal__modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby={`${props.id}-label`} tabIndex={-1}>{props.children}</div>
           </div>
         </div>
       </Portal>

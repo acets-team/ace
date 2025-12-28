@@ -1,12 +1,33 @@
+/**
+ * 🧚‍♀️ How to access:
+ *     - Plugin: solid
+ *     - import '@ace/modal.styles.css'
+ *     - 🚨 `--ace-modal-backdrop-bg`: Backdrop background color
+ *     - 🚨 `--ace-tabs-margin-top`: Space from top of screen
+ */
+
+
 .ace-modal {
   position: fixed;
   inset: 0;
-  background: oklch(0 0 0 / 0.6);
+  background: var(--ace-modal-backdrop-bg);
   z-index: var(--ace-z-popover);
   display: flex;
   justify-content: center;
   padding: calc(var(--ace-space) * 2);
   overflow: hidden;
+}
+
+.ace-modal--center {
+  align-items: center;
+}
+
+.ace-modal--top {
+  align-items: start;
+
+  .ace-modal__content {
+    margin-top: var(--ace-modal-margin-top);
+  }
 }
 
 .ace-modal__content {
