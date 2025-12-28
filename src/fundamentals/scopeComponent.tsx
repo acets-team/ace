@@ -21,12 +21,6 @@ import type { RoutePath2PathParams, Routes, AceResData, RoutePath2SearchParams, 
 
 
 
-/**
- * - Wrap app w/ Provider
- * - Assign exported fe
- */
-
-
 /** 
  * - Class to help
  *     - Access current `pathParams`, `searchParams` & `location`

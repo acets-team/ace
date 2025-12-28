@@ -5,8 +5,8 @@
 | `--ace-font-family`    | Base font stack | `system-ui, sans-serif`|
 | `--ace-font-size`      | Base UI size | `1.8rem` |
 | `--ace-line-height`    | Base line height | `1.41` |
-| `--ace-font-semibold`  | Semibold font-weight | `500` |
-| `--ace-font-bold`      | Bold font-weight | `600` |
+| `--ace-semibold`  | Semibold font-weight | `500` |
+| `--ace-bold`      | Bold font-weight | `600` |
 
 
 ## Colors

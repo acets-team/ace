@@ -365,8 +365,8 @@ const html = `
     :root {
       --ace-font-size: 1.8rem;
       --ace-line-height: 1.41;
-      --ace-font-semibold: 500;
-      --ace-font-bold: 600;
+      --ace-semibold: 500;
+      --ace-bold: 600;
       --ace-font-family: system-ui, sans-serif;
 
       --ace-easing: ease-in-out;
@@ -484,7 +484,7 @@ const html = `
     .submit {
       background: var(--ace-primary);
       color: var(--ace-primary-foreground);
-      font-weight: var(--ace-font-bold);
+      font-weight: var(--ace-bold);
       cursor: pointer;
       border: none;
     }
@@ -525,7 +525,7 @@ const html = `
       background: var(--ace-destructive);
       color: var(--ace-destructive-foreground);
       padding: var(--ace-space) calc(var(--ace-space) * 2);
-      font-weight: var(--ace-font-bold);
+      font-weight: var(--ace-bold);
       cursor: pointer;
       border-radius: calc(var(--ace-radius) * 2);
       border: none;

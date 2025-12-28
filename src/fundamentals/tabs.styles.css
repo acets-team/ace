@@ -1,81 +1,106 @@
 /**
  * 🧚‍♀️ How to access:
+ *     - Plugin: solid
  *     - import '@ace/tabs.styles.css'
+ *     - 🚨 To change the background active color, the css variable is: `--ace-tabs-active`
+ *     - 🚨 To change the foreground active color, the css variable is: `--ace-tabs-active-foreground`
  */
 
 
-.ace-tabs {
-  &.variant-pill,
-  &.variant-classic {
-    .marker {
-      top: 0;
-      left: 0;
-      background: rgba(0, 123, 255, 0.1);
-      border-radius: 0.9rem 0.9rem 0 0;
-      transition: all 0.3s ease;
-      will-change: transform, width, height, opacity;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .tab.active {
-      color: #007bff;
-    }
-  }
-  &.variant-underline {
-    .marker {
-      bottom: 0;
-      border-radius: 3rem;
-      height: 0.3rem;
-      background: #007bff;
-      transition: transform 0.3s ease, width 0.3s ease;
-      will-change: transform, width;
-    }
-
-    .tab.active {
-      color: #007bff;
-    }
-  }
-  &.variant-pill .marker {
-    border-radius: 999px;
+.ace-tabs--pill,
+.ace-tabs--classic {
+  .ace-tabs__marker {
+    position: absolute;
+    z-index: calc(var(--ace-z-content) - 1);
+    top: 0;
+    left: 0;
+    background: var(--ace-tabs-active);
+    transition: var(--ace-transition);
+    will-change: transform, width, height, opacity;
+    pointer-events: none;
   }
 
-  .tabs {
-    position: relative;
-    display: flex;
-    gap: 0.9rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    scrollbar-color: transparent transparent;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+  .ace-tabs__active,
+  .ace-tabs__tab:hover {
+    color: var(--ace-tabs-active-foreground);
+  }
+}
 
-    .marker {
-      position: absolute;
-    }
+.ace-tabs--classic {
+  .ace-tabs__marker {
+    border-top-left-radius: calc(var(--ace-radius) * 2);
+    border-top-right-radius: calc(var(--ace-radius) * 2);
+  }
+}
 
-    .tab {
-      padding: 0.6rem 1.8rem;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: color 0.3s;
-      color: #444;
-      position: relative;
-      z-index: 1;
-      &:hover {
-        color: #007bff;
-      }
-    }
+.ace-tabs--underline {
+  .ace-tabs__marker {
+    position: absolute;
+    z-index: var(--ace-z-content);
+    bottom: 0;
+    border-radius: calc(var(--ace-radius) * 6);
+    height: 0.3rem;
+    background: var(--ace-tabs-active);
+    transition: transform 0.3s ease, width 0.3s ease;
+    will-change: transform, width;
   }
 
-  .tab-contents {
-    margin-top: 0.6rem;
+  .ace-tabs__active,
+  .ace-tabs__tab:hover {
+    color: var(--ace-tabs-active-foreground);
+  }
+}
 
-    .tab-content {
-      display: none;
-      &.active {
-        display: block;
-      }
+.ace-tabs--tron {
+  .ace-tabs__marker {
+    display: none;
+  }
+
+  .ace-tabs__tab {
+    color: var(--ace-muted-foreground);
+    background: var(--ace-card);
+    &:hover,
+    &.ace-tabs__active {
+      color: var(--ace-foreground);
     }
+  }
+}
+
+.ace-tabs--pill .ace-tabs__marker {
+  border-radius: calc(var(--ace-radius) * 9);
+}
+
+.ace-tabs__tabs {
+  position: relative;
+  z-index: var(--ace-z-content);
+  display: flex;
+  gap: calc(var(--ace-space) * 2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.ace-tabs__tab {
+  position: relative;
+  z-index: var(--ace-z-content);
+  padding-block: calc(var(--ace-space) * 1.5);
+  padding-inline: calc(var(--ace-space) * 3);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--ace-transition);
+  color: var(--ace-muted-foreground);
+}
+
+.ace-tabs__contents {
+  margin-block: var(--ace-space);
+}
+
+.ace-tabs__content {
+  display: none;
+  &.ace-tabs__active {
+    display: block;
   }
 }

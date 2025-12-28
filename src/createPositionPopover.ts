@@ -49,7 +49,7 @@ export function createPositionPopover(props: { aimElement: HTMLElement, position
     _popoverElement.style.left = `${left + window.scrollX}px`
 
     if (props.isDropdown) {
-      const content = _popoverElement.querySelector<HTMLDivElement>('.ace-dropdown-content')
+      const content = _popoverElement.querySelector<HTMLDivElement>('.ace-dropdown__content')
 
       if (content) content.style.maxHeight = `calc(100vh - ${top + 20}px)`
     }

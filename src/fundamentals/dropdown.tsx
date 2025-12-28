@@ -121,10 +121,10 @@ function DropdownComponent(componentProps: {
 
   function setItems() {
     if (dropdownRef) {
-      items = dropdownRef.querySelectorAll('.item')
+      items = dropdownRef.querySelectorAll('.ace-dropdown__item')
+
       setTimeout(() => {
         items?.[0]?.focus()
-        console.log(document.activeElement)
       })
     }
   }
@@ -159,7 +159,7 @@ function DropdownComponent(componentProps: {
       {...componentProps.refProps().$div}
       class={mergedClass()}
     >
-      <div class="ace-dropdown-content">{componentProps.refProps().content({ isVisible, aimElement: componentProps.aimElement, setIsVisible })}</div>
+      <div class="ace-dropdown__content">{componentProps.refProps().content({ isVisible, aimElement: componentProps.aimElement, setIsVisible })}</div>
     </div>
   </>
 }

@@ -13,12 +13,14 @@ import { Tron, type TronProps } from './tron'
 import { useLocation } from '@solidjs/router'
 import type { TreeCreateNode } from '../treeCreate'
 import type { Routes, RoutePath2PathParams, RoutePath2SearchParams, MapRoutes } from './types'
-import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, type Accessor, Signal } from 'solid-js'
+import { onMount, mergeProps, createSignal, createEffect, For, Show, type JSX, type Accessor } from 'solid-js'
 
 
 /**
  * ### Show lovely tabs
- * Add to `app.tsx` => `import '@ace/tabs.styles.css'` & then:
+ * - 🚨 To change the background active color, the css variable is: `--ace-tabs-active`
+ * - 🚨 To change the foreground active color, the css variable is: `--ace-tabs-active-foreground`
+ * - Add to `app.tsx` => `import '@ace/tabs.styles.css'` & then:
  * @example
   ```tsx
   // route
@@ -316,8 +318,8 @@ export function Tabs(props: {
     : {}
 
   return <>
-    <div {...props.$div} class={mergeStrings('ace-tabs', `variant-` + props.variant, props.$div?.class)}>
-      <div class="tabs" ref={divTabs} {...accessibilityProps}>
+    <div {...props.$div} class={mergeStrings('ace-tabs', `ace-tabs--` + props.variant, props.$div?.class)}>
+      <div class="ace-tabs__tabs" ref={divTabs} {...accessibilityProps}>
         <For each={props.tabs()}>
           {(tab, i) => {
             const isActive = () => i() === active()
@@ -330,13 +332,13 @@ export function Tabs(props: {
                   href={tab.hash}
                   onClick={ev => onTabClick(i(), tab, ev)}
                   aria-current={isActive() ? 'page' : undefined}
-                  classList={{ 'tab': true, 'active': isActive() }}
+                  classList={{ 'ace-tabs__tab': true, 'ace-tabs__active': isActive() }}
                 >{tab.label}</a>
                 break
               case tab instanceof RouteTab:
                 anchor = () => <a
                   onClick={ev => onTabClick(i(), tab, ev)}
-                  classList={{ 'tab': true, 'active': isActive() }}
+                  classList={{ 'ace-tabs__tab': true, 'ace-tabs__active': isActive() }}
                   href={mapRoutes() ? mapRoutes()?.[(tab as RouteTab<any>).path as keyof MapRoutes].buildUrl({ absoluteUrl: true, pathParams: (tab as RouteTab<any>).pathParams, searchParams: (tab as RouteTab<any>).searchParams }) : ''}
                 > {tab.label} </a>
                 break
@@ -348,7 +350,7 @@ export function Tabs(props: {
                   tabindex={isActive() ? 0 : -1}
                   onClick={() => onTabClick(i(), tab)}
                   aria-controls={getId(props, 'tab-content', i)}
-                  classList={{ 'tab': true, 'active': isActive() }}
+                  classList={{ 'ace-tabs__tab': true, 'ace-tabs__active': isActive() }}
                 >{tab.label}</div>
                 break
             }
@@ -371,16 +373,16 @@ export function Tabs(props: {
           }}
         </For>
 
-        <div class="marker" ref={divActiveIndicator} style={{ transition: firstRender() ? 'none' : undefined, opacity: firstRender() ? '0' : '1' }}></div>
+        <div class="ace-tabs__marker" ref={divActiveIndicator} style={{ transition: firstRender() ? 'none' : undefined, opacity: firstRender() ? '0' : 'revert-layer' }}></div>
       </div>
 
       <Show when={props.mode === 'content'}>
-        <div class="tab-contents">
+        <div class="ace-tabs__contents">
           <For each={props.tabs()}>
             {(tab, i) => {
               return <>
                 <Show when={i() === active()}>
-                  <div id={getId(props, 'tab-content', i)} classList={{ 'tab-content': true, active: i() === active() }} role="tabpanel" aria-labelledby={`tab-${i()}`} hidden={active() !== i()}>
+                  <div id={getId(props, 'tab-content', i)} classList={{ 'ace-tabs__content': true, 'ace-tabs__active': i() === active() }} role="tabpanel" aria-labelledby={`tab-${i()}`} hidden={active() !== i()}>
                     {tab instanceof ContentTab ? tab.content() : null}
                   </div>
                 </Show>

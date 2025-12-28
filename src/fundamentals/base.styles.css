@@ -2,15 +2,158 @@
  * 🧚‍♀️ How to access:
  *     - Plugin: vanilla
  *     - import '@ace/base.styles.css'
+ *     - 🚨 Must be the first CSS import in app.tsx
  */
 
 
+
 :root {
+  /* font */
+  --ace-font-size: 1.8rem;
+  --ace-line-height: 1.41;
+  --ace-semibold: 500;
+  --ace-bold: 600;
+  --ace-font-family: system-ui, sans-serif;
+
+  /* space */
+  --ace-space: 0.45rem;
+  --ace-content-max-width: 132rem;
+
+  /* positioning */
+  --ace-z-base: 0;
+  --ace-z-content: 18;
+  --ace-z-nav: 45;
+  --ace-z-popover: 54;
+
+  /* transition */
+  --ace-easing: ease-in-out;
+  --ace-duration-fast: 120ms;
+  --ace-duration-normal: 300ms;
   --ace-fast-transition: all var(--ace-duration-fast) var(--ace-easing);
   --ace-transition: all var(--ace-duration-normal) var(--ace-easing);
   --ace-prop-transition: var(--ace-duration-normal) var(--ace-easing);
   --ace-fast-prop-transition: var(--ace-duration-fast) var(--ace-easing);
+
+  /* outline */
+  --ace-ring-width: 0.3rem;
+  --ace-ring: oklch(60.483% 0.21664 257.23 / 0.6);
+  --ace-outline: var(--ace-ring-width) solid var(--ace-ring);
+  --ace-outline-offset: calc(var(--ace-ring-width) * -1);
+
+  /* colors */
+  --ace-mark: oklch(0.92 0.16 96.21);
+  --ace-mark-foreground: oklch(0.23 0.14 280.98);  
+
+  /* primary */
+  --ace-primary-foreground: oklch(17.141% 0.0156 18.733);
+  --ace-primary-shadow: 
+    0 4px 18px oklch(84.194% 0.16831 90.435 / 0.21),
+    inset 0 1px 3px oklch(100% 0.00011 271.152 / 0.35),
+    inset 0 -3px 6px oklch(0% 0 0 / 0.55);
+  
+  /* secondary */
+  --ace-secondary: oklch(23.88% 0.01654 264.212);
+  --ace-secondary-gradient: linear-gradient(90deg, oklch(0.22 0.01 264.28), oklch(23.88% 0.01654 264.212));
+  --ace-secondary-foreground: oklch(100% 0.00011 271.152);
+  --ace-secondary-hover: linear-gradient(90deg, oklch(26% 0.03 266), oklch(28% 0.04 267));
+  --ace-secondary-pressed:
+    inset 0 4px 10px oklch(0% 0 0 / 0.45),
+    inset 0 -5px 8px oklch(0% 0 0 / 0.55),
+    0 1px 2px oklch(0% 0 0 / 0.08);
+  --ace-secondary-shadow: 
+    0 3px 12px rgba(77, 83, 40, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.45);
+
+  /* border radius */
+  --ace-radius: 0.45rem;
+
+  /** tabs */
+  --ace-tabs-active: oklch(60.483% 0.21664 257.23);
+  --ace-tabs-active-foreground: oklch(100% 0.00011 271.152);
 }
+
+
+
+/** Dark Mode */
+html[data-theme=dark] {
+  &:root {
+    /* colors */
+    --ace-background: oklch(0.17 0.06 254.82);
+    --ace-background-gradient: radial-gradient(at top left, #010a29 0%, #000f27 50%, #1c2130 100%);
+    --ace-foreground: oklch(0.89 0.04 265.11);
+    --ace-muted-foreground: oklch(0.63 0 0);
+    --ace-card: linear-gradient(to bottom right, oklch(18.339% 0.03171 209.849), oklch(15.046% 0.02139 283.531 / 0.9));
+    --ace-border: oklch(0.28 0.04 254.82);
+    --ace-code: linear-gradient(90deg, oklch(0.87 0.11 211.83), oklch(0.89 0.09 210.5));
+    --ace-accent: linear-gradient(90deg, oklch(0.35 0 0), oklch(0.371 0 0));
+    --ace-accent-foreground: oklch(100% 0.00011 271.152);
+    --ace-popover: oklch(0.21 0.034 264.665);
+    --ace-popover-foreground: oklch(100% 0.00011 271.152);
+    --ace-input: var(--ace-card);
+
+    /* primary */
+    --ace-primary: oklch(88.047% 0.1497 92.044);
+    --ace-primary-gradient: linear-gradient(90deg, oklch(88.047% 0.1497 92.044), oklch(88.395% 0.18159 96.411));
+    --ace-primary-hover: linear-gradient(90deg, oklch(88.395% 0.18159 96.411), oklch(88.047% 0.1497 92.044));
+    --ace-primary-pressed:
+      inset 0 2px 6px oklch(0% 0 0 / 0.35),
+      0 2px 8px oklch(0% 0 0 / 0.15);
+
+    /* box shadows */
+    --ace-shadow-subtle:
+      0 2px 4px oklch(0.84 0.155 92 / 0.03),
+      0 4px 10px oklch(0.83 0.145 96 / 0.08),
+      0 10px 22px oklch(0.82 0.130 96 / 0.01),
+      inset 0 -1px 1px oklch(0% 0 0 / 0.32);
+    --ace-shadow-big: 
+      0 4px 18px oklch(84.194% 0.16831 90.435 / 0.27),
+      0 0 80px oklch(83.275% 0.17076 95.709 / 0.12),
+      0 0 150px oklch(83.275% 0.17076 95.709 / 0.06),
+      inset 0 1px 3px oklch(100% 0.00011 271.152 / 0.35),
+      inset 0 -3px 6px oklch(0% 0 0 / 0.55);
+  }
+}
+
+
+
+/** Light Mode */
+html[data-theme=light] {
+  &:root {
+    /* colors */
+    --ace-background: oklch(100% 0.00011 271.152);
+    --ace-foreground: oklch(10% 0.02 250);
+    --ace-muted-foreground: oklch(0.51 0 0);
+    --ace-card: oklch(0.967 0.001 286.375);
+    --ace-border: oklch(0.91 0 0);
+    --ace-code: linear-gradient(90deg, oklch(0.60 0.12 211.83), oklch(0.70 0.09 210.5));
+    --ace-accent: oklch(0.45 0.31 264.1);
+    --ace-accent-foreground: oklch(100% 0.00011 271.152);
+    --ace-popover: oklch(100% 0.00011 271.152);
+    --ace-popover-foreground: oklch(10% 0.02 250);
+    --ace-input: linear-gradient(to bottom right, rgb(220 225 240), rgb(245 248 255));
+
+    /* primary */
+    --ace-primary: oklch(0.86 0.19 89.62);
+    --ace-primary-gradient: linear-gradient(90deg, oklch(0.86 0.19 89.62), oklch(88.395% 0.18159 96.411));
+    --ace-primary-hover: linear-gradient(90deg, oklch(0.90 0.22 92), oklch(0.93 0.25 97));
+    --ace-primary-pressed:
+        inset 0 2px 6px oklch(0% 0 0 / 0.15),
+        0 2px 8px oklch(0% 0 0 / 0.1);
+
+    /* box shadows */
+    --ace-shadow-subtle:
+      0 2px 6px oklch(0.52 0.035 275 / 0.14),
+      0 6px 14px oklch(0.50 0.030 280 / 0.10),
+      0 12px 28px oklch(0.48 0.025 285 / 0.06);
+    --ace-shadow-big: 
+      0 4px 18px oklch(0.52 0.035 275 / 0.10),
+      0 14px 44px oklch(0.50 0.030 280 / 0.08),
+      0 30px 90px oklch(0.48 0.025 285 / 0.05),
+      inset 0 -2px 4px oklch(0% 0 0 / 0.035);
+  }
+}
+
 
 *,
 *::before,
@@ -18,32 +161,38 @@
   box-sizing: border-box;
 }
 
-*:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 var(--ace-ring-width) var(--ace-ring);
-}
-
-body,
 html,
+body,
 #app {
   margin: 0;
   width: 100%;
 }
 
+
+body,
+input,
+select,
+textarea,
+button {
+  color: var(--ace-foreground);
+  line-height: var(--ace-line-height);
+  font-family: var(--ace-font-family);
+  font-size: var(--ace-font-size);
+}
+
+
+/* result font size is 18px, goal 1) user defined always wins. goal 2) customer does not need to reference private variables. */
+
 html {
   font-size: 62.5%;
   scroll-behavior: smooth;
-  background: var(--ace-background);
+  background: var(--ace-background); /** on fast ios scroll, the bg in front during the top/bottom bounce is this bg color */
 }
 
 body {
   position: relative;
   z-index: var(--ace-z-base);
-  color: var(--ace-foreground);
-  font-family: var(--ace-font-family);
-  font-size: var(--ace-font-size);
-  line-height: var(--ace-line-height);
-  background: var(--ace-background-gradient, var(--ace-background));
+  background: var(--ace-background-gradient, var(--ace-background)); /** on fast ios scroll, the bg behind during the top/bottom bounce is this bg color */
 }
 
 input,
@@ -54,17 +203,11 @@ textarea {
   border-radius: calc(var(--ace-radius) * 2);
 }
 
-input,
-select,
-textarea,
+a,
 button {
-  font-family: var(--ace-font-family);
-  font-size: var(--ace-font-size);
-  padding-block: var(--ace-space);
-  padding-inline: calc(var(--ace-space) * 2);
+  touch-action: manipulation; /* Prevent zoom on mobile double-tap */
 }
 
 button {
   cursor: pointer;
-  border-radius: calc(var(--ace-radius) * 2);
 }

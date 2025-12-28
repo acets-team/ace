@@ -7,22 +7,24 @@
   justify-content: center;
   padding: calc(var(--ace-space) * 2);
   overflow: hidden;
+}
 
-  .content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow-y: auto;
-    max-height: 100vh;
-  }
+.ace-modal__content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  max-height: 100vh;
+  padding: calc(var(--ace-space) * 2);
+}
 
-  .modal {
-    background-color: var(--ace-popover);
-    border-radius: calc(var(--ace-radius) * 2);
-    padding: calc(var(--ace-space) * 2);
-    width: 69rem;
-    max-width: 90vw;
-    max-height: 100%;
-    overflow: auto;
-  }
+.ace-modal__modal {
+  background-color: var(--ace-popover);
+  border-radius: calc(var(--ace-radius) * 2);
+  padding: calc(var(--ace-space) * 2);
+  box-shadow: var(--ace-shadow-subtle);
+  width: 69rem;
+  max-width: 90vw;
+  max-height: 100%;
+  overflow: auto;
 }

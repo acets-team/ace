@@ -150,7 +150,7 @@ export async function parseResponse<T_Res_Data extends AceResData>(response: any
       return body as AceResEither<T_Res_Data>
     }
 
-    if (body.data !== undefined) {
+    if (body.data !== undefined || body.error === null) { // defined data OR no error (just returned scope.success())
       body.error = null
       return body as AceResEither<T_Res_Data>
     }
