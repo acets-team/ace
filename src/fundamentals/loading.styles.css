@@ -1,19 +1,23 @@
 /**
  * 🧚‍♀️ How to access:
  *     - import '@ace/loading.styles.css'
+ *     - 🚨 `--ace-loading-color`: Color of first spinner
+ *     - 🚨 `--ace-loading-size`: Spinner height/width
+ *     - 🚨 `--ace-loading-thickness`: Thickness of spinner
+ *     - 🚨 `--ace-loading-speed`: Spinning speed
+ *     - 🚨 `--ace-loading-two-color`: Color of second spinner
  */
 
 
 .ace-loading {
-  width: var(--ace-loading-size, 2.1rem);
-  height: var(--ace-loading-size, 2.1rem);
-  border-top: var(--ace-loading-thickness, 0.3rem) solid var(--ace-loading-color, gold);
-  border-right: var(--ace-loading-thickness, 0.3rem) solid transparent;
-  animation: aceLoadingRotation var(--ace-loading-speed, 1s) linear infinite;
   border-radius: 50%;
   position: relative;
   display: inline-block;
-  box-sizing: border-box;
+  width: var(--ace-loading-size);
+  height: var(--ace-loading-size);
+  border-top: var(--ace-loading-thickness) solid var(--ace-loading-color);
+  border-right: var(--ace-loading-thickness) solid transparent;
+  animation: ace-spin var(--ace-loading-speed) linear infinite;
 
   .label {
     position: absolute;
@@ -24,29 +28,20 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+    pointer-events: none;
   }
 }
 
 .ace-loading--two {
   &::after {
-    width: var(--ace-loading-size, 2.1rem);
-    height: var(--ace-loading-size, 2.1rem);
-    border-bottom: var(--ace-loading-thickness, 0.3rem) solid var(--ace-loading-two-color, white);
-    border-left: var(--ace-loading-thickness, 0.3rem) solid transparent;
     content: '';  
-    box-sizing: border-box;
     position: absolute;
     left: 0;
     top: 0;
     border-radius: 50%;
-  }
-}
-
-@keyframes aceLoadingRotation {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
+    width: var(--ace-loading-size);
+    height: var(--ace-loading-size);
+    border-bottom: var(--ace-loading-thickness) solid var(--ace-loading-two-color);
+    border-left: var(--ace-loading-thickness) solid transparent;
   }
 }

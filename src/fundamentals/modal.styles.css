@@ -40,7 +40,7 @@
   }
 
   .ace-modal__content {
-    animation: ace-fade-slide-down var(--ace-prop-transition);
+    animation: ace-fade-down var(--ace-prop-transition);
     padding:
       var(--ace-modal-top-space)
       calc(var(--ace-space) * 2)
@@ -65,7 +65,7 @@
   align-items: end;
 
   .ace-modal__content {
-    animation: ace-fade-slide-up var(--ace-prop-transition);
+    animation: ace-fade-up var(--ace-prop-transition);
     padding:
       calc(var(--ace-space) * 2)
       calc(var(--ace-space) * 2)
